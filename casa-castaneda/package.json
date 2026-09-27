@@ -1,0 +1,18 @@
+{
+  "name": "casa-castaneda",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Modelo 3D paramétrico de la estructura metálica de Casa Castañeda (Santa Rosa): visores web, renders y PDF por etapa.",
+  "scripts": {
+    "build": "node build.mjs && node build_client.mjs",
+    "cantidades": "node getbom.mjs",
+    "renders": "node render_struct.mjs",
+    "pdf": "python build_pdfs_etapas.py",
+    "todo": "npm run build && npm run cantidades && npm run renders && npm run pdf"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.63.0",
+    "three": "^0.186.1"
+  }
+}

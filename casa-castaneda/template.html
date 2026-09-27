@@ -1,0 +1,222 @@
+<title>Casa Castañeda Estructura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#0e131a; --panel:#141b24; --panel2:#1a2330; --line:#263243; --text:#e7ecf3; --muted:#8e9bad;
+  --steel:#f26a1b; --weld:#ffc93a; --ok:#3fbf8a;
+  --f-disp:'Barlow Condensed','Arial Narrow',sans-serif; --f-body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 var(--f-body);overflow:hidden}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 372px;height:100%}
+#stage{position:relative;min-width:0;min-height:0;overflow:hidden;background:#121821}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;left:0;top:0;white-space:nowrap;display:none;will-change:transform}
+.lbl.room{font:500 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:#243044;background:rgba(255,255,255,.82);padding:2px 7px;border-radius:2px}
+.lbl.dim{font:500 12px var(--f-mono);color:#1a1300;background:var(--weld);padding:2px 7px;border-radius:2px}
+.ttl{position:absolute;left:20px;top:18px;right:20px;pointer-events:none;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.ttl .id{max-width:60ch}
+.eyebrow{font:500 11px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--weld)}
+h1{margin:4px 0 2px;font:600 clamp(26px,3.6vw,44px)/1 var(--f-disp);letter-spacing:.01em;text-transform:uppercase;text-wrap:balance}
+.meta{font:400 12px var(--f-mono);color:var(--muted)}
+.kpis{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);align-self:flex-start;pointer-events:auto}
+.kpi{background:rgba(14,19,26,.86);padding:7px 12px;min-width:74px}
+.kpi b{display:block;font:600 20px/1.1 var(--f-disp);letter-spacing:.02em}
+.kpi span{font:400 10px var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.seg{position:absolute;right:16px;top:calc(50% - 20px);display:flex;flex-direction:column;background:rgba(14,19,26,.86);border:1px solid var(--line)}
+.seg button{background:none;border:0;border-bottom:1px solid var(--line);padding:8px 12px;text-align:left;cursor:pointer;font-size:12px;color:var(--muted)}
+.seg button:last-child{border-bottom:0}
+.seg button.on{color:var(--text);box-shadow:inset 3px 0 var(--steel);background:var(--panel2)}
+#views{position:absolute;left:16px;right:16px;bottom:14px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.vbtn{background:rgba(14,19,26,.86);border:1px solid var(--line);padding:7px 12px;cursor:pointer;font-size:12px;letter-spacing:.02em}
+.vbtn:hover{border-color:var(--muted)}
+.vbtn.on{background:var(--steel);border-color:var(--steel);color:#160a02;font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--weld);outline-offset:2px}
+.hint{position:absolute;left:20px;bottom:58px;font:400 11px var(--f-mono);color:var(--muted);pointer-events:none}
+.panel{background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tab{flex:1;background:none;border:0;padding:13px 8px;cursor:pointer;font:600 15px var(--f-disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent}
+.tab.on{color:var(--text);border-bottom-color:var(--steel)}
+.pane{overflow:auto;padding:16px 18px 28px;flex:1;min-height:0}
+.pane[hidden]{display:none}
+h2{margin:20px 0 8px;font:600 13px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h2:first-child{margin-top:0}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.presets button{background:var(--panel2);border:1px solid var(--line);padding:9px 10px;cursor:pointer;text-align:left;font-size:13px}
+.presets button.on{border-color:var(--steel)}
+.row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.row input[type=checkbox]{accent-color:var(--steel);width:16px;height:16px;flex:none}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;flex:none;margin-right:2px}
+.sys .sw{margin-right:0}
+.nm{flex:1;min-width:0}
+.nm small{display:block;font:400 11px var(--f-mono);color:var(--muted)}
+.ct{font:500 13px var(--f-mono);color:var(--muted)}
+.ctl{display:grid;gap:8px}
+.ctl label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px}
+.ctl output,.ctl .v{font:500 12px var(--f-mono);color:var(--weld)}
+input[type=range]{width:100%;accent-color:var(--steel)}
+select,input[type=number]{background:var(--panel2);border:1px solid var(--line);padding:7px 9px;width:100%}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font:500 10px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+th:first-child{text-align:left}
+td{padding:8px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+td small{display:block;font:400 10.5px var(--f-mono);color:var(--muted);margin-left:16px}
+tfoot td{font-weight:600;border-bottom:0;padding-top:10px}
+tr.stagehd td{font:600 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--weld);padding-top:16px;border-bottom:1px solid var(--line)}
+tr.sub td{font-weight:600;border-bottom:1px solid var(--muted)}
+.stages{grid-template-columns:1fr 1fr 1fr}
+.tw{overflow-x:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fld span{display:block;font:400 11px var(--f-mono);color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+.total{margin-top:14px;padding:14px;background:var(--panel2);border:1px solid var(--line)}
+.total span{font:400 11px var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.total b{display:block;font:600 30px/1.1 var(--f-disp);letter-spacing:.02em;margin-top:2px}
+.total b.empty{font:400 14px var(--f-body);color:var(--muted)}
+.note p{margin:0 0 10px;color:#c9d2df;max-width:62ch}
+.note b{color:var(--text)}
+.warn{border-left:3px solid var(--weld);padding:8px 12px;background:var(--panel2);color:#e9dcae;margin:14px 0}
+body.clean .ttl,body.clean #views,body.clean .seg,body.clean .hint{display:none}
+body.clean .app{grid-template-columns:1fr}
+body.clean .panel{display:none}
+@media (max-width:860px){
+  body{overflow:auto}
+  .app{grid-template-columns:1fr;grid-template-rows:62vh auto;height:auto;min-height:100%}
+  #stage{height:62vh}
+  .panel{border-left:0;border-top:1px solid var(--line)}
+  .seg{top:auto;bottom:96px;right:12px;flex-direction:row}
+  .seg button{border-bottom:0;border-right:1px solid var(--line)}
+  .ttl{left:16px;right:16px}.kpis{display:none}
+  .hint{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="app">
+  <main id="stage">
+    <canvas id="gl" aria-label="Modelo 3D de la casa y su estructura metálica"></canvas>
+    <div id="labels"></div>
+    <header class="ttl">
+      <div class="id">
+        <div class="eyebrow">Casa Castañeda · Santa Rosa · Versión 3</div>
+        <h1>Estructura metálica de cubierta</h1>
+        <div class="meta">Modelo 3D técnico-comercial · medidas en metros</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><b id="k-len"></b><span>Largo</span></div>
+        <div class="kpi"><b id="k-dep"></b><span>Ancho</span></div>
+        <div class="kpi"><b id="k-rdg"></b><span>Cumbrera</span></div>
+        <div class="kpi"><b id="k-fr"></b><span>Cerchas</span></div>
+      </div>
+    </header>
+    <div class="seg" id="tilemode" role="group" aria-label="Cubierta">
+      <button data-mode="solid">Teja sólida</button>
+      <button data-mode="ghost">Teja translúcida</button>
+      <button data-mode="hidden">Sin teja</button>
+    </div>
+    <div class="hint">Arrastra para girar · rueda para acercar · clic derecho para desplazar</div>
+    <nav id="views" aria-label="Vistas"></nav>
+  </main>
+
+  <aside class="panel">
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-tab="model" role="tab">Modelo</button>
+      <button class="tab" data-tab="bom" role="tab">Cantidades</button>
+      <button class="tab" data-tab="notes" role="tab">Notas</button>
+    </div>
+
+    <section class="pane" id="pane-model">
+      <h2>Etapa de obra</h2>
+      <div class="presets stages" id="stages">
+        <button data-s="casa">Etapa 1 · Casa</button>
+        <button data-s="pergolas">Etapa 2 · Pérgolas</button>
+        <button data-s="todo">Ambas</button>
+      </div>
+
+      <h2>Escenas</h2>
+      <div class="presets" id="presets">
+        <button data-p="completa">Casa completa</button>
+        <button data-p="acero">Estructura destacada</button>
+        <button data-p="soloacero">Solo acero</button>
+        <button data-p="explosion">Vista explosionada</button>
+      </div>
+
+      <h2>Sistemas de acero</h2>
+      <div id="systems"></div>
+
+      <h2>Otras capas</h2>
+      <div id="others"></div>
+
+      <h2>Explosión</h2>
+      <div class="ctl">
+        <label for="explode">Separar teja, acero y muros <span class="v" id="explode-v">0%</span></label>
+        <input type="range" id="explode" min="0" max="100" value="0">
+      </div>
+
+      <h2>Corte</h2>
+      <div class="ctl">
+        <select id="cutaxis" aria-label="Tipo de corte">
+          <option value="none">Sin corte</option>
+          <option value="x">Corte transversal (a lo ancho)</option>
+          <option value="y">Corte longitudinal (a lo largo)</option>
+        </select>
+        <div id="cutrow" hidden class="ctl">
+          <label for="cutpos">Posición <span class="v" id="cutpos-v">7.30 m</span></label>
+          <input type="range" id="cutpos" min="-1" max="17.8" step="0.05" value="7.3">
+          <label class="row" style="border:0;padding:0"><span>Invertir lado del corte</span><input type="checkbox" id="cutflip"></label>
+        </div>
+        <label class="row" style="border:0;padding:0"><span>Giro automático</span><input type="checkbox" id="spin"></label>
+      </div>
+    </section>
+
+    <section class="pane" id="pane-bom" hidden>
+      <h2>Cuadro de cantidades por etapa</h2>
+      <div class="tw">
+      <table>
+        <thead><tr><th>Elemento</th><th>Tramos</th><th>m</th><th>kg</th></tr></thead>
+        <tbody id="bomrows"></tbody>
+        <tfoot>
+          <tr><td>Total ambas etapas<small style="margin:0"><span id="bom-nodes">0</span> nodos de soldadura</small></td><td></td><td class="n" id="bom-len"></td><td class="n" id="bom-kg"></td></tr>
+        </tfoot>
+      </table>
+      </div>
+      <div class="warn">La cubierta de la casa (etapa 1) y la pérgola y cochera (etapa 2) se ejecutan en momentos distintos y se cotizan por separado. Longitudes calculadas del modelo; limahoyas, cerchuelas y soleras siguen como referencia.</div>
+      <h2>Tu precio</h2>
+      <label class="fld" style="display:block;margin-bottom:10px"><span>Etapa a cotizar</span>
+        <select id="qstage">
+          <option value="casa">Etapa 1 · Estructura de la casa</option>
+          <option value="pergolas">Etapa 2 · Pérgola y cochera</option>
+          <option value="todo">Ambas etapas</option>
+        </select>
+      </label>
+      <div class="grid2">
+        <label class="fld"><span>Desperdicio %</span><input type="number" id="waste" min="0" max="40" step="1"></label>
+        <label class="fld"><span>$ por kg instalado</span><input type="number" id="pkg" min="0" step="100" placeholder="0"></label>
+        <label class="fld"><span>$ por nodo soldado</span><input type="number" id="pnode" min="0" step="1000" placeholder="0"></label>
+        <div class="fld"><span>Acero con desperdicio</span><div class="v" id="kg-waste" style="font:500 15px var(--f-mono);padding-top:6px"></div></div>
+      </div>
+      <div class="total"><span id="total-lbl">Total estimado (COP)</span><b id="total" class="empty"></b></div>
+    </section>
+
+    <section class="pane note" id="pane-notes" hidden>
+      <h2>Fuente</h2>
+      <p>Planta de primer piso (versión 3, 15/09/2026), planta de cubiertas y secciones A-A a D-D (versión 3, 24/07/2026), axonometría estructural y el boceto de estructura metálica del ejecutor.</p>
+      <h2>Tomado de los planos</h2>
+      <p><b>Cubierta 16.81 × 10.60 m</b>, cumbrera a +5.35, quiebre a 2.28 m de la cumbrera, frontón cruzado de 5.91 m con prolongación de 0.50 m sobre la terraza, piso terminado a +0.28 y aleros a +2.90 (norte) y +2.75 (sur).</p>
+      <h2>Interpretado</h2>
+      <p>Los muros, ventanas y mobiliario se digitalizaron desde las fotos de los planos, con una tolerancia cercana a 0.2 m. Sirven como contexto visual de la estructura.</p>
+      <p>Las 7 cerchas siguen el boceto. Las cerchas 3, 4 y 5 se ubicaron en los bordes y en el eje del frontón real, que en el plano queda a 7.30 m del extremo oeste y en el boceto aparece centrado.</p>
+      <h2>Antes de cotizar</h2>
+      <p>Perfiles del ejecutor: cerchas en tubo 150×50×4, correas 120×60×2.5, cumbrera doble 200×70×4, y en pérgola y cochera columnas 120×120×4 con vigas 100×50×2.5 (boceto del 25/09/2026). Limahoyas, cerchuelas de frontón y soleras de amarre son supuestos de referencia.</p>
+      <p>Cochera de 6.81 × 2.93 m y pérgola de 4.86 × 2.80 m, cada una con 6 columnas. Las cerchas cruzan luces de hasta 9 m entre muros, así que los apoyos intermedios y las secciones finales deben validarse con el cálculo estructural.</p>
+    </section>
+  </aside>
+</div>
+<script>
+/*BUNDLE*/
+</script>

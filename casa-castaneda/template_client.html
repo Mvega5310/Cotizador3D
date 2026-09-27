@@ -1,0 +1,87 @@
+<title>Casa Castañeda · Estructura metálica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#0e131a; --panel:#141b24; --panel2:#1a2330; --line:#263243; --text:#e7ecf3; --muted:#8e9bad;
+  --steel:#f26a1b; --weld:#ffc93a;
+  --f-disp:'Barlow Condensed','Arial Narrow',sans-serif; --f-body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 var(--f-body);overflow:hidden}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit}
+#stage{position:relative;width:100%;height:100%;overflow:hidden;background:#121821}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.ttl{position:absolute;left:20px;top:18px;right:20px;pointer-events:none}
+.eyebrow{font:500 11px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--weld)}
+h1{margin:4px 0 0;font:600 clamp(24px,3.4vw,40px)/1 var(--f-disp);letter-spacing:.01em;text-transform:uppercase;text-wrap:balance}
+.side{position:absolute;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px}
+.side .cap{font:500 10px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 -6px 2px}
+.seg{display:flex;flex-direction:column;background:rgba(14,19,26,.86);border:1px solid var(--line)}
+.seg button{background:none;border:0;border-bottom:1px solid var(--line);padding:9px 13px;text-align:left;cursor:pointer;font-size:12px;color:var(--muted);white-space:nowrap}
+.seg button:last-child{border-bottom:0}
+.seg button.on{color:var(--text);box-shadow:inset 3px 0 var(--steel);background:var(--panel2)}
+#views{position:absolute;left:16px;right:16px;bottom:14px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.vbtn{background:rgba(14,19,26,.86);border:1px solid var(--line);padding:8px 14px;cursor:pointer;font-size:12px;letter-spacing:.02em;flex:none}
+.vbtn:hover{border-color:var(--muted)}
+.vbtn.on{background:var(--steel);border-color:var(--steel);color:#160a02;font-weight:600}
+button:focus-visible{outline:2px solid var(--weld);outline-offset:2px}
+.hint{position:absolute;left:20px;bottom:58px;font:400 11px var(--f-mono);color:var(--muted);pointer-events:none}
+/* En móvil, escena + vistas se apilan en una sola barra inferior de flujo
+   normal (nunca superpuestas), y las vistas se desplazan en una fila
+   horizontal en vez de envolver en varias líneas. */
+.bottombar{position:static}
+@media (max-width:640px){
+  .ttl{left:14px;right:14px}
+  .hint{display:none}
+  .bottombar{
+    position:absolute;left:0;right:0;bottom:0;
+    display:flex;flex-direction:column;gap:8px;
+    padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));
+    background:linear-gradient(to top, rgba(14,19,26,.95), rgba(14,19,26,.75) 75%, transparent);
+  }
+  .bottombar .side{position:static;transform:none;gap:6px}
+  .bottombar .side .cap{display:none}
+  .bottombar .seg{position:static;flex-direction:row;width:100%;top:auto;right:auto}
+  .bottombar .seg button{flex:1;text-align:center;border-bottom:0;border-right:1px solid var(--line);padding:9px 4px;font-size:11.5px;white-space:nowrap}
+  .bottombar .seg button:last-child{border-right:0}
+  .bottombar #views{
+    position:static;left:auto;right:auto;bottom:auto;
+    flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;
+    gap:6px;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .bottombar #views::-webkit-scrollbar{display:none}
+  .bottombar .vbtn{padding:8px 12px;font-size:11.5px}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div id="stage">
+  <canvas id="gl" aria-label="Modelo 3D de la estructura metálica de cubierta"></canvas>
+  <header class="ttl">
+    <div class="eyebrow">Casa Castañeda · Santa Rosa</div>
+    <h1>Estructura metálica de cubierta</h1>
+  </header>
+  <div class="hint">Arrastra para girar · rueda para acercar · clic derecho para desplazar</div>
+  <div class="bottombar">
+    <div class="side">
+      <div class="cap">Etapa</div>
+      <div class="seg" id="stagesel" role="group" aria-label="Etapa de obra">
+        <button data-stage="casa">Etapa 1 · Casa</button>
+        <button data-stage="pergolas">Etapa 2 · Pérgolas</button>
+        <button data-stage="todo">Ambas</button>
+      </div>
+      <div class="cap">Vista</div>
+      <div class="seg" id="scene" role="group" aria-label="Escena">
+        <button data-mode="completa">Casa completa</button>
+        <button data-mode="acero">Estructura de acero</button>
+      </div>
+    </div>
+    <nav id="views" aria-label="Vistas"></nav>
+  </div>
+</div>
+<script>
+/*BUNDLE*/
+</script>
