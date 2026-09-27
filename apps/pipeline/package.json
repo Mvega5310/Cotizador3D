@@ -1,0 +1,16 @@
+{
+  "name": "@cotizador3d/pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Build → render → BOM por proyecto, generalizado a partir de los scripts de casa-castaneda.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "bom": "node bom.mjs",
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.63.0"
+  }
+}

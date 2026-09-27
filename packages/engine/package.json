@@ -1,0 +1,11 @@
+{
+  "name": "@cotizador3d/engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Motor 3D genérico (Three.js): primitivas de geometría, visor y cotización. Generalizado a partir de casa-castaneda/src.",
+  "type": "module",
+  "main": "src/index.js",
+  "dependencies": {
+    "three": "^0.186.1"
+  }
+}

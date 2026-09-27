@@ -1,0 +1,10 @@
+{
+  "name": "cotizador-3d",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cotizador 3D para ejecutores — workspace raíz.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
+}

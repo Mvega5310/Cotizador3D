@@ -1,0 +1,140 @@
+// Esquema de datos — Cotizador 3D para ejecutores
+// Ver docs/MODELO-DE-DATOS.md para el razonamiento detrás de cada tabla.
+// Motor sugerido: PostgreSQL. Ajustar `provider`/`url` al desplegar.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  prueba
+  ejecutor
+  profesional
+  estudio
+}
+
+enum EstadoProyecto {
+  borrador
+  en_revision
+  generado
+  entregado
+}
+
+enum OrigenParametro {
+  ia
+  usuario
+}
+
+model Cuenta {
+  id          String    @id @default(cuid())
+  nombre      String
+  plan        Plan      @default(prueba)
+  pruebaHasta DateTime?
+  cupoMes     Int // proyectos que puede generar este mes, según el plan
+  creadoEn    DateTime  @default(now())
+
+  usuarios    Usuario[]
+  proyectos   Proyecto[]
+  plantillas  PlantillaCotizacion[]
+}
+
+model Usuario {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  nombre    String
+  cuentaId  String
+  cuenta    Cuenta   @relation(fields: [cuentaId], references: [id])
+  creadoEn  DateTime @default(now())
+
+  proyectos Proyecto[]
+}
+
+model Proyecto {
+  id          String         @id @default(cuid())
+  cuentaId    String
+  cuenta      Cuenta         @relation(fields: [cuentaId], references: [id])
+  creadoPorId String
+  creadoPor   Usuario        @relation(fields: [creadoPorId], references: [id])
+  cliente     String // nombre del cliente final, para el PDF
+  tipoObra    String // 'cubierta' | 'estructura_metalica' | 'cochera' | 'pergola' | ... (abierto, no enum: crece con el catálogo)
+  estado      EstadoProyecto @default(borrador)
+  creadoEn    DateTime       @default(now())
+
+  archivos ArchivoEntrada[]
+  versiones VersionProyecto[]
+}
+
+model ArchivoEntrada {
+  id           String   @id @default(cuid())
+  proyectoId   String
+  proyecto     Proyecto @relation(fields: [proyectoId], references: [id])
+  tipo         String // 'plano' | 'boceto' | 'foto' | 'descripcion'
+  url          String? // null cuando tipo = 'descripcion'
+  descripcion  String? // texto libre del usuario
+  subidoEn     DateTime @default(now())
+}
+
+model VersionProyecto {
+  id         String   @id @default(cuid())
+  proyectoId String
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id])
+  numero     Int // 1, 2, 3... incremental dentro del proyecto
+  creadoEn   DateTime @default(now())
+
+  parametros Parametro[]
+  resultado  Resultado?
+
+  @@unique([proyectoId, numero])
+}
+
+model Parametro {
+  id         String          @id @default(cuid())
+  versionId  String
+  version    VersionProyecto @relation(fields: [versionId], references: [id])
+  clave      String // p.ej. 'ridgeZ', 'houseL', 'perfil_cercha'
+  valor      String // guardado como texto; se tipa/parsea en la capa de aplicación
+  unidad     String? // 'm', 'kg/m', null para valores no numéricos
+  origen     OrigenParametro
+  perfilId   String?
+  perfil     PerfilMaterial? @relation(fields: [perfilId], references: [id])
+}
+
+model PerfilMaterial {
+  id        String   @id @default(cuid())
+  cuentaId  String? // null = catálogo global del sistema
+  nombre    String // 'Tubo rect. 150×50×4 mm'
+  ancho     Float // metros
+  alto      Float // metros
+  kgPorM    Float
+  reutilizable Boolean @default(true)
+
+  parametros Parametro[]
+}
+
+model Resultado {
+  id            String          @id @default(cuid())
+  versionId     String          @unique
+  version       VersionProyecto @relation(fields: [versionId], references: [id])
+  renders       Json // [{ nombre, url }]
+  pdfUrl        String?
+  linkCompleto  String? // token/URL del visor completo (para el usuario)
+  linkCliente   String? // token/URL del visor solo-vistas (para compartir)
+  marcaAgua     Boolean         @default(true) // true durante la prueba
+  bom           Json // mismo shape que casa-castaneda/data/bom.json
+  generadoEn    DateTime        @default(now())
+}
+
+model PlantillaCotizacion {
+  id           String   @id @default(cuid())
+  cuentaId     String
+  cuenta       Cuenta   @relation(fields: [cuentaId], references: [id])
+  nombre       String
+  archivoUrl   String // el formato original subido por el usuario
+  mapeoColumnas Json // { columnaOrigen: campoBom }
+  creadoEn     DateTime @default(now())
+}
