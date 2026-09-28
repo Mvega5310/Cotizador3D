@@ -1,13 +1,15 @@
 // Esquema de datos — Cotizador 3D para ejecutores
 // Ver docs/MODELO-DE-DATOS.md para el razonamiento detrás de cada tabla.
-// Motor sugerido: PostgreSQL. Ajustar `provider`/`url` al desplegar.
+// SQLite para desarrollo local (cero configuración). Para producción, cambiar
+// `provider` a "postgresql" y `DATABASE_URL` a la conexión real, y correr
+// `prisma migrate dev` de nuevo — el resto del esquema no cambia.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -44,12 +46,13 @@ model Cuenta {
 }
 
 model Usuario {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  nombre    String
-  cuentaId  String
-  cuenta    Cuenta   @relation(fields: [cuentaId], references: [id])
-  creadoEn  DateTime @default(now())
+  id           String   @id @default(cuid())
+  email        String   @unique
+  nombre       String
+  passwordHash String
+  cuentaId     String
+  cuenta       Cuenta   @relation(fields: [cuentaId], references: [id])
+  creadoEn     DateTime @default(now())
 
   proyectos Proyecto[]
 }

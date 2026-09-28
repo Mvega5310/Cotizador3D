@@ -15,7 +15,7 @@ Estructura nueva que generaliza el patrón probado en Casa Castañeda para que s
 | `docs/` | Análisis y decisiones: `ARQUITECTURA.md`, `MODELO-DE-DATOS.md`, `BACKLOG-MVP.md`. **Empieza por aquí.** |
 | `packages/engine/` | Motor 3D genérico (Three.js), extraído y generalizado de `casa-castaneda/src`. |
 | `apps/pipeline/` | Build → render → cuadro de cantidades, generalizado por proyecto. |
-| `apps/web/` | *(por crear)* La app de suscripción: carga de planos, revisión de medidas, dashboard. Ver `docs/BACKLOG-MVP.md`, ítem 4. |
+| `apps/web/` | La app de suscripción: cuentas, login, y el flujo crear proyecto → modelo 3D → cotización, ya funcional para un primer tipo de obra (cubierta + cercha). Falta subir planos con lectura por IA — ver su propio `README.md` y `docs/BACKLOG-MVP.md`, ítem 4. |
 | `projects/` | Un folder por proyecto de cliente, con la forma de `casa-castaneda/` pero usando `packages/engine`. |
 | `prisma/schema.prisma` | Esquema de base de datos: usuarios, suscripción, proyectos, versiones, parámetros, resultados. |
 

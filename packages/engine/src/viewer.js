@@ -84,12 +84,29 @@ export class Viewer {
     this.state = { explode: 0, cut: null, view: config.defaultView || null, stage: null };
     this.shiftFrame = true;
     this.resize();
-    window.addEventListener('resize', () => this.resize());
-    if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(stageEl);
+    this._onResize = () => this.resize();
+    window.addEventListener('resize', this._onResize);
+    if (window.ResizeObserver) {
+      this._resizeObserver = new ResizeObserver(this._onResize);
+      this._resizeObserver.observe(stageEl);
+    }
     if (this.state.view) this.setView(this.state.view, true);
     this.loop = this.loop.bind(this);
+    this._disposed = false;
     requestAnimationFrame(this.loop);
     this.ready = true;
+  }
+
+  // Libera listeners, el loop de animación y el contexto WebGL. Necesario
+  // para usar el Viewer dentro de un componente de React, donde el efecto
+  // que lo crea puede desmontarse (o remontarse, en modo estricto) más de
+  // una vez.
+  dispose() {
+    this._disposed = true;
+    window.removeEventListener('resize', this._onResize);
+    this._resizeObserver?.disconnect();
+    this.controls.dispose();
+    this.renderer.dispose();
   }
 
   // ---------- Capas ----------
@@ -266,6 +283,7 @@ export class Viewer {
   }
 
   loop(now) {
+    if (this._disposed) return;
     if (this.paused) { requestAnimationFrame(this.loop); return; }
     if (this.tween) {
       const k = Math.min(1, (now - this.tween.t0) / this.tween.dur);

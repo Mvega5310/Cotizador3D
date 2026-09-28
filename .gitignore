@@ -2,3 +2,14 @@ node_modules/
 dist/
 renders/_recortes/
 __pycache__/
+
+# Next.js
+apps/web/.next/
+
+# Env y base de datos local (sqlite)
+.env
+.env.local
+apps/web/.env
+apps/web/.env.local
+prisma/dev.db
+prisma/dev.db-journal
