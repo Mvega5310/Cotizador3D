@@ -24,8 +24,10 @@ Junto con esto quedaron los dos links de la sección 05 de la guía: `linkComple
 
 **Limitación conocida:** `generarPdfAction` lanza Chrome dentro del proceso del servidor de Next.js. Funciona en local o en un servidor propio; no funciona en hosting serverless (Vercel y similares no pueden lanzar un navegador). Al reestructurar el despliegue, este paso se mueve a un worker aparte — ver nota al inicio de `lib/actions/pdf.ts`.
 
-## 7. Paso de IA (planos → elementos)
-La IA produce solo elementos con formas y piezas existentes; lo que no reconoce se marca para que el usuario lo resuelva. Probarlo primero a mano con 2–3 planos reales para medir calidad y costo.
+## 7. Paso de IA (planos → elementos) — HECHO, falta probar con planos reales
+"Subir planos (con IA)" en `/projects/new`: fotos o PDF + descripción libre van a Claude (`claude-opus-5`, salida estructurada con Zod — `lib/ia.ts`), que devuelve *solo datos* (catálogo + elementos + etapas) siguiendo el mismo contrato de formas del motor — nunca código. Todo elemento sale con `origen: "ia"` y `confirmado: false`; la app fuerza esos dos campos, el modelo no puede ponerlos. Lo que el motor no puede interpretar (pieza inexistente, geometría inválida) se descarta y se cuenta en vez de tumbar el proyecto completo (`lib/proyectos.ts::depurarEntradaIA`).
+
+**Sin probar todavía con planos reales** — solo con datos sintéticos, porque no había ANTHROPIC_API_KEY configurada. Falta el ejercicio real: correrlo con 2–3 planos de obra y medir qué tan buenas salen las medidas y cuánto cuesta cada generación (sección 09 de la guía).
 
 ## 8. Catálogo inicial
 Tubos y perfiles, teja y láminas, muros y losas, vidrio, madera y tableros, puertas y ventanas (guía §07).

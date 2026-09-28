@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { crearDesdeEjemploAction, importarJsonAction, type EstadoForm } from "@/lib/actions/proyectos";
+import { crearDesdeEjemploAction, importarJsonAction, crearDesdeIAAction, type EstadoForm } from "@/lib/actions/proyectos";
 
 const inicial: EstadoForm = {};
 
@@ -12,6 +12,7 @@ const CAMPO = "w-full border border-neutral-300 rounded px-3 py-2";
 export default function FormulariosNuevo({ ejemplos }: { ejemplos: readonly Ejemplo[] }) {
   const [ej, ejAction, ejPending] = useActionState(crearDesdeEjemploAction, inicial);
   const [js, jsAction, jsPending] = useActionState(importarJsonAction, inicial);
+  const [ia, iaAction, iaPending] = useActionState(crearDesdeIAAction, inicial);
 
   return (
     <main className="flex-1 mx-auto w-full max-w-2xl px-6 py-10 space-y-12">
@@ -19,9 +20,43 @@ export default function FormulariosNuevo({ ejemplos }: { ejemplos: readonly Ejem
         <h1 className="text-2xl font-semibold mb-1">Nuevo proyecto</h1>
         <p className="text-sm text-neutral-500">
           Un proyecto es una lista de elementos: cada uno con su forma, su pieza del catálogo, su etapa y su origen.
-          Mientras no exista la lectura automática de planos, se crea desde un ejemplo o pegando esa lista.
         </p>
       </div>
+
+      <section className="space-y-4 border border-orange-200 bg-orange-50/40 rounded p-5">
+        <div>
+          <h2 className="font-medium">Subir planos (con IA)</h2>
+          <p className="text-xs text-neutral-500 mt-1">
+            Fotos o PDF de planos o bocetos, más lo que quieras aclarar en texto. La IA propone los elementos;
+            ninguno queda confirmado hasta que los revises en la página del proyecto.
+          </p>
+        </div>
+        <form action={iaAction} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label htmlFor="cliente-ia" className="text-sm font-medium">Cliente</label>
+              <input id="cliente-ia" name="cliente" type="text" required className={CAMPO} />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="tipoObra-ia" className="text-sm font-medium">Tipo de producto</label>
+              <input id="tipoObra-ia" name="tipoObra" type="text" placeholder="cocina_integral" className={CAMPO} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="archivos" className="text-sm font-medium">Planos, bocetos o fotos</label>
+            <input id="archivos" name="archivos" type="file" multiple required accept="image/*,.pdf" className={CAMPO} />
+            <p className="text-xs text-neutral-500">Hasta 6 archivos, 15 MB cada uno.</p>
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="descripcion" className="text-sm font-medium">Descripción (lo que quieras aclarar)</label>
+            <textarea id="descripcion" name="descripcion" rows={3} placeholder="Medidas confirmadas, materiales, qué parte cotizar…" className={CAMPO} />
+          </div>
+          {ia.error && <p className="text-sm text-red-600">{ia.error}</p>}
+          <button type="submit" disabled={iaPending} className="bg-orange-600 text-white rounded px-5 py-2.5 font-medium disabled:opacity-60">
+            {iaPending ? "Leyendo los planos… (puede tardar un minuto)" : "Generar con IA"}
+          </button>
+        </form>
+      </section>
 
       <section className="space-y-4">
         <h2 className="font-medium">Empezar desde un ejemplo</h2>

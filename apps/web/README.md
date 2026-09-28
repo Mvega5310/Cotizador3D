@@ -8,12 +8,14 @@ La app de suscripción sobre el motor (`@cotizador3d/engine`): cuentas, login y 
 - **Crear proyecto** (`/projects/new`): desde un ejemplo (`projects/casa-castaneda`, `projects/porton-reja`) o pegando una lista de elementos en JSON. Lo que entra se valida y se corre por el motor: si un elemento no se puede interpretar, se rechaza diciendo cuál y por qué.
 - **Página del proyecto:** visor 3D con las etapas activables, cuadro de cantidades por etapa (kg, m², m³, m, und), estado de cada pieza (confirmada o referencia) y cotización con precio por pieza, desperdicio, mano de obra y alcance por etapa.
 - **Versiones:** confirmar una pieza de referencia no edita el proyecto; crea la versión siguiente con esos elementos confirmados.
+- **Subir planos con IA:** en `/projects/new`, subir fotos o PDF de planos + una descripción libre. `lib/ia.ts` se los manda a Claude (visión, salida estructurada con Zod) pidiendo *solo datos* — catálogo y elementos con el mismo contrato de formas del motor, nunca código. Cada elemento sale marcado `origen: "ia"` y sin confirmar; lo que no se pueda interpretar se descarta y se avisa en vez de tumbar el proyecto. Necesita `ANTHROPIC_API_KEY` en el entorno.
 - **PDF y enlaces públicos:** cada proyecto tiene un link completo (visor + cantidades) y uno de cliente (solo visor), sin sesión, con marca de agua durante la prueba. "Generar PDF" abre `/p/<token>/imprimir` con Playwright, captura las 5 vistas de cámara y arma un PDF de varias páginas, servido en `/p/<token>/pdf`.
 
 ## Qué no hace todavía (ver `docs/BACKLOG-MVP.md`)
 
 - Subir planos y que una IA proponga los elementos (hoy se crea desde un ejemplo o JSON).
 - Editar la geometría de un elemento en pantalla (solo se confirma).
+- Probar la lectura de planos con casos reales (hoy solo se probó con datos sintéticos, sin ANTHROPIC_API_KEY configurada durante el desarrollo).
 - Cobro y límite de proyectos por plan (toda cuenta nueva queda en `prueba`, sin tope forzado).
 - Generar el PDF fuera de un servidor propio (ver la limitación anotada en `lib/actions/pdf.ts`).
 - Formas más allá de `viga`, `panel`, `volumen` y `pieza`. Se agregan en `packages/engine/src/formas.js` cuando un producto las pida.
@@ -38,6 +40,7 @@ npm run dev
 ```
 DATABASE_URL="file:./dev.db"
 AUTH_SECRET="una-cadena-larga-y-aleatoria"
+ANTHROPIC_API_KEY="sk-ant-..."   # necesaria solo para "Subir planos (con IA)"
 ```
 
 Abre `http://localhost:3000`, crea una cuenta y luego un proyecto. La

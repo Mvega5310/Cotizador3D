@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { calcularProyecto, medirElemento } from "@cotizador3d/engine";
+import type { RespuestaIA } from "@/lib/ia";
 
 const nuevoToken = () => randomBytes(16).toString("hex");
 
@@ -79,6 +80,35 @@ export function validarEntrada(data: unknown): EntradaMotor {
     throw new Error(`${errores.length} elemento(s) no se pueden interpretar. ${lista}`);
   }
   return { elementos, catalogo, etapas };
+}
+
+// A diferencia de validarEntrada (todo o nada, para JSON pegado a mano), lo
+// que propone la IA se depura: los elementos que el motor no pueda
+// interpretar se descartan en vez de tumbar el proyecto completo — total, la
+// IA se pudo haber equivocado en una sola pieza de cincuenta. Todo lo que
+// entra queda con origen "ia" y sin confirmar: nada avanza sin que el usuario
+// lo revise (ver docs/ARQUITECTURA.md, sección 2).
+export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; descartados: number; notas?: string } {
+  const catalogo: Record<string, Pieza> = Object.fromEntries(
+    Object.entries(resp.catalogo).map(([clave, p]) => [
+      clave,
+      { id: clave, nombre: p.nombre, unidad: p.unidad, dimensiones: p.dimensiones ?? {}, factor: p.factor },
+    ])
+  );
+  const elementos: ElementoMotor[] = resp.elementos.map((e) => ({
+    id: e.id, nombre: e.nombre, forma: e.forma, geometria: e.geometria, pieza: e.pieza,
+    etapa: e.etapa, origen: "ia", confirmado: false,
+  }));
+  const etapas: Etapa[] = [...resp.etapas].sort((a, b) => a.numero - b.numero);
+
+  const { errores } = calcularProyecto({ elementos, catalogo, etapas });
+  const invalidos = new Set(errores.map((e: { elementoId: string }) => e.elementoId));
+  const validos = elementos.filter((e) => !invalidos.has(e.id));
+  if (validos.length === 0) {
+    const lista = errores.slice(0, 5).map((e: { elementoId: string; mensaje: string }) => `${e.elementoId}: ${e.mensaje}`).join(" · ");
+    throw new Error(`La IA no propuso ningún elemento interpretable. ${lista}`);
+  }
+  return { entrada: { elementos: validos, catalogo, etapas }, descartados: invalidos.size, notas: resp.notas };
 }
 
 // ---------- Guardar ----------

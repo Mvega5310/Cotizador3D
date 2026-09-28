@@ -11,8 +11,11 @@ import EnlaceCopiable from "@/components/EnlaceCopiable";
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean; origenes: string[] };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
 
-export default async function ProyectoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProyectoPage({
+  params, searchParams,
+}: { params: Promise<{ id: string }>; searchParams: Promise<{ aviso?: string }> }) {
   const { id } = await params;
+  const { aviso } = await searchParams;
   const { proyecto, version, entrada, calculo } = await obtenerProyecto(id);
   const etapas = Object.entries(calculo.porEtapa as Record<string, EtapaCalculo>);
   const sinConfirmar = calculo.lineas.filter((l: Linea) => !l.confirmado).length;
@@ -26,6 +29,10 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
           {proyecto.tipoObra} · versión {version.numero} · {entrada.elementos.length} elementos
         </p>
       </div>
+
+      {aviso && (
+        <p className="border border-orange-300 bg-orange-50 text-orange-800 rounded p-3 text-sm">{aviso}</p>
+      )}
 
       {entrada.elementos.length === 0 ? (
         <p className="border border-neutral-200 rounded p-6 text-neutral-600">
