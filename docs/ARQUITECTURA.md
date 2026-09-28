@@ -60,8 +60,8 @@ Mapeo a las seis etapas de la guía:
 | 01 Ingreso de planos, medidas e ideas | `apps/web` | Parcial: hoy se crea desde un ejemplo o JSON; falta subir planos y la lectura por IA |
 | 02 Revisión de lo que entendió la IA | `apps/web` (editar elementos con su origen) | Por construir |
 | 03 Modelo 3D | Intérprete de elementos en `packages/engine` | Hecho y conectado a la web |
-| 04 Render multiángulo | `apps/pipeline/render.mjs` | Generalizado por carpeta; falta que las vistas salgan del bounding box de los elementos |
-| 05 PDF y links | `apps/pipeline` | Falta generalizar plantilla |
+| 04 Render multiángulo | `apps/web` (`VisorImprimible`, dentro de `/p/[token]/imprimir`) | Hecho: el propio canvas del proyecto captura sus 5 vistas, calculadas del bounding box (`packages/engine/src/vistas.js`) |
+| 05 PDF y links | `apps/web` (`lib/actions/pdf.ts`, `/p/[token]`) | Hecho: PDF con Playwright + `page.pdf()`, y los dos links (completo/cliente) públicos con marca de agua. `apps/pipeline/render.mjs` queda para casos que necesiten renders sueltos (no PDF), no se usa en este camino. |
 | 06 Cantidades y cotización | `packages/engine/pricing.js::calcCotizacion` | Hecho y conectado a la web (precio por pieza, desperdicio, mano de obra, por etapa) |
 
 ## 5. Límites a dejar claros

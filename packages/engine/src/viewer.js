@@ -93,6 +93,7 @@ export class Viewer {
     if (this.state.view) this.setView(this.state.view, true);
     this.loop = this.loop.bind(this);
     this._disposed = false;
+    this.paused = false; // en true, loop() deja de renderizar cada frame (útil para capturas puntuales)
     requestAnimationFrame(this.loop);
     this.ready = true;
   }

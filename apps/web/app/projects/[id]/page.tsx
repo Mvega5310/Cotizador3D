@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { obtenerProyecto } from "@/lib/proyectos";
 import { confirmarPiezaAction } from "@/lib/actions/proyectos";
+import { generarPdfAction } from "@/lib/actions/pdf";
 import { cantidadTexto } from "@/lib/format";
 import VisorProyecto from "@/components/VisorProyecto";
 import CotizadorProyecto from "@/components/CotizadorProyecto";
+import BotonPdf from "@/components/BotonPdf";
+import EnlaceCopiable from "@/components/EnlaceCopiable";
 
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean; origenes: string[] };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
@@ -96,6 +99,27 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
           </section>
 
           <CotizadorProyecto calculo={{ lineas: calculo.lineas, porEtapa: calculo.porEtapa }} />
+
+          <section className="border border-neutral-200 rounded p-4 space-y-4">
+            <h2 className="font-medium">PDF y enlaces para presentar</h2>
+            <div className="space-y-1">
+              <p className="text-xs text-neutral-500">Completo — visor y cuadro de cantidades. Para ti.</p>
+              <EnlaceCopiable ruta={`/p/${version.resultado?.linkCompleto}`} />
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-neutral-500">Solo vistas — sin cantidades. Para compartir con tu cliente.</p>
+              <EnlaceCopiable ruta={`/p/${version.resultado?.linkCliente}`} />
+            </div>
+            <div className="flex items-center gap-3 pt-2 border-t border-neutral-100">
+              <form action={generarPdfAction}>
+                <input type="hidden" name="proyectoId" value={proyecto.id} />
+                <BotonPdf yaExiste={!!version.resultado?.pdfUrl} />
+              </form>
+              {version.resultado?.pdfUrl && (
+                <a href={version.resultado.pdfUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-700 hover:underline">Ver el último PDF generado</a>
+              )}
+            </div>
+          </section>
         </>
       )}
     </main>

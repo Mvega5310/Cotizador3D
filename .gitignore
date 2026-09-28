@@ -13,3 +13,6 @@ apps/web/.env
 apps/web/.env.local
 prisma/dev.db
 prisma/dev.db-journal
+
+# PDFs generados (apps/web/lib/pdf.ts) — derivados, no se versionan
+apps/web/.data/

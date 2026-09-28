@@ -17,8 +17,12 @@ Cocina integral o portón con reja, con el mismo motor. Criterio: lo que se agre
 ## 5. `apps/web` sobre elementos — HECHO (falta edición de geometría)
 Crear desde ejemplo o JSON validado, visor por etapas, cantidades en cinco unidades, confirmación de piezas con versiones nuevas y cotización por pieza; probado de punta a punta en el navegador, incluido el aislamiento entre usuarios. Se eliminó el kit de cubierta y sus pantallas. Pendiente: editar geometría en la revisión. Rehacer crear proyecto / revisión / cuadro de cantidades / cotización sobre elementos (hoy están atados al kit de cubierta). Incluye la pantalla de revisión con origen (IA/usuario) y confirmación.
 
-## 6. Generalizar el PDF
-Plantilla que recibe nombre, cliente, etapas, filas de cantidades e imágenes; sin texto ni verificaciones escritas por proyecto.
+## 6. Generalizar el PDF — HECHO
+`/p/[token]/imprimir` (componente `VisorImprimible`) renderiza el proyecto sin interfaz, captura las 5 vistas de cámara del propio canvas (ya no hace falta un script de renders aparte) y arma portada + vistas + cuadro de cantidades + aviso legal. `lib/actions/pdf.ts` abre esa página con Playwright y llama `page.pdf()`. Probado de punta a punta: PDF de 4 páginas con las 5 vistas embebidas, servido en `/p/[token]/pdf`.
+
+Junto con esto quedaron los dos links de la sección 05 de la guía: `linkCompleto` (visor + cantidades, para el usuario) y `linkCliente` (solo visor, sin cantidades), públicos y sin sesión, con marca de agua mientras el proyecto esté en prueba. Los tokens se generan al crear el proyecto y se conservan entre versiones (`lib/proyectos.ts`), así un link ya compartido sigue mostrando la versión más reciente.
+
+**Limitación conocida:** `generarPdfAction` lanza Chrome dentro del proceso del servidor de Next.js. Funciona en local o en un servidor propio; no funciona en hosting serverless (Vercel y similares no pueden lanzar un navegador). Al reestructurar el despliegue, este paso se mueve a un worker aparte — ver nota al inicio de `lib/actions/pdf.ts`.
 
 ## 7. Paso de IA (planos → elementos)
 La IA produce solo elementos con formas y piezas existentes; lo que no reconoce se marca para que el usuario lo resuelva. Probarlo primero a mano con 2–3 planos reales para medir calidad y costo.

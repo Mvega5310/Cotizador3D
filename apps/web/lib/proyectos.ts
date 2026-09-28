@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
+import { randomBytes } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { calcularProyecto, medirElemento } from "@cotizador3d/engine";
+
+const nuevoToken = () => randomBytes(16).toString("hex");
 
 const UNIDADES = ["kg", "m2", "m3", "ml", "und"] as const;
 type UnidadClave = (typeof UNIDADES)[number];
@@ -82,7 +85,15 @@ export function validarEntrada(data: unknown): EntradaMotor {
 
 // Guarda una versión completa (etapas, elementos y resultado) usando piezas del
 // catálogo que ya existen en la base. Cada elemento guarda su cantidad calculada.
-async function volcarVersion(tx: Prisma.TransactionClient, versionId: string, entrada: EntradaMotor, piezaIds: Record<string, string>) {
+// `enlaces` se pasa igual entre versiones de un mismo proyecto, para que el
+// link que ya compartiste siga mostrando la versión más reciente.
+async function volcarVersion(
+  tx: Prisma.TransactionClient,
+  versionId: string,
+  entrada: EntradaMotor,
+  piezaIds: Record<string, string>,
+  enlaces: { linkCompleto: string; linkCliente: string }
+) {
   const catalogoPorId: Record<string, Pieza> = {};
   for (const [clave, p] of Object.entries(entrada.catalogo)) catalogoPorId[piezaIds[clave]] = { ...p, id: piezaIds[clave] };
   const elementos = entrada.elementos.map((e) => ({ ...e, pieza: piezaIds[e.pieza] }));
@@ -113,7 +124,10 @@ async function volcarVersion(tx: Prisma.TransactionClient, versionId: string, en
   const calculo = calcularProyecto({ elementos, catalogo: catalogoPorId, etapas: entrada.etapas });
   const { lineas, porEtapa, total, bbox } = calculo;
   await tx.resultado.create({
-    data: { versionId, renders: [], bom: { lineas, porEtapa, total, bbox } as unknown as Prisma.InputJsonValue, marcaAgua: true },
+    data: {
+      versionId, renders: [], bom: { lineas, porEtapa, total, bbox } as unknown as Prisma.InputJsonValue, marcaAgua: true,
+      linkCompleto: enlaces.linkCompleto, linkCliente: enlaces.linkCliente,
+    },
   });
 }
 
@@ -134,15 +148,36 @@ export async function crearProyecto(args: { usuarioId: string; cuentaId: string;
           })
         ).id;
       }
-      await volcarVersion(tx, version.id, entrada, piezaIds);
+      await volcarVersion(tx, version.id, entrada, piezaIds, { linkCompleto: nuevoToken(), linkCliente: nuevoToken() });
       return proyecto;
     },
     { timeout: 120000, maxWait: 30000 }
   );
 }
 
-// ---------- Cargar (siempre restringido a la cuenta del usuario en sesión) ----------
+// ---------- Cargar ----------
 
+// Arma entrada + cálculo a partir de una versión ya cargada de la base
+// (con etapas, elementos y resultado). No decide permisos: eso lo hace quien
+// llama (obtenerProyecto exige sesión; obtenerProyectoPorToken es público).
+type VersionCargada = Prisma.VersionProyectoGetPayload<{ include: { etapas: true; elementos: true; resultado: true } }>;
+async function armarEntrada(version: VersionCargada) {
+  const piezas = await prisma.catalogoPieza.findMany({ where: { id: { in: [...new Set(version.elementos.map((e) => e.piezaId).filter((x): x is string => !!x))] } } });
+  const catalogo: Record<string, Pieza> = Object.fromEntries(
+    piezas.map((p) => [p.id, { id: p.id, nombre: p.nombre, unidad: p.unidad as UnidadClave, dimensiones: p.dimensiones as Record<string, unknown>, factor: p.factor ?? undefined, tipo: p.tipo }])
+  );
+  const numeroDe = new Map(version.etapas.map((e) => [e.id, e.numero]));
+  const etapas: Etapa[] = version.etapas.map((e) => ({ numero: e.numero, nombre: e.nombre }));
+  const elementos: ElementoMotor[] = version.elementos.map((e) => ({
+    id: e.id, nombre: e.nombre, forma: e.forma, geometria: e.geometria, pieza: e.piezaId ?? "",
+    etapa: (e.etapaId && numeroDe.get(e.etapaId)) || 1, unidad: e.unidad as UnidadClave, origen: e.origen as "ia" | "usuario", confirmado: e.confirmado,
+  }));
+  const entrada: EntradaMotor = { elementos, catalogo, etapas };
+  return { entrada, calculo: calcularProyecto(entrada) };
+}
+
+// Siempre restringido a la cuenta del usuario en sesión: es lo que separa los
+// proyectos de personas distintas (ver lib/session.ts::requireSession).
 export async function obtenerProyecto(projectId: string) {
   const session = await requireSession();
   const usuario = await prisma.usuario.findUniqueOrThrow({ where: { id: session.userId } });
@@ -160,19 +195,31 @@ export async function obtenerProyecto(projectId: string) {
   if (!proyecto || !proyecto.versiones[0]) notFound();
 
   const version = proyecto.versiones[0];
-  const piezas = await prisma.catalogoPieza.findMany({ where: { id: { in: [...new Set(version.elementos.map((e) => e.piezaId).filter((x): x is string => !!x))] } } });
-  const catalogo: Record<string, Pieza> = Object.fromEntries(
-    piezas.map((p) => [p.id, { id: p.id, nombre: p.nombre, unidad: p.unidad as UnidadClave, dimensiones: p.dimensiones as Record<string, unknown>, factor: p.factor ?? undefined, tipo: p.tipo }])
-  );
-  const numeroDe = new Map(version.etapas.map((e) => [e.id, e.numero]));
-  const etapas: Etapa[] = version.etapas.map((e) => ({ numero: e.numero, nombre: e.nombre }));
-  const elementos: ElementoMotor[] = version.elementos.map((e) => ({
-    id: e.id, nombre: e.nombre, forma: e.forma, geometria: e.geometria, pieza: e.piezaId ?? "",
-    etapa: (e.etapaId && numeroDe.get(e.etapaId)) || 1, unidad: e.unidad as UnidadClave, origen: e.origen as "ia" | "usuario", confirmado: e.confirmado,
-  }));
+  const { entrada, calculo } = await armarEntrada(version);
+  return { proyecto, version, entrada, calculo };
+}
 
-  const entrada: EntradaMotor = { elementos, catalogo, etapas };
-  return { proyecto, version, entrada, calculo: calcularProyecto(entrada) };
+// Página pública (sin sesión): busca por el token de cualquier versión del
+// proyecto y muestra la versión MÁS RECIENTE, para que un link compartido no
+// quede pegado a una versión vieja. `modo` decide qué se muestra: la
+// "completo" trae cantidades, la "cliente" es solo el visor (guía v3, §06).
+export async function obtenerProyectoPorToken(token: string) {
+  const resultado = await prisma.resultado.findFirst({
+    where: { OR: [{ linkCompleto: token }, { linkCliente: token }] },
+    include: { version: { include: { proyecto: true } } },
+  });
+  if (!resultado) notFound();
+  const modo: "completo" | "cliente" = resultado.linkCompleto === token ? "completo" : "cliente";
+
+  const version = await prisma.versionProyecto.findFirst({
+    where: { proyectoId: resultado.version.proyecto.id },
+    orderBy: { numero: "desc" },
+    include: { etapas: { orderBy: { numero: "asc" } }, elementos: true, resultado: true },
+  });
+  if (!version) notFound();
+
+  const { entrada, calculo } = await armarEntrada(version);
+  return { proyecto: resultado.version.proyecto, version, entrada, calculo, modo, marcaAgua: version.resultado?.marcaAgua ?? true };
 }
 
 // Confirmar una pieza es una corrección: no se edita la versión existente, se
@@ -186,10 +233,11 @@ export async function confirmarPieza(projectId: string, piezaId: string) {
     ...entrada,
     elementos: entrada.elementos.map((e) => (e.pieza === piezaId ? { ...e, confirmado: true, origen: "usuario" as const } : e)),
   };
+  const enlaces = { linkCompleto: version.resultado?.linkCompleto ?? nuevoToken(), linkCliente: version.resultado?.linkCliente ?? nuevoToken() };
   await prisma.$transaction(
     async (tx) => {
       const v = await tx.versionProyecto.create({ data: { proyectoId: proyecto.id, numero: version.numero + 1 } });
-      await volcarVersion(tx, v.id, nueva, piezaIds);
+      await volcarVersion(tx, v.id, nueva, piezaIds, enlaces);
     },
     { timeout: 120000, maxWait: 30000 }
   );
