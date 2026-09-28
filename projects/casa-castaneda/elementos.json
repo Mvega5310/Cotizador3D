@@ -1,0 +1,5006 @@
+{
+ "proyecto": "Casa Castañeda · Santa Rosa",
+ "etapas": [
+  {
+   "numero": 1,
+   "nombre": "Estructura de cubierta de la casa"
+  },
+  {
+   "numero": 2,
+   "nombre": "Pérgola y cochera"
+  }
+ ],
+ "catalogo": {
+  "frame": {
+   "id": "frame",
+   "nombre": "Cercha principal · Tubo rect. 150×50×4 mm",
+   "unidad": "kg",
+   "dimensiones": {
+    "ancho": 0.05,
+    "alto": 0.15,
+    "color": 15886875
+   },
+   "factor": 12.06
+  },
+  "purlin": {
+   "id": "purlin",
+   "nombre": "Correa · Tubo rect. 120×60×2.5 mm",
+   "unidad": "kg",
+   "dimensiones": {
+    "ancho": 0.06,
+    "alto": 0.12,
+    "color": 16757760
+   },
+   "factor": 6.87
+  },
+  "ridge": {
+   "id": "ridge",
+   "nombre": "Viga cumbrera · Tubo rect. 200×70×4 mm (doble)",
+   "unidad": "kg",
+   "dimensiones": {
+    "ancho": 0.07,
+    "alto": 0.2,
+    "color": 14234667
+   },
+   "factor": 16.45
+  },
+  "valley": {
+   "id": "valley",
+   "nombre": "Limahoya · Tubo rect. 150×50×4 mm",
+   "unidad": "kg",
+   "dimensiones": {
+    "ancho": 0.05,
+    "alto": 0.15,
+    "color": 2078120
+   },
+   "factor": 12.06
+  },
+  "gableRaf": {
+   "id": "gableRaf",
+   "nombre": "Cerchuela de frontón · Tubo rect. 80×40×2 mm",
+   "unidad": "kg",
+   "dimensiones": {
+    "ancho": 0.04,
+    "alto": 0.08,
+    "color": 6280134
+   },
+   "factor": 3.9
+  },
+  "tie": {
+   "id": "tie",
+   "nombre": "Solera de amarre · Tubo rect. 100×50×2.5 mm",
+   "unidad": "kg",
+   "dimensiones": {
+    "ancho": 0.05,
+    "alto": 0.1,
+    "color": 4030389
+   },
+   "factor": 5.69
+  },
+  "pergolaCol": {
+   "id": "pergolaCol",
+   "nombre": "Pérgola / cochera — columnas · Tubo cuad. 120×120×4 mm",
+   "unidad": "kg",
+   "dimensiones": {
+    "ancho": 0.12,
+    "alto": 0.12,
+    "color": 6122360
+   },
+   "factor": 14.57
+  },
+  "pergola": {
+   "id": "pergola",
+   "nombre": "Pérgola / cochera — vigas · Tubo rect. 100×50×2.5 mm",
+   "unidad": "kg",
+   "dimensiones": {
+    "ancho": 0.05,
+    "alto": 0.1,
+    "color": 10134446
+   },
+   "factor": 5.69
+  },
+  "nodo": {
+   "id": "nodo",
+   "nombre": "Nodo de soldadura",
+   "unidad": "und",
+   "dimensiones": {
+    "color": 16763194
+   }
+  }
+ },
+ "elementos": [
+  {
+   "id": "frame-1",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     0.1,
+     -0.88,
+     2.69
+    ],
+    "b": [
+     0.1,
+     2.14,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-2",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     0.1,
+     2.14,
+     3.71
+    ],
+    "b": [
+     0.1,
+     4.42,
+     5.14
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-3",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     0.1,
+     4.42,
+     5.14
+    ],
+    "b": [
+     0.1,
+     6.7,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-4",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     0.1,
+     6.7,
+     3.71
+    ],
+    "b": [
+     0.1,
+     9.72,
+     2.54
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-5",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     2.17,
+     -0.88,
+     2.69
+    ],
+    "b": [
+     2.17,
+     2.14,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-6",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     2.17,
+     2.14,
+     3.71
+    ],
+    "b": [
+     2.17,
+     4.42,
+     5.14
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-7",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     2.17,
+     4.42,
+     5.14
+    ],
+    "b": [
+     2.17,
+     6.7,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-8",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     2.17,
+     6.7,
+     3.71
+    ],
+    "b": [
+     2.17,
+     9.72,
+     2.54
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-9",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     4.34,
+     -0.88,
+     2.69
+    ],
+    "b": [
+     4.34,
+     2.14,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-10",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     4.34,
+     2.14,
+     3.71
+    ],
+    "b": [
+     4.34,
+     4.42,
+     5.14
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-11",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     4.34,
+     4.42,
+     5.14
+    ],
+    "b": [
+     4.34,
+     6.7,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-12",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     4.34,
+     6.7,
+     3.71
+    ],
+    "b": [
+     4.34,
+     9.72,
+     2.54
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-13",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     4.34,
+     9.72,
+     2.54
+    ],
+    "b": [
+     4.34,
+     10.22,
+     2.3463
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-14",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     -0.88,
+     2.69
+    ],
+    "b": [
+     7.295,
+     2.14,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-15",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     2.14,
+     3.71
+    ],
+    "b": [
+     7.295,
+     4.42,
+     5.14
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-16",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     4.42,
+     5.14
+    ],
+    "b": [
+     7.295,
+     6.7,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-17",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     6.7,
+     3.71
+    ],
+    "b": [
+     7.295,
+     9.72,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-18",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     9.72,
+     3.71
+    ],
+    "b": [
+     7.295,
+     10.22,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-19",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     10.25,
+     -0.88,
+     2.69
+    ],
+    "b": [
+     10.25,
+     2.14,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-20",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     10.25,
+     2.14,
+     3.71
+    ],
+    "b": [
+     10.25,
+     4.42,
+     5.14
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-21",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     10.25,
+     4.42,
+     5.14
+    ],
+    "b": [
+     10.25,
+     6.7,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-22",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     10.25,
+     6.7,
+     3.71
+    ],
+    "b": [
+     10.25,
+     9.72,
+     2.54
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-23",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     10.25,
+     9.72,
+     2.54
+    ],
+    "b": [
+     10.25,
+     10.22,
+     2.3463
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-24",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     13.53,
+     -0.88,
+     2.69
+    ],
+    "b": [
+     13.53,
+     2.14,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-25",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     13.53,
+     2.14,
+     3.71
+    ],
+    "b": [
+     13.53,
+     4.42,
+     5.14
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-26",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     13.53,
+     4.42,
+     5.14
+    ],
+    "b": [
+     13.53,
+     6.7,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-27",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     13.53,
+     6.7,
+     3.71
+    ],
+    "b": [
+     13.53,
+     9.72,
+     2.54
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-28",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     16.71,
+     -0.88,
+     2.69
+    ],
+    "b": [
+     16.71,
+     2.14,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-29",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     16.71,
+     2.14,
+     3.71
+    ],
+    "b": [
+     16.71,
+     4.42,
+     5.14
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-30",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     16.71,
+     4.42,
+     5.14
+    ],
+    "b": [
+     16.71,
+     6.7,
+     3.71
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "frame-31",
+   "nombre": "Cercha principal",
+   "forma": "viga",
+   "pieza": "frame",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     16.71,
+     6.7,
+     3.71
+    ],
+    "b": [
+     16.71,
+     9.72,
+     2.54
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "ridge-1",
+   "nombre": "Viga cumbrera",
+   "forma": "viga",
+   "pieza": "ridge",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     -0.035,
+     4.33,
+     5.24
+    ],
+    "b": [
+     16.735,
+     4.33,
+     5.24
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "ridge-2",
+   "nombre": "Viga cumbrera",
+   "forma": "viga",
+   "pieza": "ridge",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     -0.035,
+     4.51,
+     5.24
+    ],
+    "b": [
+     16.735,
+     4.51,
+     5.24
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-1",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     -0.035,
+     3.17,
+     4.416
+    ],
+    "b": [
+     16.735,
+     3.17,
+     4.416
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-2",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     -0.035,
+     2.14,
+     3.77
+    ],
+    "b": [
+     16.735,
+     2.14,
+     3.77
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-3",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     -0.035,
+     0.77,
+     3.3073
+    ],
+    "b": [
+     16.735,
+     0.77,
+     3.3073
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-4",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     -0.035,
+     -0.82,
+     2.7703
+    ],
+    "b": [
+     16.735,
+     -0.82,
+     2.7703
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-5",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     -0.035,
+     5.67,
+     4.416
+    ],
+    "b": [
+     16.735,
+     5.67,
+     4.416
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-6",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     -0.035,
+     6.7,
+     3.77
+    ],
+    "b": [
+     16.735,
+     6.7,
+     3.77
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-7",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     -0.035,
+     8.07,
+     3.2392
+    ],
+    "b": [
+     6.1449,
+     8.07,
+     3.2392
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-8",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     8.4451,
+     8.07,
+     3.2392
+    ],
+    "b": [
+     16.735,
+     8.07,
+     3.2392
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-9",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     -0.035,
+     9.66,
+     2.6232
+    ],
+    "b": [
+     4.8101,
+     9.66,
+     2.6232
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-10",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     9.7799,
+     9.66,
+     2.6232
+    ],
+    "b": [
+     16.735,
+     9.66,
+     2.6232
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "gableRaf-1",
+   "nombre": "Cerchuela de frontón",
+   "forma": "viga",
+   "pieza": "gableRaf",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     10.22,
+     3.71
+    ],
+    "b": [
+     4.34,
+     10.22,
+     2.3463
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "gableRaf-2",
+   "nombre": "Cerchuela de frontón",
+   "forma": "viga",
+   "pieza": "gableRaf",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     10.22,
+     3.71
+    ],
+    "b": [
+     10.25,
+     10.22,
+     2.3463
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "gableRaf-3",
+   "nombre": "Cerchuela de frontón",
+   "forma": "viga",
+   "pieza": "gableRaf",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     8.97,
+     3.71
+    ],
+    "b": [
+     5.3894,
+     8.97,
+     2.8306
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "gableRaf-4",
+   "nombre": "Cerchuela de frontón",
+   "forma": "viga",
+   "pieza": "gableRaf",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     8.97,
+     3.71
+    ],
+    "b": [
+     9.2006,
+     8.97,
+     2.8306
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "gableRaf-5",
+   "nombre": "Cerchuela de frontón",
+   "forma": "viga",
+   "pieza": "gableRaf",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     7.77,
+     3.71
+    ],
+    "b": [
+     6.3967,
+     7.77,
+     3.2955
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "gableRaf-6",
+   "nombre": "Cerchuela de frontón",
+   "forma": "viga",
+   "pieza": "gableRaf",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     7.77,
+     3.71
+    ],
+    "b": [
+     8.1933,
+     7.77,
+     3.2955
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "purlin-11",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     5.135,
+     9.273,
+     2.7732
+    ],
+    "b": [
+     5.135,
+     10.22,
+     2.7732
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-12",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     6.295,
+     7.8912,
+     3.3085
+    ],
+    "b": [
+     6.295,
+     10.22,
+     3.3085
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-13",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     8.295,
+     7.8912,
+     3.3085
+    ],
+    "b": [
+     8.295,
+     10.22,
+     3.3085
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "purlin-14",
+   "nombre": "Correa",
+   "forma": "viga",
+   "pieza": "purlin",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     9.455,
+     9.273,
+     2.7732
+    ],
+    "b": [
+     9.455,
+     10.22,
+     2.7732
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "valley-1",
+   "nombre": "Limahoya",
+   "forma": "viga",
+   "pieza": "valley",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     6.7,
+     3.71
+    ],
+    "b": [
+     4.34,
+     10.22,
+     2.3463
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "valley-2",
+   "nombre": "Limahoya",
+   "forma": "viga",
+   "pieza": "valley",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     6.7,
+     3.71
+    ],
+    "b": [
+     10.25,
+     10.22,
+     2.3463
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "tie-1",
+   "nombre": "Solera de amarre",
+   "forma": "viga",
+   "pieza": "tie",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     0.1,
+     3.42,
+     4.4128
+    ],
+    "b": [
+     0.1,
+     5.42,
+     4.4128
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "tie-2",
+   "nombre": "Solera de amarre",
+   "forma": "viga",
+   "pieza": "tie",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     2.17,
+     3.42,
+     4.4128
+    ],
+    "b": [
+     2.17,
+     5.42,
+     4.4128
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "tie-3",
+   "nombre": "Solera de amarre",
+   "forma": "viga",
+   "pieza": "tie",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     4.34,
+     3.42,
+     4.4128
+    ],
+    "b": [
+     4.34,
+     5.42,
+     4.4128
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "tie-4",
+   "nombre": "Solera de amarre",
+   "forma": "viga",
+   "pieza": "tie",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     7.295,
+     3.42,
+     4.4128
+    ],
+    "b": [
+     7.295,
+     5.42,
+     4.4128
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "tie-5",
+   "nombre": "Solera de amarre",
+   "forma": "viga",
+   "pieza": "tie",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     10.25,
+     3.42,
+     4.4128
+    ],
+    "b": [
+     10.25,
+     5.42,
+     4.4128
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "tie-6",
+   "nombre": "Solera de amarre",
+   "forma": "viga",
+   "pieza": "tie",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     13.53,
+     3.42,
+     4.4128
+    ],
+    "b": [
+     13.53,
+     5.42,
+     4.4128
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "tie-7",
+   "nombre": "Solera de amarre",
+   "forma": "viga",
+   "pieza": "tie",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     16.71,
+     3.42,
+     4.4128
+    ],
+    "b": [
+     16.71,
+     5.42,
+     4.4128
+    ]
+   },
+   "origen": "ia",
+   "confirmado": false
+  },
+  {
+   "id": "pergolaCol-1",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -6.91,
+     -2.9,
+     0.05
+    ],
+    "b": [
+     -6.91,
+     -2.9,
+     2.55
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-2",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -0.1,
+     -2.9,
+     0.05
+    ],
+    "b": [
+     -0.1,
+     -2.9,
+     2.55
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-3",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -6.91,
+     0.03,
+     0.05
+    ],
+    "b": [
+     -6.91,
+     0.03,
+     2.55
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-4",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -0.1,
+     0.03,
+     0.05
+    ],
+    "b": [
+     -0.1,
+     0.03,
+     2.55
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-5",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.505,
+     -2.9,
+     0.05
+    ],
+    "b": [
+     -3.505,
+     -2.9,
+     2.55
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-6",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.505,
+     0.03,
+     0.05
+    ],
+    "b": [
+     -3.505,
+     0.03,
+     2.55
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-1",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -6.91,
+     -2.9,
+     2.6
+    ],
+    "b": [
+     -0.1,
+     -2.9,
+     2.6
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-2",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -6.91,
+     0.03,
+     2.6
+    ],
+    "b": [
+     -0.1,
+     0.03,
+     2.6
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-3",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -6.91,
+     -2.9,
+     2.6
+    ],
+    "b": [
+     -6.91,
+     0.03,
+     2.6
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-4",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -0.1,
+     -2.9,
+     2.6
+    ],
+    "b": [
+     -0.1,
+     0.03,
+     2.6
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-5",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -5.548,
+     -2.9,
+     2.6
+    ],
+    "b": [
+     -5.548,
+     0.03,
+     2.6
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-6",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -4.186,
+     -2.9,
+     2.6
+    ],
+    "b": [
+     -4.186,
+     0.03,
+     2.6
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-7",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -2.824,
+     -2.9,
+     2.6
+    ],
+    "b": [
+     -2.824,
+     0.03,
+     2.6
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-8",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -1.462,
+     -2.9,
+     2.6
+    ],
+    "b": [
+     -1.462,
+     0.03,
+     2.6
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-9",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -6.91,
+     -1.435,
+     2.6
+    ],
+    "b": [
+     -0.1,
+     -1.435,
+     2.6
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-7",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.15,
+     3.745,
+     0.05
+    ],
+    "b": [
+     -3.15,
+     3.745,
+     2.4
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-8",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.15,
+     8.605,
+     0.05
+    ],
+    "b": [
+     -3.15,
+     8.605,
+     2.4
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-9",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -0.35,
+     3.745,
+     0.05
+    ],
+    "b": [
+     -0.35,
+     3.745,
+     2.4
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-10",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -0.35,
+     8.605,
+     0.05
+    ],
+    "b": [
+     -0.35,
+     8.605,
+     2.4
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-11",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.15,
+     6.175,
+     0.05
+    ],
+    "b": [
+     -3.15,
+     6.175,
+     2.4
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergolaCol-12",
+   "nombre": "Pérgola / cochera — columnas",
+   "forma": "viga",
+   "pieza": "pergolaCol",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -0.35,
+     6.175,
+     0.05
+    ],
+    "b": [
+     -0.35,
+     6.175,
+     2.4
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-10",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.15,
+     3.745,
+     2.45
+    ],
+    "b": [
+     -3.15,
+     8.605,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-11",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -0.35,
+     3.745,
+     2.45
+    ],
+    "b": [
+     -0.35,
+     8.605,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-12",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.15,
+     3.745,
+     2.45
+    ],
+    "b": [
+     -0.35,
+     3.745,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-13",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.15,
+     8.605,
+     2.45
+    ],
+    "b": [
+     -0.35,
+     8.605,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-14",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.15,
+     4.96,
+     2.45
+    ],
+    "b": [
+     -0.35,
+     4.96,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-15",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.15,
+     6.175,
+     2.45
+    ],
+    "b": [
+     -0.35,
+     6.175,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-16",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -3.15,
+     7.39,
+     2.45
+    ],
+    "b": [
+     -0.35,
+     7.39,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-17",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -1.75,
+     3.745,
+     2.45
+    ],
+    "b": [
+     -1.75,
+     4.96,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-18",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -1.75,
+     4.96,
+     2.45
+    ],
+    "b": [
+     -1.75,
+     6.175,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-19",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -1.75,
+     6.175,
+     2.45
+    ],
+    "b": [
+     -1.75,
+     7.39,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "pergola-20",
+   "nombre": "Pérgola / cochera — vigas",
+   "forma": "viga",
+   "pieza": "pergola",
+   "etapa": 2,
+   "geometria": {
+    "a": [
+     -1.75,
+     7.39,
+     2.45
+    ],
+    "b": [
+     -1.75,
+     8.605,
+     2.45
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-1",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     2.14,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-2",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     4.42,
+     5.14
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-3",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     6.7,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-4",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     2.14,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-5",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     4.42,
+     5.14
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-6",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     6.7,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-7",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     2.14,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-8",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     4.42,
+     5.14
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-9",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     6.7,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-10",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     9.72,
+     2.54
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-11",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     2.14,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-12",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     4.42,
+     5.14
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-13",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     6.7,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-14",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     9.72,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-15",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     2.14,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-16",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     4.42,
+     5.14
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-17",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     6.7,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-18",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     9.72,
+     2.54
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-19",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     2.14,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-20",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     4.42,
+     5.14
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-21",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     6.7,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-22",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     2.14,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-23",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     4.42,
+     5.14
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-24",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     6.7,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-25",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     4.33,
+     5.22
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-26",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     4.33,
+     5.22
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-27",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     4.33,
+     5.22
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-28",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     4.33,
+     5.22
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-29",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     4.33,
+     5.22
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-30",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     4.33,
+     5.22
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-31",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     4.33,
+     5.22
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-32",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     3.17,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-33",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     3.17,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-34",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     3.17,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-35",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     3.17,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-36",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     3.17,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-37",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     3.17,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-38",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     3.17,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-39",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     2.14,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-40",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     2.14,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-41",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     2.14,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-42",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     2.14,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-43",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     2.14,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-44",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     2.14,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-45",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     2.14,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-46",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     0.77,
+     3.3473
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-47",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     0.77,
+     3.3473
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-48",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     0.77,
+     3.3473
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-49",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     0.77,
+     3.3473
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-50",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     0.77,
+     3.3473
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-51",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     0.77,
+     3.3473
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-52",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     0.77,
+     3.3473
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-53",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     -0.82,
+     2.8103
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-54",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     -0.82,
+     2.8103
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-55",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     -0.82,
+     2.8103
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-56",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     -0.82,
+     2.8103
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-57",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     -0.82,
+     2.8103
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-58",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     -0.82,
+     2.8103
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-59",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     -0.82,
+     2.8103
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-60",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     5.67,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-61",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     5.67,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-62",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     5.67,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-63",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     5.67,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-64",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     5.67,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-65",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     5.67,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-66",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     5.67,
+     4.456
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-67",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     6.7,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-68",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     6.7,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-69",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     6.7,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-70",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     6.7,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-71",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     6.7,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-72",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     6.7,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-73",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     6.7,
+     3.81
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-74",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     8.07,
+     3.2792
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-75",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     8.07,
+     3.2792
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-76",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     8.07,
+     3.2792
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-77",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     6.1449,
+     8.07,
+     3.2392
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-78",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     8.07,
+     3.2792
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-79",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     8.07,
+     3.2792
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-80",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     8.07,
+     3.2792
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-81",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     8.4451,
+     8.07,
+     3.2392
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-82",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0.1,
+     9.66,
+     2.6632
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-83",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     2.17,
+     9.66,
+     2.6632
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-84",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     9.66,
+     2.6632
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-85",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.8101,
+     9.66,
+     2.6232
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-86",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     9.66,
+     2.6632
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-87",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     13.53,
+     9.66,
+     2.6632
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-88",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     16.71,
+     9.66,
+     2.6632
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-89",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     9.7799,
+     9.66,
+     2.6232
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-90",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     4.34,
+     10.22,
+     2.3463
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-91",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     10.25,
+     10.22,
+     2.3463
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-92",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     10.22,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-93",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     5.3894,
+     8.97,
+     2.8306
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-94",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     9.2006,
+     8.97,
+     2.8306
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-95",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     8.97,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-96",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     6.3967,
+     7.77,
+     3.2955
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-97",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     8.1933,
+     7.77,
+     3.2955
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-98",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     7.295,
+     7.77,
+     3.71
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-99",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     5.135,
+     10.22,
+     2.7732
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-100",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     6.295,
+     10.22,
+     3.3085
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-101",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     6.295,
+     8.97,
+     3.3085
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-102",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     8.295,
+     10.22,
+     3.3085
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-103",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     8.295,
+     8.97,
+     3.3085
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-1-104",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     9.455,
+     10.22,
+     2.7732
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-1",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -6.91,
+     -2.9,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-2",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -0.1,
+     -2.9,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-3",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -6.91,
+     0.03,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-4",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -0.1,
+     0.03,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-5",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -3.505,
+     -2.9,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-6",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -3.505,
+     0.03,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-7",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -5.548,
+     -2.9,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-8",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -5.548,
+     0.03,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-9",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -5.548,
+     -1.435,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-10",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -4.186,
+     -2.9,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-11",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -4.186,
+     0.03,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-12",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -4.186,
+     -1.435,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-13",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -2.824,
+     -2.9,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-14",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -2.824,
+     0.03,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-15",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -2.824,
+     -1.435,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-16",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -1.462,
+     -2.9,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-17",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -1.462,
+     0.03,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-18",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -1.462,
+     -1.435,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-19",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -6.91,
+     -1.435,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-20",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -0.1,
+     -1.435,
+     2.6
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-21",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -3.15,
+     3.745,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-22",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -3.15,
+     8.605,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-23",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -0.35,
+     3.745,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-24",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -0.35,
+     8.605,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-25",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -3.15,
+     6.175,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-26",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -0.35,
+     6.175,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-27",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -3.15,
+     4.96,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-28",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -0.35,
+     4.96,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-29",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -1.75,
+     4.96,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-30",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -1.75,
+     6.175,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-31",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -3.15,
+     7.39,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-32",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -0.35,
+     7.39,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-33",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -1.75,
+     7.39,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-34",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -1.75,
+     3.745,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "nodo-2-35",
+   "nombre": "Nodo de soldadura",
+   "forma": "pieza",
+   "pieza": "nodo",
+   "etapa": 2,
+   "geometria": {
+    "pos": [
+     -1.75,
+     8.605,
+     2.45
+    ],
+    "tam": [
+     0.11,
+     0.11,
+     0.11
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  }
+ ]
+}

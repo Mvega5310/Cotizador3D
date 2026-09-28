@@ -8,8 +8,8 @@ Orden basado en el "siguiente paso" de la guía v3 (§10) y en la decisión de q
 ## 2. Intérprete de elementos en `packages/engine` — HECHO (falta migrar la app)
 `interprete.js` (`calcularProyecto`, `construirEscena`), `vistas.js` y `pricing.js::calcCotizacion`, con pruebas en `packages/engine/test`. Un portón con reja ya sale de solo datos (prueba de aceptación parcial; falta el segundo ejemplo real con catálogo de un oficio). Pendiente: reemplazar `kits/gableRoofTruss.js` en la web. Dado una lista de elementos + catálogo, devolver escena 3D, cuadro de cantidades por etapa y vistas de cámara (calculadas del bounding box, no fijas). Multiunidad: kg, m², m³, ml, und. Reemplaza a `kits/gableRoofTruss.js` y extiende `pricing.js`.
 
-## 3. Convertir Casa Castañeda en el primer proyecto de datos
-Expresar la casa (cerchas, correas, cumbrera, limahoyas, frontón, pérgola, cochera) como lista de elementos + catálogo, y verificar que renders y cantidades coincidan con los de `casa-castaneda/`. Valida el intérprete contra un caso real.
+## 3. Convertir Casa Castañeda en el primer proyecto de datos — HECHO para la estructura de acero
+`projects/casa-castaneda/elementos.json` (94 vigas + 139 nodos, generado del código original con `generar-elementos.mjs`). Las pruebas `casa.test.js` confirman que piezas, longitudes, kilos, nodos y etapas coinciden con `casa-castaneda/data/bom.json` (3.529,4 kg), y el dibujo coincide con el render original. **Brecha conocida:** teja, muros con puertas y ventanas, terreno, mobiliario y vehículos NO están convertidos. Requieren formas nuevas (panel poligonal, muro extruido con vanos); se agregan al motor cuando el catálogo de un producto las pida. Expresar la casa (cerchas, correas, cumbrera, limahoyas, frontón, pérgola, cochera) como lista de elementos + catálogo, y verificar que renders y cantidades coincidan con los de `casa-castaneda/`. Valida el intérprete contra un caso real.
 
 ## 4. Segundo producto de otro rubro (prueba de aceptación)
 Cocina integral o portón con reja, con el mismo motor. Criterio: lo que se agregue al motor debe ser genérico y reutilizable (una forma, una pieza), no lógica propia de ese producto.
