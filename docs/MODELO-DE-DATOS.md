@@ -1,49 +1,36 @@
 # Modelo de datos
 
-Basado en la sección 08 del plan de producto. El esquema formal vive en `prisma/schema.prisma`; este documento explica las decisiones detrás de cada entidad.
+Basado en la guía v3 (sección 09). El esquema formal vive en `prisma/schema.prisma`. Principio rector (ver `ARQUITECTURA.md` §2): **el proyecto es datos; el código lo escribimos nosotros.** Por eso el modelo guarda *qué hay* en un proyecto, nunca *cómo dibujarlo*: eso vive en el motor.
 
 ## Entidades
 
-### Usuario / Suscripción
-Un usuario tiene un plan (`prueba`, `ejecutor`, `profesional`, `estudio`), un cupo de proyectos del mes y, si aplica, una fecha límite de prueba. El cupo se cuenta por **proyectos generados**, no por días — porque cada proyecto generado tiene un costo real de procesamiento (sección 07 del plan), y la prueba debe enganchar sin que un solo usuario consuma más de lo que paga.
+**Cuenta / Usuario.** Una `Cuenta` es una persona o una empresa (`esEmpresa`). Tiene plan (`prueba`, `personal`, `profesional`, `empresa`), cupo de proyectos del mes y fecha de prueba. El cupo cuenta *proyectos generados*, no días, porque cada uno tiene costo real de procesamiento. Los proyectos pertenecen a la cuenta, no al usuario: así el plan Empresa (varios usuarios, cupo compartido) no exige migrar nada después.
 
-### Cuenta (Estudio)
-Se separa `Cuenta` de `Usuario` desde el inicio, aunque el plan "Estudio" (varios usuarios, cupo compartido) sea posterior al lanzamiento. Sin esta separación, agregar equipos después obliga a migrar todos los proyectos existentes de "pertenece a un usuario" a "pertenece a una cuenta". Un usuario individual es, simplemente, una cuenta de un solo miembro.
+**Proyecto.** Dueño, `tipoObra` (texto abierto: `cubierta_cercha`, `cocina_integral`, `porton_reja`...), estado. No es un enum a propósito: crece con el catálogo.
 
-### Proyecto
-Cliente, tipo de obra, estado (`borrador`, `en_revision`, `generado`, `entregado`), versión activa. Un proyecto tiene **muchas versiones** — cada corrección del usuario genera una versión nueva (sección 08), nunca se sobrescribe una anterior. Esto es lo que ya se probó a mano con Casa Castañeda ("cuando llegaron las medidas reales... bastó con cambiar un archivo de parámetros").
+**ArchivoEntrada.** Planos, bocetos, fotos y descripción libre de la etapa 01. Cuelgan del proyecto (son el insumo).
 
-### VersionProyecto
-Es el corazón del sistema: una versión = un conjunto de parámetros confirmados + sus resultados derivados (renders, PDF, BOM). Inmutable una vez generada; una corrección crea la siguiente versión, no la edita.
+**VersionProyecto.** Una versión = un conjunto de elementos + sus resultados. Inmutable una vez generada; una corrección crea la siguiente versión.
 
-### ArchivoEntrada
-Planos, bocetos, fotos y la descripción libre que el usuario sube en la etapa 01. Vinculados al proyecto, no a una versión (son el insumo, no el resultado).
+**Etapa.** Parte de la obra que se ejecuta por separado ("Estructura de cubierta", "Pérgola y cochera"). Pertenece a una versión.
 
-### Parametro
-Una fila por medida individual: `clave`, `valor`, `unidad`, `origen` (`ia` | `usuario`), y a qué versión pertenece. Guardar el origen de cada medida —tal como se hizo con el tag `ejecutor`/`referencia` en `PROFILES` de Casa Castañeda— es lo que permite marcar en el PDF qué es dato confirmado y qué es supuesto de referencia.
+**Elemento.** Una pieza del proyecto: `nombre`, `forma`, `geometria` (JSON), `piezaId` (catálogo), `cantidad`, `unidad`, `etapa`, `origen` (`ia` | `usuario`) y `confirmado`. Es lo que la IA propone y el usuario revisa. `forma` es una clave de la biblioteca de formas del motor (viga, panel, volumen, pieza...); el esquema de `geometria` lo define cada forma en código. Guardar `origen` y `confirmado` es lo que permite marcar en el PDF qué es dato confirmado y qué es referencia.
 
-Alternativa descartada: guardar los parámetros como un solo JSON por versión. Se prefiere una fila por parámetro porque la pantalla de revisión (etapa 02) necesita mostrar y editar campo por campo, y el origen (`ia`/`usuario`) se pierde si todo vive en un blob.
+**CatalogoPieza.** Tipo, nombre, unidad de cobro, dimensiones y factor (kg/m, rendimiento). Compartido entre proyectos; global o de una cuenta. Generaliza al antiguo `PerfilMaterial`.
 
-### PerfilMaterial
-Catálogo de perfiles (tipo de tubo, dimensiones, kg/m) — igual a `PROFILES` en `params.js`, pero reutilizable entre proyectos en vez de copiado a mano en cada archivo. Puede ser global (catálogo del sistema) o propio de una cuenta, cuando el plan Profesional permita perfiles personalizados.
+**Unidad.** `kg`, `m2`, `m3`, `ml`, `und`: las cinco de la guía.
 
-### Resultado
-Un resultado por versión: lista de renders (URLs), PDF (URL), link público (con o sin marca de agua), y el BOM calculado (cantidades por elemento y por etapa — el mismo `bom.json` que ya genera `getbom.mjs`).
+**Resultado.** Por versión: renders, PDF, links (completo y de cliente), marca de agua y el cuadro de cantidades (JSON).
 
-### PlantillaCotizacion
-El formato de cotización propio que el usuario sube una vez (plan Profesional en adelante) y el sistema llena en cada proyecto nuevo, con las columnas mapeadas a los campos del BOM.
+**PlantillaCotizacion.** Formato propio del usuario, con columnas mapeadas (plan Profesional en adelante).
 
-## Diagrama (resumen de relaciones)
+**Parametro** *(transitorio).* Entradas crudas clave/valor. Hoy solo las usa el kit de cubierta del MVP; desaparece cuando la pantalla de proyecto pase a elementos.
+
+## Relaciones
 
 ```
-Cuenta 1───* Usuario
-Cuenta 1───* Proyecto
-Proyecto 1───* ArchivoEntrada
-Proyecto 1───* VersionProyecto
-VersionProyecto 1───* Parametro
-VersionProyecto 1───1 Resultado
-Cuenta 1───* PlantillaCotizacion
-PerfilMaterial *───* VersionProyecto   (a través de Parametro, cuando clave = perfil)
+Cuenta 1─* Usuario            Cuenta 1─* Proyecto        Cuenta 1─* PlantillaCotizacion
+Proyecto 1─* ArchivoEntrada   Proyecto 1─* VersionProyecto
+VersionProyecto 1─* Etapa     VersionProyecto 1─* Elemento     VersionProyecto 1─1 Resultado
+Etapa 1─* Elemento            CatalogoPieza 1─* Elemento
 ```
-
-Ver `prisma/schema.prisma` para los campos exactos y tipos.

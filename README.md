@@ -1,11 +1,13 @@
 # Cotizador 3D para ejecutores
 
-Espacio de trabajo por suscripción donde arquitectos, contratistas y ejecutores suben planos, medidas e ideas, y reciben un esquema 3D de su obra desde varios ángulos, un PDF listo para presentar y, cuando lo necesitan, una cotización con las cantidades sacadas del plano.
+Plataforma abierta, por suscripción, donde cualquier persona o empresa sube los planos, medidas e ideas de su proyecto —del tipo que sea— y recibe un modelo 3D desde varios ángulos, un PDF profesional y, cuando lo necesita, una cotización con las cantidades sacadas del plano.
+
+Guía de producto vigente: **borrador v3** (artifact "Cotizador 3D para ejecutores"). Principio de diseño: **los proyectos son datos (una lista de elementos); el código —motor, formas, catálogo— lo escribimos nosotros.** La IA solo propone datos, nunca código. Detalle en `docs/ARQUITECTURA.md`.
 
 Este repo tiene dos partes:
 
 ## `casa-castaneda/` — la prueba de concepto
-Todo el camino recorrido a mano para un cliente real (Casa Castañeda, Santa Rosa): lectura de planos, modelo 3D paramétrico, renders multiángulo y PDF técnico-comercial. **Intacta, no se toca** — es la referencia de lo que ya se sabe que funciona. Ver su propio `README.md`.
+Es *un ejemplo* de cómo se ve una cotización, no el alcance del producto. Todo el camino recorrido a mano para un cliente real (Casa Castañeda, Santa Rosa): lectura de planos, modelo 3D paramétrico, renders multiángulo y PDF técnico-comercial. **Intacta, no se toca** — es la referencia de lo que ya se sabe que funciona. Ver su propio `README.md`.
 
 ## El resto — el producto
 Estructura nueva que generaliza el patrón probado en Casa Castañeda para que sirva a cualquier proyecto, no solo a uno:

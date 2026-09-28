@@ -1,36 +1,35 @@
-# Backlog hacia el piloto
+# Backlog
 
-Orden sugerido, pensado para llegar al piloto de 3–5 usuarios de la sección 09 del plan lo más rápido posible sin construir sobre supuestos no probados. Cada ítem dice qué resuelve y por qué va en ese orden.
+Orden basado en el "siguiente paso" de la guía v3 (§10) y en la decisión de que los proyectos son datos y el código lo escribimos nosotros.
 
-## 1. Validar el motor: migrar Casa Castañeda a `projects/`
-Reescribir `structure.js`/`civil.js` de Casa Castañeda usando `@cotizador3d/engine` (este scaffold) en vez de las primitivas locales, y comparar los renders contra los que ya existen en `casa-castaneda/renders/`. Si coinciden, el motor generalizado está probado con un caso real antes de construir nada más encima. Si no coinciden, es más barato descubrirlo ahora que después de construir la IA de generación.
+## 1. Definir el contrato de formas
+Decidir qué formas mínimas necesita el motor (empezar por: `viga`, `panel`, `volumen`, `pieza`) y, para cada una: medidas que pide, cómo se dibuja en 3D, cómo se calcula su cantidad y en qué unidades puede cotizarse. Este contrato es lo que luego usan la IA y la pantalla de revisión.
 
-## 2. Definir el esquema de "kits" paramétricos
-El engine de este scaffold sabe *renderizar* capas; no sabe *construir* una cubierta o una cercha a partir de números. Hace falta diseñar, para los tipos de obra del lanzamiento (sección 06: cubiertas, estructuras metálicas, cocheras, pérgolas), qué parámetros de entrada necesita cada kit y qué geometría produce — generalizando `structure.js` de Casa Castañeda de "coordenadas literales de esta casa" a "función que recibe medidas y devuelve geometría". Este es el trabajo de ingeniería más grande del producto.
+## 2. Intérprete de elementos en `packages/engine`
+Dado una lista de elementos + catálogo, devolver escena 3D, cuadro de cantidades por etapa y vistas de cámara (calculadas del bounding box, no fijas). Multiunidad: kg, m², m³, ml, und. Reemplaza a `kits/gableRoofTruss.js` y extiende `pricing.js`.
 
-## 3. Generalizar el PDF
-Hoy `build_pdfs_etapas.py` tiene el texto, el layout y los `assert` de verificación escritos a mano para las dos etapas de Casa Castañeda. Reemplazarlo por una plantilla que reciba: nombre del proyecto, cliente, etapas, filas del BOM y lista de imágenes — sin texto ni cálculos hardcodeados por proyecto.
+## 3. Convertir Casa Castañeda en el primer proyecto de datos
+Expresar la casa (cerchas, correas, cumbrera, limahoyas, frontón, pérgola, cochera) como lista de elementos + catálogo, y verificar que renders y cantidades coincidan con los de `casa-castaneda/`. Valida el intérprete contra un caso real.
 
-## 4. Etapa 01 y 02: `apps/web` — carga y revisión
-El corazón sin resolver del producto. Mínimo viable:
-- Subida de planos/bocetos/fotos + descripción libre (sin formularios largos, según el plan).
-- Un paso que interprete esa entrada y proponga parámetros (ver ítem 5).
-- Pantalla de revisión: mostrar cada parámetro propuesto con su origen (IA/usuario), permitir corregirlo. Ningún proyecto avanza sin esta confirmación (sección 05 del plan).
+## 4. Segundo producto de otro rubro (prueba de aceptación)
+Cocina integral o portón con reja, con el mismo motor. Criterio: lo que se agregue al motor debe ser genérico y reutilizable (una forma, una pieza), no lógica propia de ese producto.
 
-Este ítem depende de decidir stack (`npx create-next-app`, storage de archivos, auth) — no lo asumas de este documento sin decidirlo explícitamente.
+## 5. `apps/web` sobre elementos
+Rehacer crear proyecto / revisión / cuadro de cantidades / cotización sobre elementos (hoy están atados al kit de cubierta). Incluye la pantalla de revisión con origen (IA/usuario) y confirmación.
 
-## 5. El paso de IA (lectura de planos → parámetros)
-El mayor desconocido de costo y tiempo del producto entero. Antes de automatizarlo del todo, vale la pena probarlo manualmente (un humano usando un LLM con visión para leer 2-3 planos reales y llenar el esquema del ítem 2) para tener una primera medida de qué tan bien funciona antes de construir la integración.
+## 6. Generalizar el PDF
+Plantilla que recibe nombre, cliente, etapas, filas de cantidades e imágenes; sin texto ni verificaciones escritas por proyecto.
 
-## 6. Piloto: 3 a 5 usuarios reales (sección 09 del plan)
-Con los ítems 1–5 en pie, correr proyectos reales de 2-3 arquitectos y 2-3 ejecutores. De aquí salen los tres números que hoy no existen: costo real de generar un proyecto, tiempo que le ahorra al usuario, precio que estaría dispuesto a pagar. Sin estos números, cualquier precio de suscripción (sección 07) es una adivinanza.
+## 7. Paso de IA (planos → elementos)
+La IA produce solo elementos con formas y piezas existentes; lo que no reconoce se marca para que el usuario lo resuelva. Probarlo primero a mano con 2–3 planos reales para medir calidad y costo.
 
-## 7. Cuentas, suscripción y cobro
-Con el modelo de datos ya definido (`prisma/schema.prisma`), conectar autenticación, pasarela de pago y el conteo de cupo por proyectos generados (no por días).
+## 8. Catálogo inicial
+Tubos y perfiles, teja y láminas, muros y losas, vidrio, madera y tableros, puertas y ventanas (guía §07).
 
-## 8. Link público y marca de agua
-`linkCompleto`/`linkCliente` en el modelo de `Resultado` — versión pública del visor, con marca de agua durante la prueba (sección 07).
+## 9. Piloto con 3–5 usuarios de oficios distintos
+Mide costo real por proyecto, tiempo ahorrado y disposición a pagar. Sin esto, los precios de los planes son adivinanza.
 
----
+## 10. Cuentas, suscripción y cobro
+Planes Personal / Profesional / Empresa con cupo por proyectos generados; prueba de 14 días o 2 proyectos; PDF con marca de agua en la prueba.
 
-**Fuera del backlog inicial**, según la sección 06 del plan (se suma después del lanzamiento): viviendas completas, otros oficios (eléctrico, hidráulico, acabados), formato de cotización propio del usuario, marca propia en el PDF, cuentas de equipo, plantillas automáticas para casos repetidos.
+**Después del lanzamiento:** formato de cotización propio, marca propia en el PDF, cuentas de equipo, catálogos de proveedores con precios, piezas de fabricantes, plantillas automáticas para casos repetidos.

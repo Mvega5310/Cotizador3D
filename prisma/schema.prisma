@@ -15,9 +15,18 @@ datasource db {
 
 enum Plan {
   prueba
-  ejecutor
+  personal
   profesional
-  estudio
+  empresa
+}
+
+// Unidades de cotización (guía v3, sección 03).
+enum Unidad {
+  kg
+  m2
+  m3
+  ml
+  und
 }
 
 enum EstadoProyecto {
@@ -38,6 +47,7 @@ model Cuenta {
   plan        Plan      @default(prueba)
   pruebaHasta DateTime?
   cupoMes     Int // proyectos que puede generar este mes, según el plan
+  esEmpresa   Boolean   @default(false) // persona (false) o empresa/equipo (true)
   creadoEn    DateTime  @default(now())
 
   usuarios    Usuario[]
@@ -64,7 +74,7 @@ model Proyecto {
   creadoPorId String
   creadoPor   Usuario        @relation(fields: [creadoPorId], references: [id])
   cliente     String // nombre del cliente final, para el PDF
-  tipoObra    String // 'cubierta' | 'estructura_metalica' | 'cochera' | 'pergola' | ... (abierto, no enum: crece con el catálogo)
+  tipoObra    String // tipo de producto, texto abierto (no enum): 'cubierta_cercha', 'cocina_integral', 'porton_reja', ...
   estado      EstadoProyecto @default(borrador)
   creadoEn    DateTime       @default(now())
 
@@ -89,10 +99,45 @@ model VersionProyecto {
   numero     Int // 1, 2, 3... incremental dentro del proyecto
   creadoEn   DateTime @default(now())
 
-  parametros Parametro[]
+  parametros Parametro[] // entradas crudas (transitorio: solo las usa el kit de cubierta)
+  etapas     Etapa[]
+  elementos  Elemento[]
   resultado  Resultado?
 
   @@unique([proyectoId, numero])
+}
+
+// Etapa de obra dentro de una versión (p. ej. "Estructura de cubierta", "Pérgola y cochera").
+model Etapa {
+  id        String          @id @default(cuid())
+  versionId String
+  version   VersionProyecto @relation(fields: [versionId], references: [id])
+  numero    Int
+  nombre    String
+
+  elementos Elemento[]
+
+  @@unique([versionId, numero])
+}
+
+// Un elemento del proyecto: qué es, su forma, su pieza del catálogo, cuánto hay,
+// en qué unidad, a qué etapa pertenece y de dónde salió el dato (IA o usuario).
+// El motor arma el 3D y el cuadro de cantidades a partir de estas filas.
+model Elemento {
+  id        String          @id @default(cuid())
+  versionId String
+  version   VersionProyecto @relation(fields: [versionId], references: [id])
+  etapaId   String?
+  etapa     Etapa?          @relation(fields: [etapaId], references: [id])
+  nombre    String // 'Cercha principal'
+  forma     String // tipo de forma que el motor sabe dibujar: 'viga', 'panel', 'volumen', 'pieza', ...
+  geometria Json // medidas y posición de la forma; su esquema depende de `forma`
+  piezaId   String?
+  pieza     CatalogoPieza?  @relation(fields: [piezaId], references: [id])
+  cantidad  Float // en `unidad`
+  unidad    Unidad
+  origen    OrigenParametro
+  confirmado Boolean        @default(false) // false = referencia pendiente de confirmar
 }
 
 model Parametro {
@@ -104,19 +149,23 @@ model Parametro {
   unidad     String? // 'm', 'kg/m', null para valores no numéricos
   origen     OrigenParametro
   perfilId   String?
-  perfil     PerfilMaterial? @relation(fields: [perfilId], references: [id])
+  perfil     CatalogoPieza?  @relation(fields: [perfilId], references: [id])
 }
 
-model PerfilMaterial {
-  id        String   @id @default(cuid())
-  cuentaId  String? // null = catálogo global del sistema
-  nombre    String // 'Tubo rect. 150×50×4 mm'
-  ancho     Float // metros
-  alto      Float // metros
-  kgPorM    Float
-  reutilizable Boolean @default(true)
+// Catálogo de piezas compartido entre proyectos (guía v3, sección 09).
+// Una pieza que falta se agrega una vez y queda disponible para todos.
+model CatalogoPieza {
+  id           String   @id @default(cuid())
+  cuentaId     String? // null = catálogo global del sistema
+  tipo         String // 'perfil_acero', 'teja', 'lamina', 'vidrio', 'tablero', 'puerta', ...
+  nombre       String // 'Tubo rect. 150×50×4 mm'
+  unidad       Unidad // unidad en la que se cotiza
+  dimensiones  Json // ancho, alto, espesor, etc.; depende de `tipo`
+  factor       Float? // kg por unidad o rendimiento, cuando aplica (p. ej. kg/m de un perfil)
+  reutilizable Boolean  @default(true)
 
   parametros Parametro[]
+  elementos  Elemento[]
 }
 
 model Resultado {
