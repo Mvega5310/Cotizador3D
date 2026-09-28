@@ -126,18 +126,4 @@ export function buildGableRoofTruss(p) {
   return { group, bom, bbox, layers: { frames: framesGrp, purlins: purlinsGrp, ridge: ridgeGrp, roof: roofGrp, welds: weldGrp } };
 }
 
-// Vistas de cámara genéricas a partir del bounding box del proyecto —
-// reemplaza las coordenadas fijas de casa-castaneda/src/viewer.js::VIEWS,
-// que estaban calculadas a mano para una sola casa.
-export function defaultViewsFromBbox(bbox) {
-  const cx = (bbox.x0 + bbox.x1) / 2, cy = (bbox.y0 + bbox.y1) / 2, cz = (bbox.z0 + bbox.z1) / 2;
-  const span = Math.max(bbox.x1 - bbox.x0, bbox.y1 - bbox.y0, (bbox.z1 - bbox.z0) * 2);
-  const d = span * 1.6;
-  return {
-    iso: { label: 'Isométrica', pos: [cx + d * 0.7, cy - d * 0.7, cz + d * 0.6], tgt: [cx, cy, cz * 0.7], fov: 28 },
-    norte: { label: 'Fachada norte', pos: [cx, bbox.y0 - d, cz], tgt: [cx, cy, cz * 0.6], fov: 24 },
-    sur: { label: 'Fachada sur', pos: [cx, bbox.y1 + d, cz], tgt: [cx, cy, cz * 0.6], fov: 24 },
-    lateral: { label: 'Lateral', pos: [bbox.x0 - d, cy, cz], tgt: [cx, cy, cz * 0.6], fov: 24 },
-    planta: { label: 'Planta', pos: [cx, cy, cz + d * 1.4], tgt: [cx, cy, 0], fov: 26, planTilt: true },
-  };
-}
+export { defaultViewsFromBbox } from '../vistas.js';

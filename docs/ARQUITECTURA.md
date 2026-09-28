@@ -37,7 +37,7 @@ Reglas que salen de esto:
 | Pieza | Estado |
 |---|---|
 | `casa-castaneda/` | Prueba de concepto artesanal, intacta. Geometría escrita a mano para esa casa. Es el primer proyecto que hay que convertir a lista de elementos. |
-| `packages/engine` — `helpers.js`, `viewer.js`, `pricing.js` | Genéricos. `pricing.js` solo maneja kg y nodos: falta multiunidad. |
+| `packages/engine` — `helpers.js`, `viewer.js`, `formas.js`, `interprete.js`, `vistas.js`, `pricing.js` | Genéricos. Cuatro formas (`viga`, `panel`, `volumen`, `pieza`), intérprete de elementos con cantidades por etapa en las cinco unidades y errores explícitos, y `calcCotizacion` multiunidad. Con pruebas (`npm test` en el paquete). `pricing.js::calcQuote` (solo kg y nodos) queda mientras la web no migre. |
 | `packages/engine/src/kits/gableRoofTruss.js` | **Transitorio.** Es un generador específico de cubierta a dos aguas. Sirvió para validar el flujo, pero es exactamente el enfoque "una plantilla por tipo de obra" que la guía descarta como núcleo. Debe reemplazarse por el intérprete de elementos; a lo sumo sobrevive como *generador* que produce elementos. |
 | `apps/web` | Login, cuentas y proyectos aislados por cuenta: funcional. Las pantallas de crear proyecto, cuadro de cantidades y visor **están atadas al kit de cubierta** y hay que rehacerlas sobre elementos. |
 | `apps/pipeline` | Genérico por carpeta de proyecto. |
@@ -60,10 +60,10 @@ Mapeo a las seis etapas de la guía:
 |---|---|---|
 | 01 Ingreso de planos, medidas e ideas | `apps/web` | Por construir (hoy: formulario a mano del kit de cubierta) |
 | 02 Revisión de lo que entendió la IA | `apps/web` (editar elementos con su origen) | Por construir |
-| 03 Modelo 3D | Intérprete de elementos en `packages/engine` | Por construir |
+| 03 Modelo 3D | Intérprete de elementos en `packages/engine` | Hecho en el motor; falta conectarlo a la web |
 | 04 Render multiángulo | `apps/pipeline/render.mjs` | Generalizado por carpeta; falta que las vistas salgan del bounding box de los elementos |
 | 05 PDF y links | `apps/pipeline` | Falta generalizar plantilla |
-| 06 Cantidades y cotización | `packages/engine/pricing.js` | Falta multiunidad, por etapas y por unidad |
+| 06 Cantidades y cotización | `packages/engine/pricing.js::calcCotizacion` | Hecho en el motor (multiunidad, por etapa); falta conectarlo a la web |
 
 ## 5. Límites a dejar claros
 

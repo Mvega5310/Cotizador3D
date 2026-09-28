@@ -1,25 +1,20 @@
 # @cotizador3d/engine
 
-Motor 3D genérico, generalizado a partir de la prueba de concepto en `../../casa-castaneda`.
+Motor 3D genérico. Los proyectos son **datos** (una lista de elementos); el código de este paquete es nuestro y es lo único que se ejecuta. Ver `docs/ARQUITECTURA.md` §2.
 
-- **`src/helpers.js`** — primitivas de geometría y materiales (`v`, `beam`, `box`, `mats`, `steelMat`, `tileTexture`, `addEdges`). Copiado tal cual: ya era 100% genérico.
-- **`src/viewer.js`** — clase `Viewer`: escena, cámara, controles, cortes, explosión, etiquetas. Generalizado desde `casa-castaneda/src/viewer.js`: ya no importa `params.js`/`civil.js`/`structure.js` de un proyecto fijo, sino que recibe las capas y vistas de cámara ya construidas por `config` (ver comentario al inicio del archivo).
-- **`src/pricing.js`** — `calcQuote(bom, opciones)`: misma fórmula que la calculadora de `casa-castaneda/src/main.js` (desperdicio %, $/kg, $/nodo), sin acoplar a UI.
-
-## Lo que este paquete NO hace
-
-No construye geometría de ningún tipo de obra (cubierta, cercha, pérgola...). Eso vive en `projects/<slug>/` — cada proyecto arma sus propias capas con las primitivas de `helpers.js` y se las pasa al `Viewer`. Ver `docs/ARQUITECTURA.md`, sección 2, sobre la decisión pendiente de si esas capas las escribe una IA en código o las arma este motor a partir de un esquema de datos.
-
-## Uso esperado
+- `src/formas.js`: biblioteca de formas (`viga`, `panel`, `volumen`, `pieza`). Cada una declara su geometría, cómo se dibuja y cómo saca su cantidad. Una forma nueva se agrega aquí, una vez.
+- `src/interprete.js`: `calcularProyecto({ elementos, catalogo, etapas })` devuelve cantidades por etapa y unidad (kg, m2, m3, ml, und), bounding box y `errores` (forma, pieza, geometría o unidad inválidas). `construirEscena(...)` (solo navegador) devuelve capas por etapa y vistas para el `Viewer`.
+- `src/pricing.js`: `calcCotizacion(calculo, { precios, desperdicioPct, manoObraPct, etapa })`. `calcQuote` es la versión antigua (kg y nodos), solo para la web actual.
+- `src/viewer.js`, `src/helpers.js`, `src/vistas.js`: visor, primitivas y vistas de cámara calculadas del volumen del proyecto.
+- `src/kits/gableRoofTruss.js`: **transitorio**, generador específico de cubierta usado por la web actual; se reemplaza por el intérprete.
 
 ```js
-import { Viewer, calcQuote, v, beam, mats } from '@cotizador3d/engine';
+import { calcularProyecto, construirEscena, calcCotizacion, Viewer } from '@cotizador3d/engine';
 
-const layers = { techo: buildTecho(params), acero: buildAcero(params) }; // del proyecto
-const viewer = new Viewer(canvas, stageEl, {
-  layers,
-  views: { iso: { label: 'Isométrica', pos: [20,20,20], tgt: [0,0,0], fov: 30 } },
-  defaultView: 'iso',
-  stages: { etapa1: { techo: true, acero: true } },
-});
+const calculo = calcularProyecto({ elementos, catalogo });   // servidor o navegador
+const cot = calcCotizacion(calculo, { precios: { kg: 9000, m2: 45000 }, desperdicioPct: 8 });
+const { layers, views } = construirEscena({ calculo });      // solo navegador
+new Viewer(canvas, stage, { layers, views, defaultView: 'iso' });
 ```
+
+Pruebas: `npm test`. Incluyen un portón con reja armado solo con datos (prueba de que el motor no depende de un producto).

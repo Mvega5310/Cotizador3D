@@ -2,11 +2,11 @@
 
 Orden basado en el "siguiente paso" de la guía v3 (§10) y en la decisión de que los proyectos son datos y el código lo escribimos nosotros.
 
-## 1. Definir el contrato de formas
-Decidir qué formas mínimas necesita el motor (empezar por: `viga`, `panel`, `volumen`, `pieza`) y, para cada una: medidas que pide, cómo se dibuja en 3D, cómo se calcula su cantidad y en qué unidades puede cotizarse. Este contrato es lo que luego usan la IA y la pantalla de revisión.
+## 1. Definir el contrato de formas — HECHO
+`packages/engine/src/formas.js`: `viga`, `panel`, `volumen`, `pieza`. Decidir qué formas mínimas necesita el motor (empezar por: `viga`, `panel`, `volumen`, `pieza`) y, para cada una: medidas que pide, cómo se dibuja en 3D, cómo se calcula su cantidad y en qué unidades puede cotizarse. Este contrato es lo que luego usan la IA y la pantalla de revisión.
 
-## 2. Intérprete de elementos en `packages/engine`
-Dado una lista de elementos + catálogo, devolver escena 3D, cuadro de cantidades por etapa y vistas de cámara (calculadas del bounding box, no fijas). Multiunidad: kg, m², m³, ml, und. Reemplaza a `kits/gableRoofTruss.js` y extiende `pricing.js`.
+## 2. Intérprete de elementos en `packages/engine` — HECHO (falta migrar la app)
+`interprete.js` (`calcularProyecto`, `construirEscena`), `vistas.js` y `pricing.js::calcCotizacion`, con pruebas en `packages/engine/test`. Un portón con reja ya sale de solo datos (prueba de aceptación parcial; falta el segundo ejemplo real con catálogo de un oficio). Pendiente: reemplazar `kits/gableRoofTruss.js` en la web. Dado una lista de elementos + catálogo, devolver escena 3D, cuadro de cantidades por etapa y vistas de cámara (calculadas del bounding box, no fijas). Multiunidad: kg, m², m³, ml, und. Reemplaza a `kits/gableRoofTruss.js` y extiende `pricing.js`.
 
 ## 3. Convertir Casa Castañeda en el primer proyecto de datos
 Expresar la casa (cerchas, correas, cumbrera, limahoyas, frontón, pérgola, cochera) como lista de elementos + catálogo, y verificar que renders y cantidades coincidan con los de `casa-castaneda/`. Valida el intérprete contra un caso real.
