@@ -37,9 +37,8 @@ Reglas que salen de esto:
 | Pieza | Estado |
 |---|---|
 | `casa-castaneda/` | Prueba de concepto artesanal, intacta. Geometría escrita a mano para esa casa. Es el primer proyecto que hay que convertir a lista de elementos. |
-| `packages/engine` — `helpers.js`, `viewer.js`, `formas.js`, `interprete.js`, `vistas.js`, `pricing.js` | Genéricos. Cuatro formas (`viga`, `panel`, `volumen`, `pieza`), intérprete de elementos con cantidades por etapa en las cinco unidades y errores explícitos, y `calcCotizacion` multiunidad. Con pruebas (`npm test` en el paquete). `pricing.js::calcQuote` (solo kg y nodos) queda mientras la web no migre. |
-| `packages/engine/src/kits/gableRoofTruss.js` | **Transitorio.** Es un generador específico de cubierta a dos aguas. Sirvió para validar el flujo, pero es exactamente el enfoque "una plantilla por tipo de obra" que la guía descarta como núcleo. Debe reemplazarse por el intérprete de elementos; a lo sumo sobrevive como *generador* que produce elementos. |
-| `apps/web` | Login, cuentas y proyectos aislados por cuenta: funcional. Las pantallas de crear proyecto, cuadro de cantidades y visor **están atadas al kit de cubierta** y hay que rehacerlas sobre elementos. |
+| `packages/engine` — `helpers.js`, `viewer.js`, `formas.js`, `interprete.js`, `vistas.js`, `pricing.js` | Genéricos. Cuatro formas (`viga`, `panel`, `volumen`, `pieza`), intérprete de elementos con cantidades por etapa en las cinco unidades y errores explícitos, y `calcCotizacion` multiunidad. Con pruebas (`npm test` en el paquete). |
+| `apps/web` | Funcional sobre elementos: login, cuentas, proyectos aislados por cuenta, crear desde ejemplo o JSON validado, visor por etapas, cantidades en cinco unidades, confirmación de piezas con versiones y cotización. Falta la carga de planos con IA y editar geometría. |
 | `apps/pipeline` | Genérico por carpeta de proyecto. |
 | PDF | Sigue siendo el script Python escrito a mano para Casa Castañeda. |
 
@@ -58,12 +57,12 @@ Mapeo a las seis etapas de la guía:
 
 | Etapa | Componente | Estado |
 |---|---|---|
-| 01 Ingreso de planos, medidas e ideas | `apps/web` | Por construir (hoy: formulario a mano del kit de cubierta) |
+| 01 Ingreso de planos, medidas e ideas | `apps/web` | Parcial: hoy se crea desde un ejemplo o JSON; falta subir planos y la lectura por IA |
 | 02 Revisión de lo que entendió la IA | `apps/web` (editar elementos con su origen) | Por construir |
-| 03 Modelo 3D | Intérprete de elementos en `packages/engine` | Hecho en el motor; falta conectarlo a la web |
+| 03 Modelo 3D | Intérprete de elementos en `packages/engine` | Hecho y conectado a la web |
 | 04 Render multiángulo | `apps/pipeline/render.mjs` | Generalizado por carpeta; falta que las vistas salgan del bounding box de los elementos |
 | 05 PDF y links | `apps/pipeline` | Falta generalizar plantilla |
-| 06 Cantidades y cotización | `packages/engine/pricing.js::calcCotizacion` | Hecho en el motor (multiunidad, por etapa); falta conectarlo a la web |
+| 06 Cantidades y cotización | `packages/engine/pricing.js::calcCotizacion` | Hecho y conectado a la web (precio por pieza, desperdicio, mano de obra, por etapa) |
 
 ## 5. Límites a dejar claros
 

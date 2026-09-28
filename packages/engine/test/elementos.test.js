@@ -102,6 +102,9 @@ test('cotización: precio por unidad, desperdicio y mano de obra', () => {
   casi(c.total, c.materiales * 1.2);
   assert.equal(c.tienePrecio, true);
   assert.equal(calcCotizacion(calculo).tienePrecio, false);
+  // un precio por pieza gana sobre el precio general de la unidad
+  const porPieza = calcCotizacion(calculo, { precios: { und: 50, bisagra: 200 } });
+  casi(porPieza.materiales, 200);
   assert.throws(() => calcCotizacion(calculo, { etapa: 99 }), /Etapa desconocida/);
 });
 

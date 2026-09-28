@@ -19,6 +19,35 @@ import { defaultViewsFromBbox } from './vistas.js';
 const UNIDADES = ['kg', 'm2', 'm3', 'ml', 'und'];
 const vacio = () => ({ kg: 0, m2: 0, m3: 0, ml: 0, und: 0 });
 
+// Mide un solo elemento: valida forma, pieza, geometría y unidad, y devuelve la
+// cantidad en la unidad de cobro. Es lo que usa calcularProyecto y lo que la
+// web usa para guardar la cantidad de cada elemento.
+/**
+ * @param {any} el
+ * @param {Record<string, any>} [catalogo]
+ * @returns {any}
+ */
+export function medirElemento(el, catalogo = {}) {
+  const forma = FORMAS[el.forma];
+  if (!forma) return { ok: false, codigo: 'forma_desconocida', mensaje: `La forma "${el.forma}" no existe en el motor.` };
+  const pieza = catalogo[el.pieza];
+  if (!pieza) return { ok: false, codigo: 'pieza_desconocida', mensaje: `La pieza "${el.pieza}" no está en el catálogo.` };
+  const problema = forma.validar(el.geometria, pieza);
+  if (problema) return { ok: false, codigo: 'geometria_invalida', mensaje: problema };
+
+  const medidas = forma.medir(el.geometria, pieza);
+  if (Number.isFinite(pieza.factor)) medidas.kg = medidas[forma.unidadBase] * pieza.factor;
+  const unidad = el.unidad ?? pieza.unidad;
+  if (!UNIDADES.includes(unidad) || !(unidad in medidas)) {
+    return { ok: false, codigo: 'unidad_no_disponible', mensaje: `La forma "${el.forma}" con la pieza "${pieza.nombre}" no puede cotizarse en "${unidad}".` };
+  }
+  return { ok: true, forma, pieza, unidad, cantidad: medidas[unidad], medidas };
+}
+
+/**
+ * @param {{ elementos: any[], catalogo?: Record<string, any>, etapas?: { numero: number, nombre: string }[] }} proyecto
+ * @returns {any}
+ */
 export function calcularProyecto({ elementos, catalogo = {}, etapas = [] }) {
   const errores = [];
   const validos = [];
@@ -26,26 +55,14 @@ export function calcularProyecto({ elementos, catalogo = {}, etapas = [] }) {
   const nombreEtapa = (n) => etapas.find((e) => e.numero === n)?.nombre ?? `Etapa ${n}`;
 
   for (const el of elementos) {
-    const err = (codigo, mensaje) => errores.push({ elementoId: el.id, codigo, mensaje });
-    const forma = FORMAS[el.forma];
-    if (!forma) { err('forma_desconocida', `La forma "${el.forma}" no existe en el motor.`); continue; }
-    const pieza = catalogo[el.pieza];
-    if (!pieza) { err('pieza_desconocida', `La pieza "${el.pieza}" no está en el catálogo.`); continue; }
-    const problema = forma.validar(el.geometria, pieza);
-    if (problema) { err('geometria_invalida', problema); continue; }
-
-    const medidas = forma.medir(el.geometria, pieza);
-    if (Number.isFinite(pieza.factor)) medidas.kg = medidas[forma.unidadBase] * pieza.factor;
-    const unidad = el.unidad ?? pieza.unidad;
-    if (!UNIDADES.includes(unidad) || !(unidad in medidas)) {
-      err('unidad_no_disponible', `La forma "${el.forma}" con la pieza "${pieza.nombre}" no puede cotizarse en "${unidad}".`);
-      continue;
-    }
+    const m = medirElemento(el, catalogo);
+    if (!m.ok) { errores.push({ elementoId: el.id, codigo: m.codigo, mensaje: m.mensaje }); continue; }
+    const { forma, pieza, unidad, cantidad } = m;
 
     const etapa = el.etapa ?? 1;
     const clave = `${etapa}|${el.pieza}|${unidad}`;
     const linea = lineas.get(clave) ?? { etapa, piezaId: el.pieza, nombre: pieza.nombre, unidad, cantidad: 0, n: 0, confirmado: true, origenes: new Set() };
-    linea.cantidad += medidas[unidad];
+    linea.cantidad += cantidad;
     linea.n += 1;
     linea.confirmado = linea.confirmado && el.confirmado !== false;
     linea.origenes.add(el.origen ?? 'usuario');
@@ -81,6 +98,10 @@ function calcularBbox(validos) {
 
 // Escena 3D (solo navegador): un grupo por etapa, listo para pasarle al Viewer
 // como `layers`, más las vistas de cámara calculadas del bounding box.
+/**
+ * @param {any} proyecto  { elementos, catalogo, etapas } o { calculo }
+ * @returns {any}
+ */
 export function construirEscena(proyecto) {
   const calculo = proyecto.calculo ?? calcularProyecto(proyecto);
   const layers = {};

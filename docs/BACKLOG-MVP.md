@@ -14,8 +14,8 @@ Orden basado en el "siguiente paso" de la guía v3 (§10) y en la decisión de q
 ## 4. Segundo producto de otro rubro (prueba de aceptación)
 Cocina integral o portón con reja, con el mismo motor. Criterio: lo que se agregue al motor debe ser genérico y reutilizable (una forma, una pieza), no lógica propia de ese producto.
 
-## 5. `apps/web` sobre elementos
-Rehacer crear proyecto / revisión / cuadro de cantidades / cotización sobre elementos (hoy están atados al kit de cubierta). Incluye la pantalla de revisión con origen (IA/usuario) y confirmación.
+## 5. `apps/web` sobre elementos — HECHO (falta edición de geometría)
+Crear desde ejemplo o JSON validado, visor por etapas, cantidades en cinco unidades, confirmación de piezas con versiones nuevas y cotización por pieza; probado de punta a punta en el navegador, incluido el aislamiento entre usuarios. Se eliminó el kit de cubierta y sus pantallas. Pendiente: editar geometría en la revisión. Rehacer crear proyecto / revisión / cuadro de cantidades / cotización sobre elementos (hoy están atados al kit de cubierta). Incluye la pantalla de revisión con origen (IA/usuario) y confirmación.
 
 ## 6. Generalizar el PDF
 Plantilla que recibe nombre, cliente, etapas, filas de cantidades e imágenes; sin texto ni verificaciones escritas por proyecto.

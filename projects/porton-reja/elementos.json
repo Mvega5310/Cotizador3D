@@ -1,0 +1,331 @@
+{
+ "proyecto": "Portón con reja 3 × 2 m",
+ "etapas": [
+  {
+   "numero": 1,
+   "nombre": "Fabricación del portón"
+  }
+ ],
+ "catalogo": {
+  "tubo50": {
+   "id": "tubo50",
+   "nombre": "Tubo cuadrado 50×50×2 mm",
+   "unidad": "kg",
+   "dimensiones": {
+    "ancho": 0.05,
+    "alto": 0.05,
+    "color": 6122360
+   },
+   "factor": 3
+  },
+  "tubo25": {
+   "id": "tubo25",
+   "nombre": "Tubo cuadrado 25×25×1,5 mm",
+   "unidad": "ml",
+   "dimensiones": {
+    "ancho": 0.025,
+    "alto": 0.025,
+    "color": 10134446
+   },
+   "factor": 1.2
+  },
+  "lamina": {
+   "id": "lamina",
+   "nombre": "Lámina cold rolled cal. 18",
+   "unidad": "m2",
+   "dimensiones": {
+    "espesor": 0.0012,
+    "color": 13128732
+   },
+   "factor": 9.4
+  },
+  "bisagra": {
+   "id": "bisagra",
+   "nombre": "Bisagra de barril 5\"",
+   "unidad": "und",
+   "dimensiones": {
+    "color": 2764598
+   }
+  }
+ },
+ "elementos": [
+  {
+   "id": "marco-1",
+   "nombre": "Marco",
+   "forma": "viga",
+   "pieza": "tubo50",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     0,
+     0,
+     0
+    ],
+    "b": [
+     3,
+     0,
+     0
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "marco-2",
+   "nombre": "Marco",
+   "forma": "viga",
+   "pieza": "tubo50",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     0,
+     0,
+     2
+    ],
+    "b": [
+     3,
+     0,
+     2
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "marco-3",
+   "nombre": "Marco",
+   "forma": "viga",
+   "pieza": "tubo50",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     0,
+     0,
+     0
+    ],
+    "b": [
+     0,
+     0,
+     2
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "marco-4",
+   "nombre": "Marco",
+   "forma": "viga",
+   "pieza": "tubo50",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     3,
+     0,
+     0
+    ],
+    "b": [
+     3,
+     0,
+     2
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "barrote-1",
+   "nombre": "Barrote",
+   "forma": "viga",
+   "pieza": "tubo25",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     0.5,
+     0,
+     0.5
+    ],
+    "b": [
+     0.5,
+     0,
+     2
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "barrote-2",
+   "nombre": "Barrote",
+   "forma": "viga",
+   "pieza": "tubo25",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     1,
+     0,
+     0.5
+    ],
+    "b": [
+     1,
+     0,
+     2
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "barrote-3",
+   "nombre": "Barrote",
+   "forma": "viga",
+   "pieza": "tubo25",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     1.5,
+     0,
+     0.5
+    ],
+    "b": [
+     1.5,
+     0,
+     2
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "barrote-4",
+   "nombre": "Barrote",
+   "forma": "viga",
+   "pieza": "tubo25",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     2,
+     0,
+     0.5
+    ],
+    "b": [
+     2,
+     0,
+     2
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "barrote-5",
+   "nombre": "Barrote",
+   "forma": "viga",
+   "pieza": "tubo25",
+   "etapa": 1,
+   "geometria": {
+    "a": [
+     2.5,
+     0,
+     0.5
+    ],
+    "b": [
+     2.5,
+     0,
+     2
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "lamina-1",
+   "nombre": "Lámina inferior",
+   "forma": "panel",
+   "pieza": "lamina",
+   "etapa": 1,
+   "geometria": {
+    "origen": [
+     0,
+     0,
+     0
+    ],
+    "u": [
+     3,
+     0,
+     0
+    ],
+    "v": [
+     0,
+     0,
+     0.5
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "bisagra-1",
+   "nombre": "Bisagra",
+   "forma": "pieza",
+   "pieza": "bisagra",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0,
+     0,
+     0.2
+    ],
+    "tam": [
+     0.06,
+     0.06,
+     0.13
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "bisagra-2",
+   "nombre": "Bisagra",
+   "forma": "pieza",
+   "pieza": "bisagra",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0,
+     0,
+     1
+    ],
+    "tam": [
+     0.06,
+     0.06,
+     0.13
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  },
+  {
+   "id": "bisagra-3",
+   "nombre": "Bisagra",
+   "forma": "pieza",
+   "pieza": "bisagra",
+   "etapa": 1,
+   "geometria": {
+    "pos": [
+     0,
+     0,
+     1.8
+    ],
+    "tam": [
+     0.06,
+     0.06,
+     0.13
+    ]
+   },
+   "origen": "usuario",
+   "confirmado": true
+  }
+ ]
+}

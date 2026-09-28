@@ -1,27 +1,20 @@
 # apps/web
 
-La app de suscripción: cuentas, login y el primer flujo completo de un
-proyecto (crear → modelo 3D → cuadro de cantidades → cotización), usando
-`@cotizador3d/engine` y el kit `gableRoofTruss` (cubierta a dos aguas +
-cerchas metálicas).
+La app de suscripción sobre el motor (`@cotizador3d/engine`): cuentas, login y proyectos como lista de elementos (guía v3). Sirve para cualquier producto que el motor sepa dibujar y medir; no está atada a ningún tipo de obra.
 
-## Qué resuelve, y qué no, esta primera versión
+## Qué hace hoy
 
-Resuelve lo que pediste explícitamente: **cualquiera puede crear una
-cuenta, y sus proyectos no se mezclan con los de otra persona** (cada
-proyecto queda ligado a la cuenta de quien lo creó — ver
-`lib/actions/projects.ts::getOwnedProject`).
+- **Cuentas y aislamiento:** registro y login (bcrypt + JWT en cookie httpOnly). Cada proyecto pertenece a la cuenta que lo creó; otro usuario recibe 404 (`lib/proyectos.ts::obtenerProyecto`).
+- **Crear proyecto** (`/projects/new`): desde un ejemplo (`projects/casa-castaneda`, `projects/porton-reja`) o pegando una lista de elementos en JSON. Lo que entra se valida y se corre por el motor: si un elemento no se puede interpretar, se rechaza diciendo cuál y por qué.
+- **Página del proyecto:** visor 3D con las etapas activables, cuadro de cantidades por etapa (kg, m², m³, m, und), estado de cada pieza (confirmada o referencia) y cotización con precio por pieza, desperdicio, mano de obra y alcance por etapa.
+- **Versiones:** confirmar una pieza de referencia no edita el proyecto; crea la versión siguiente con esos elementos confirmados.
 
-No resuelve todavía (quedan en `docs/BACKLOG-MVP.md`):
-- Subida de planos/fotos y lectura por IA — hoy las medidas se escriben a
-  mano en `/projects/new`, como un paso intermedio honesto mientras el
-  paso de IA no está construido.
-- Cobro/suscripción real (el plan `prueba` se asigna por defecto a toda
-  cuenta nueva, sin límite forzado todavía).
-- PDF descargable y link público — el visor 3D y la cotización ya
-  funcionan en pantalla, exportarlos es trabajo aparte.
-- Solo hay un kit (cubierta + cercha). Cocheras y pérgolas necesitan su
-  propio kit en `packages/engine/src/kits/`.
+## Qué no hace todavía (ver `docs/BACKLOG-MVP.md`)
+
+- Subir planos y que una IA proponga los elementos (hoy se crea desde un ejemplo o JSON).
+- Editar la geometría de un elemento en pantalla (solo se confirma).
+- Cobro, límite de proyectos por plan (toda cuenta nueva queda en `prueba`), PDF descargable y enlace público.
+- Formas más allá de `viga`, `panel`, `volumen` y `pieza`. Se agregan en `packages/engine/src/formas.js` cuando un producto las pida.
 
 ## Correr en local
 
