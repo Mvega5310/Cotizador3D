@@ -8,9 +8,8 @@ import type { RespuestaIA } from "@/lib/ia";
 
 const nuevoToken = () => randomBytes(16).toString("hex");
 
-const UNIDADES = ["kg", "m2", "m3", "ml", "und"] as const;
-type UnidadClave = (typeof UNIDADES)[number];
-export const MAX_ELEMENTOS = 3000;
+type UnidadClave = "kg" | "m2" | "m3" | "ml" | "und";
+const MAX_ELEMENTOS = 3000;
 
 export type Etapa = { numero: number; nombre: string };
 export type Pieza = { id: string; nombre: string; unidad: UnidadClave; dimensiones: Record<string, unknown>; factor?: number; tipo?: string };
@@ -21,74 +20,15 @@ export type ElementoMotor = {
 };
 export type EntradaMotor = { elementos: ElementoMotor[]; catalogo: Record<string, Pieza>; etapas: Etapa[] };
 
-const esObjeto = (x: unknown): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x);
-
-// Valida lo que llega de fuera (ejemplo, JSON pegado, más adelante la IA) y lo
-// corre por el motor: si algún elemento no se puede interpretar, se rechaza
-// con el motivo en vez de guardar un proyecto a medias.
-export function validarEntrada(data: unknown): EntradaMotor {
-  if (!esObjeto(data)) throw new Error("El JSON debe ser un objeto con `catalogo` y `elementos`.");
-  if (!esObjeto(data.catalogo)) throw new Error("Falta `catalogo` (un objeto con las piezas).");
-  if (!Array.isArray(data.elementos) || data.elementos.length === 0) throw new Error("`elementos` debe ser una lista con al menos un elemento.");
-  if (data.elementos.length > MAX_ELEMENTOS) throw new Error(`Máximo ${MAX_ELEMENTOS} elementos por proyecto.`);
-
-  const catalogo: Record<string, Pieza> = {};
-  for (const [clave, p] of Object.entries(data.catalogo)) {
-    if (!esObjeto(p) || typeof p.nombre !== "string" || !UNIDADES.includes(p.unidad as UnidadClave)) {
-      throw new Error(`Pieza "${clave}": necesita \`nombre\` y \`unidad\` (${UNIDADES.join(", ")}).`);
-    }
-    catalogo[clave] = {
-      id: clave,
-      nombre: p.nombre,
-      unidad: p.unidad as UnidadClave,
-      dimensiones: esObjeto(p.dimensiones) ? p.dimensiones : {},
-      factor: typeof p.factor === "number" && Number.isFinite(p.factor) ? p.factor : undefined,
-      tipo: typeof p.tipo === "string" ? p.tipo : undefined,
-    };
-  }
-
-  const elementos = data.elementos.map((e, i): ElementoMotor => {
-    if (!esObjeto(e) || typeof e.forma !== "string" || typeof e.pieza !== "string") {
-      throw new Error(`Elemento ${i + 1}: necesita \`forma\` y \`pieza\` (texto).`);
-    }
-    const etapa = e.etapa === undefined ? 1 : Number(e.etapa);
-    if (!Number.isInteger(etapa) || etapa < 1) throw new Error(`Elemento ${i + 1}: \`etapa\` debe ser un entero de 1 o más.`);
-    if (e.unidad !== undefined && !UNIDADES.includes(e.unidad as UnidadClave)) throw new Error(`Elemento ${i + 1}: unidad inválida.`);
-    const origen = e.origen === "ia" ? "ia" : "usuario";
-    return {
-      id: typeof e.id === "string" ? e.id : `el-${i + 1}`,
-      nombre: typeof e.nombre === "string" ? e.nombre : e.forma,
-      forma: e.forma,
-      geometria: e.geometria,
-      pieza: e.pieza,
-      etapa,
-      unidad: e.unidad as UnidadClave | undefined,
-      origen,
-      confirmado: typeof e.confirmado === "boolean" ? e.confirmado : origen !== "ia",
-    };
-  });
-
-  const etapas: Etapa[] = Array.isArray(data.etapas)
-    ? data.etapas.filter((e): e is Etapa => esObjeto(e) && Number.isInteger(e.numero) && typeof e.nombre === "string")
-    : [];
-  for (const n of new Set(elementos.map((e) => e.etapa))) if (!etapas.some((e) => e.numero === n)) etapas.push({ numero: n, nombre: `Etapa ${n}` });
-  etapas.sort((a, b) => a.numero - b.numero);
-
-  const { errores } = calcularProyecto({ elementos, catalogo, etapas });
-  if (errores.length) {
-    const lista = errores.slice(0, 5).map((e: { elementoId: string; mensaje: string }) => `${e.elementoId}: ${e.mensaje}`).join(" · ");
-    throw new Error(`${errores.length} elemento(s) no se pueden interpretar. ${lista}`);
-  }
-  return { elementos, catalogo, etapas };
-}
-
-// A diferencia de validarEntrada (todo o nada, para JSON pegado a mano), lo
-// que propone la IA se depura: los elementos que el motor no pueda
-// interpretar se descartan en vez de tumbar el proyecto completo — total, la
-// IA se pudo haber equivocado en una sola pieza de cincuenta. Todo lo que
-// entra queda con origen "ia" y sin confirmar: nada avanza sin que el usuario
-// lo revise (ver docs/ARQUITECTURA.md, sección 2).
+// Único camino de entrada de un proyecto: lo que propone la IA a partir de
+// planos (lib/ia.ts). Se depura en vez de aceptarse todo o nada: los
+// elementos que el motor no pueda interpretar se descartan y se cuentan, en
+// vez de tumbar el proyecto completo — total, la IA se pudo haber equivocado
+// en una sola pieza de cincuenta. Todo lo que entra queda con origen "ia" y
+// sin confirmar: nada avanza sin que el usuario lo revise (ver
+// docs/ARQUITECTURA.md, sección 2).
 export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; descartados: number; notas?: string } {
+  if (resp.elementos.length > MAX_ELEMENTOS) throw new Error(`La IA propuso ${resp.elementos.length} elementos; el máximo por proyecto es ${MAX_ELEMENTOS}.`);
   const catalogo: Record<string, Pieza> = Object.fromEntries(
     Object.entries(resp.catalogo).map(([clave, p]) => [
       clave,
@@ -104,6 +44,9 @@ export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; de
   const { errores } = calcularProyecto({ elementos, catalogo, etapas });
   const invalidos = new Set(errores.map((e: { elementoId: string }) => e.elementoId));
   const validos = elementos.filter((e) => !invalidos.has(e.id));
+  if (errores.length > 0) {
+    console.log(`[ia] ${errores.length} elemento(s) descartados:`, errores.slice(0, 15).map((e: { elementoId: string; mensaje: string }) => `${e.elementoId}: ${e.mensaje}`).join(" · "));
+  }
   if (validos.length === 0) {
     const lista = errores.slice(0, 5).map((e: { elementoId: string; mensaje: string }) => `${e.elementoId}: ${e.mensaje}`).join(" · ");
     throw new Error(`La IA no propuso ningún elemento interpretable. ${lista}`);

@@ -1,8 +1,7 @@
 import { requireSession } from "@/lib/session";
-import { EJEMPLOS } from "@/lib/ejemplos";
-import FormulariosNuevo from "@/components/FormulariosNuevo";
+import FormularioSubirPlanos from "@/components/FormularioSubirPlanos";
 
 export default async function NuevoProyectoPage() {
   await requireSession();
-  return <FormulariosNuevo ejemplos={EJEMPLOS} />;
+  return <FormularioSubirPlanos />;
 }

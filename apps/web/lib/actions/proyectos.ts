@@ -4,13 +4,11 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
-import { crearProyecto, confirmarPieza, validarEntrada, depurarEntradaIA, type EntradaMotor } from "@/lib/proyectos";
-import { EJEMPLOS, leerEjemplo } from "@/lib/ejemplos";
+import { crearProyecto, confirmarPieza, depurarEntradaIA, type EntradaMotor } from "@/lib/proyectos";
 import { proponerElementos } from "@/lib/ia";
 
 export type EstadoForm = { error?: string };
 
-const MAX_JSON_BYTES = 2 * 1024 * 1024;
 const MAX_ARCHIVOS = 6;
 const MAX_BYTES_ARCHIVO = 15 * 1024 * 1024;
 
@@ -21,40 +19,10 @@ async function crearYRedirigir(cliente: string, tipoObra: string, entrada: Entra
   redirect(`/projects/${proyecto.id}${aviso ? `?aviso=${encodeURIComponent(aviso)}` : ""}`);
 }
 
-export async function crearDesdeEjemploAction(_prev: EstadoForm, formData: FormData): Promise<EstadoForm> {
-  await requireSession();
-  const clave = String(formData.get("ejemplo") || "");
-  const ejemplo = EJEMPLOS.find((e) => e.clave === clave);
-  if (!ejemplo) return { error: "Elige un ejemplo." };
-  const cliente = String(formData.get("cliente") || "").trim() || ejemplo.cliente;
-
-  let entrada: EntradaMotor;
-  try {
-    entrada = validarEntrada(leerEjemplo(ejemplo.clave));
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : "No se pudo leer el ejemplo." };
-  }
-  return crearYRedirigir(cliente, ejemplo.tipoObra, entrada);
-}
-
-export async function importarJsonAction(_prev: EstadoForm, formData: FormData): Promise<EstadoForm> {
-  await requireSession();
-  const cliente = String(formData.get("cliente") || "").trim();
-  const tipoObra = String(formData.get("tipoObra") || "").trim() || "personalizado";
-  const texto = String(formData.get("json") || "");
-  if (!cliente) return { error: "Escribe el nombre del cliente." };
-  if (!texto.trim()) return { error: "Pega el JSON del proyecto." };
-  if (Buffer.byteLength(texto) > MAX_JSON_BYTES) return { error: "El JSON pesa más de 2 MB." };
-
-  let entrada: EntradaMotor;
-  try {
-    entrada = validarEntrada(JSON.parse(texto));
-  } catch (e) {
-    return { error: e instanceof SyntaxError ? "El texto no es un JSON válido." : e instanceof Error ? e.message : "JSON inválido." };
-  }
-  return crearYRedirigir(cliente, tipoObra, entrada);
-}
-
+// Único camino para crear un proyecto: subir planos y dejar que la IA
+// proponga los elementos (ver lib/ia.ts). Un usuario cualquiera nunca escribe
+// datos a mano ni ve el formato interno — eso quedó solo como herramienta de
+// desarrollo (packages/engine/test, projects/*, casa.test.js).
 export async function crearDesdeIAAction(_prev: EstadoForm, formData: FormData): Promise<EstadoForm> {
   await requireSession();
   const cliente = String(formData.get("cliente") || "").trim();

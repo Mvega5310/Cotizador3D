@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function EnlaceCopiable({ ruta }: { ruta: string }) {
   const [copiado, setCopiado] = useState(false);
-  const url = typeof window !== "undefined" ? `${window.location.origin}${ruta}` : ruta;
+  // Arranca igual que el servidor (ruta relativa) para no desajustar la
+  // hidratación; una vez montado en el navegador, completa con el origen.
+  const [url, setUrl] = useState(ruta);
+  // Lectura única de window.location tras montar; no hay forma de saberlo en
+  // el primer render sin desajustar la hidratación (SSR no conoce el origen).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setUrl(`${window.location.origin}${ruta}`);
+  }, [ruta]);
 
   async function copiar() {
     try {
