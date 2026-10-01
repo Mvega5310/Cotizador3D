@@ -4,36 +4,35 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
-import { crearProyecto, confirmarPieza, corregirElementos, depurarEntradaIA, type EntradaMotor } from "@/lib/proyectos";
-import { proponerElementos } from "@/lib/ia";
+import { crearProyecto, confirmarPieza, corregirElementos, depurarEntradaIA, guardarArchivosEntrada } from "@/lib/proyectos";
+import { proponerElementos, type ArchivoLeido } from "@/lib/ia";
 
 export type EstadoForm = { error?: string };
 
 const MAX_ARCHIVOS = 6;
 const MAX_BYTES_ARCHIVO = 15 * 1024 * 1024;
 
-async function crearYRedirigir(cliente: string, tipoObra: string, entrada: EntradaMotor, aviso?: string): Promise<never> {
-  const session = await requireSession();
-  const usuario = await prisma.usuario.findUniqueOrThrow({ where: { id: session.userId } });
-  const proyecto = await crearProyecto({ usuarioId: usuario.id, cuentaId: usuario.cuentaId, cliente, tipoObra, entrada });
-  redirect(`/projects/${proyecto.id}${aviso ? `?aviso=${encodeURIComponent(aviso)}` : ""}`);
-}
-
 // Único camino para crear un proyecto: subir planos y dejar que la IA
 // proponga los elementos (ver lib/ia.ts). Un usuario cualquiera nunca escribe
 // datos a mano ni ve el formato interno — eso quedó solo como herramienta de
 // desarrollo (packages/engine/test, projects/*, casa.test.js).
 export async function crearDesdeIAAction(_prev: EstadoForm, formData: FormData): Promise<EstadoForm> {
-  await requireSession();
+  const session = await requireSession();
   const cliente = String(formData.get("cliente") || "").trim();
   const tipoObra = String(formData.get("tipoObra") || "").trim() || "personalizado";
   const descripcion = String(formData.get("descripcion") || "");
-  const archivos = formData.getAll("archivos").filter((a): a is File => a instanceof File && a.size > 0);
+  const archivosForm = formData.getAll("archivos").filter((a): a is File => a instanceof File && a.size > 0);
 
   if (!cliente) return { error: "Escribe el nombre del cliente." };
-  if (archivos.length === 0) return { error: "Sube al menos un plano, boceto o foto." };
-  if (archivos.length > MAX_ARCHIVOS) return { error: `Máximo ${MAX_ARCHIVOS} archivos por proyecto.` };
-  for (const a of archivos) if (a.size > MAX_BYTES_ARCHIVO) return { error: `"${a.name}" pesa más de 15 MB.` };
+  if (archivosForm.length === 0) return { error: "Sube al menos un plano, boceto o foto." };
+  if (archivosForm.length > MAX_ARCHIVOS) return { error: `Máximo ${MAX_ARCHIVOS} archivos por proyecto.` };
+  for (const a of archivosForm) if (a.size > MAX_BYTES_ARCHIVO) return { error: `"${a.name}" pesa más de 15 MB.` };
+
+  // Se leen una sola vez a memoria: el mismo buffer se manda a la IA y se
+  // guarda en disco si el proyecto se termina creando (ver más abajo).
+  const archivos: ArchivoLeido[] = await Promise.all(
+    archivosForm.map(async (a) => ({ nombre: a.name, mime: a.type, datos: Buffer.from(await a.arrayBuffer()) }))
+  );
 
   let resultado;
   try {
@@ -43,10 +42,14 @@ export async function crearDesdeIAAction(_prev: EstadoForm, formData: FormData):
     return { error: e instanceof Error ? e.message : "No se pudo generar el proyecto a partir de los planos." };
   }
 
+  const usuario = await prisma.usuario.findUniqueOrThrow({ where: { id: session.userId } });
+  const proyecto = await crearProyecto({ usuarioId: usuario.id, cuentaId: usuario.cuentaId, cliente, tipoObra, entrada: resultado.entrada });
+  await guardarArchivosEntrada(proyecto.id, archivos, descripcion);
+
   const partes = [`${resultado.entrada.elementos.length} elementos propuestos por IA, todos pendientes de confirmar`];
   if (resultado.descartados > 0) partes.push(`${resultado.descartados} no se pudieron interpretar y se descartaron`);
   if (resultado.notas) partes.push(resultado.notas);
-  return crearYRedirigir(cliente, tipoObra, resultado.entrada, partes.join(" · "));
+  redirect(`/projects/${proyecto.id}?aviso=${encodeURIComponent(partes.join(" · "))}`);
 }
 
 export async function confirmarPiezaAction(formData: FormData) {

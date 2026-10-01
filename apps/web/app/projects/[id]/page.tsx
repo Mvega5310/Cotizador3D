@@ -48,6 +48,30 @@ export default async function ProyectoPage({
         <p className="border border-orange-300 bg-orange-50 text-orange-800 rounded p-3 text-sm">{aviso}</p>
       )}
 
+      {proyecto.archivos.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="font-medium">Planos subidos</h2>
+          <div className="flex flex-wrap gap-3">
+            {proyecto.archivos.filter((a) => a.tipo !== "descripcion").map((a) => (
+              <a key={a.id} href={a.url ?? "#"} target="_blank" rel="noreferrer"
+                className="block w-24 h-24 border border-neutral-200 rounded overflow-hidden hover:border-neutral-400">
+                {a.tipo === "foto" ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- archivo privado del usuario servido por /projects/[id]/archivos/, no una imagen pública optimizable
+                  <img src={a.url ?? ""} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="w-full h-full flex items-center justify-center text-xs text-neutral-500 bg-neutral-50">PDF</span>
+                )}
+              </a>
+            ))}
+          </div>
+          {proyecto.archivos.find((a) => a.tipo === "descripcion") && (
+            <p className="text-sm text-neutral-600 italic">
+              &ldquo;{proyecto.archivos.find((a) => a.tipo === "descripcion")?.descripcion}&rdquo;
+            </p>
+          )}
+        </section>
+      )}
+
       {entrada.elementos.length === 0 ? (
         <p className="border border-neutral-200 rounded p-6 text-neutral-600">
           Este proyecto se creó con una versión anterior de la plataforma y no tiene elementos. Crea uno nuevo desde el panel.

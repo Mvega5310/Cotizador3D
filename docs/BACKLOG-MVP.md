@@ -40,6 +40,9 @@ Mide costo real por proyecto, tiempo ahorrado y disposición a pagar. Sin esto, 
 ## 10a. Login completo — HECHO
 Verificación de correo al registrarse (banner en el panel + reenviar si no llegó) y recuperar contraseña, ambos con enlaces de un solo uso que vencen (modelo `TokenAuth`). El correo sale por Resend; sin `RESEND_API_KEY` configurada el registro y el login siguen funcionando, solo no se envía el correo (queda en el log del servidor). El mensaje de "recuperar contraseña" es idéntico exista o no la cuenta, para no revelar qué correos están registrados.
 
+## 10b. Guardar los planos subidos — HECHO
+Cada foto/PDF que se sube y la descripción quedan guardados (`.data/planos/<proyectoId>/` en disco, filas en `ArchivoEntrada`) y visibles en el proyecto bajo "Planos subidos" — antes se mandaban a la IA y se perdían. Servidos solo al dueño (`/projects/[id]/archivos/[archivo]`), nunca por el link público; probado el aislamiento entre cuentas. **Pendiente real:** esto guarda en el disco del servidor — para desplegar fuera de esta máquina hace falta moverlo a un storage de verdad (S3 o similar), igual que ya está anotado para los PDF.
+
 ## 10. Cuentas, suscripción y cobro
 Planes Personal / Profesional / Empresa con cupo por proyectos generados; prueba de 14 días o 2 proyectos; PDF con marca de agua en la prueba.
 

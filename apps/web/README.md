@@ -5,21 +5,21 @@ La app de suscripción sobre el motor (`@cotizador3d/engine`): cuentas, login y 
 ## Qué hace hoy
 
 - **Cuentas y aislamiento:** registro y login (bcrypt + JWT en cookie httpOnly). Cada proyecto pertenece a la cuenta que lo creó; otro usuario recibe 404 (`lib/proyectos.ts::obtenerProyecto`).
-- **Crear proyecto** (`/projects/new`): desde un ejemplo (`projects/casa-castaneda`, `projects/porton-reja`) o pegando una lista de elementos en JSON. Lo que entra se valida y se corre por el motor: si un elemento no se puede interpretar, se rechaza diciendo cuál y por qué.
+- **Crear proyecto** (`/projects/new`): subiendo planos (ver más abajo). Lo que propone la IA se corre por el motor: lo que no se pueda interpretar se descarta y se avisa, en vez de tumbar el proyecto entero.
 - **Página del proyecto:** visor 3D con las etapas activables, cuadro de cantidades por etapa (kg, m², m³, m, und), estado de cada pieza (confirmada o referencia) y cotización con precio por pieza, desperdicio, mano de obra y alcance por etapa.
-- **Versiones:** confirmar una pieza de referencia no edita el proyecto; crea la versión siguiente con esos elementos confirmados.
+- **Versiones:** confirmar una pieza, o corregir la geometría de uno o varios elementos (`EditorElementos.tsx`), no edita el proyecto — crea la versión siguiente con esos cambios.
 - **Login completo:** registro con verificación de correo (banner + reenviar si no llegó) y recuperar contraseña ("¿olvidaste tu contraseña?" en el login), ambos por enlaces de un solo uso que vencen (`TokenAuth` en el esquema). El correo sale por Resend — sin `RESEND_API_KEY` configurada, el registro y el login igual funcionan, solo no llega el correo (se registra en el log del servidor).
+- **Guarda los planos que subes:** cada archivo (foto o PDF) y tu descripción quedan guardados en el proyecto (`ArchivoEntrada`, en disco bajo `.data/planos/<id>/`), visibles en una sección "Planos subidos" — antes se mandaban a la IA y se perdían. Solo los puede ver el dueño del proyecto (`/projects/[id]/archivos/[archivo]`), nunca por el link público.
 - **Subir planos con IA (único camino para crear un proyecto):** en `/projects/new`, subir fotos o PDF de planos + una descripción libre. `lib/ia.ts` se los manda a Claude (visión, JSON pedido en el texto y validado con Zod — ver nota en el archivo sobre por qué no se usa salida estructurada) pidiendo *solo datos* — catálogo y elementos con el mismo contrato de formas del motor, nunca código. Cada elemento sale marcado `origen: "ia"` y sin confirmar; lo que no se pueda interpretar se descarta y se avisa en vez de tumbar el proyecto. Necesita `ANTHROPIC_API_KEY` en el entorno. Probado con un plano real (ver `docs/BACKLOG-MVP.md`, ítem 7): funciona bien para piezas simples, inconsistente para estructuras metálicas complejas.
 - **PDF y enlaces públicos:** cada proyecto tiene un link completo (visor + cantidades) y uno de cliente (solo visor), sin sesión, con marca de agua durante la prueba. "Generar PDF" abre `/p/<token>/imprimir` con Playwright, captura las 5 vistas de cámara y arma un PDF de varias páginas, servido en `/p/<token>/pdf`.
 
 ## Qué no hace todavía (ver `docs/BACKLOG-MVP.md`)
 
-- Subir planos y que una IA proponga los elementos (hoy se crea desde un ejemplo o JSON).
 - Consistencia de la IA en planos técnicos complejos (ver hallazgo de calidad en `docs/BACKLOG-MVP.md`, ítem 7).
-- Guardar los planos subidos (hoy se mandan a la IA y se descartan; no se puede volver a verlos).
-- Editar la geometría de un elemento propuesto por IA (hoy solo se confirma o se descarta, no se corrige un número).
+- Cambiar la contraseña ya con sesión iniciada (hoy solo existe recuperarla por correo).
 - Cobro y límite de proyectos por plan (toda cuenta nueva queda en `prueba`, sin tope forzado).
 - Generar el PDF fuera de un servidor propio (ver la limitación anotada en `lib/actions/pdf.ts`).
+- Guardar los planos en un storage de verdad (hoy quedan en el disco del servidor, `.data/planos/`) para cuando esto se despliegue fuera de esta máquina.
 - Formas más allá de `viga`, `panel`, `volumen` y `pieza`. Se agregan en `packages/engine/src/formas.js` cuando un producto las pida.
 
 ## Correr en local

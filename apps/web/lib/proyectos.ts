@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { calcularProyecto, medirElemento } from "@cotizador3d/engine";
 import type { RespuestaIA } from "@/lib/ia";
+import { guardarArchivos } from "@/lib/archivos";
 
 const nuevoToken = () => randomBytes(16).toString("hex");
 
@@ -128,6 +129,26 @@ export async function crearProyecto(args: { usuarioId: string; cuentaId: string;
   );
 }
 
+// Guarda en disco los planos/fotos que dieron origen al proyecto (y la
+// descripción libre, si la hubo), para poder volver a verlos después — antes
+// se mandaban a la IA y se perdían. Aparte de crearProyecto porque escribir
+// a disco no pertenece a una transacción de base de datos.
+export async function guardarArchivosEntrada(
+  proyectoId: string,
+  archivos: { nombre: string; mime: string; datos: Buffer }[],
+  descripcion: string
+) {
+  const guardados = guardarArchivos(proyectoId, archivos);
+  if (guardados.length) {
+    await prisma.archivoEntrada.createMany({
+      data: guardados.map((g) => ({ proyectoId, tipo: g.tipo, url: g.url })),
+    });
+  }
+  if (descripcion.trim()) {
+    await prisma.archivoEntrada.create({ data: { proyectoId, tipo: "descripcion", descripcion: descripcion.trim() } });
+  }
+}
+
 // ---------- Cargar ----------
 
 // Arma entrada + cálculo a partir de una versión ya cargada de la base
@@ -163,6 +184,7 @@ export async function obtenerProyecto(projectId: string) {
         take: 1,
         include: { etapas: { orderBy: { numero: "asc" } }, elementos: true, resultado: true },
       },
+      archivos: { orderBy: { subidoEn: "asc" } },
     },
   });
   if (!proyecto || !proyecto.versiones[0]) notFound();

@@ -77,17 +77,22 @@ function tipoMedia(nombre: string, tipo: string): "image" | "pdf" | null {
   return null;
 }
 
-export async function proponerElementos(args: { archivos: File[]; descripcion: string }): Promise<RespuestaIA> {
+// Ya leído a memoria (Buffer), no File — así el llamador lee cada archivo una
+// sola vez y puede tanto mandarlo a la IA como guardarlo (ver
+// lib/actions/proyectos.ts, que hace las dos cosas con el mismo buffer).
+export type ArchivoLeido = { nombre: string; mime: string; datos: Buffer };
+
+export async function proponerElementos(args: { archivos: ArchivoLeido[]; descripcion: string }): Promise<RespuestaIA> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("Falta configurar ANTHROPIC_API_KEY en el servidor para usar la lectura de planos con IA.");
 
   const content: Anthropic.Messages.ContentBlockParam[] = [];
   for (const archivo of args.archivos) {
-    const tipo = tipoMedia(archivo.name, archivo.type);
+    const tipo = tipoMedia(archivo.nombre, archivo.mime);
     if (!tipo) continue;
-    const data = Buffer.from(await archivo.arrayBuffer()).toString("base64");
+    const data = archivo.datos.toString("base64");
     if (tipo === "image") {
-      content.push({ type: "image", source: { type: "base64", media_type: archivo.type as "image/png" | "image/jpeg" | "image/webp", data } });
+      content.push({ type: "image", source: { type: "base64", media_type: archivo.mime as "image/png" | "image/jpeg" | "image/webp", data } });
     } else {
       content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data } });
     }
