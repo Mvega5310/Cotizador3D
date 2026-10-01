@@ -7,12 +7,6 @@
     "packages/*",
     "apps/*"
   ],
-  "devDependencies": {
-    "prisma": "^6.19.3"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.19.3"
-  },
   "scripts": {
     "test": "npm test -w @cotizador3d/engine && node --test projects/casa-castaneda/casa.test.js"
   }

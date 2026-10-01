@@ -1,11 +1,12 @@
 import fs from "fs";
 import path from "path";
+import { DATA_DIR } from "@/lib/datos";
 
 // Los tokens los generamos nosotros (randomBytes(16).toString('hex')): siempre
 // 32 caracteres hexadecimales. Cualquier otra cosa en la URL se rechaza antes
 // de tocar el sistema de archivos, para no armar una ruta con lo que venga.
 const TOKEN_VALIDO = /^[0-9a-f]{32}$/;
-const CARPETA_PDF = path.join(process.cwd(), ".data", "pdf");
+const CARPETA_PDF = path.join(DATA_DIR, "pdf");
 
 export function tokenValido(token: string): boolean {
   return TOKEN_VALIDO.test(token);

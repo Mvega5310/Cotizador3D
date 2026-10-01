@@ -1,0 +1,14 @@
+# Nunca en la imagen: secretos y datos locales
+.env
+.env.*
+**/.env
+**/.env.*
+**/.data
+prisma/dev.db*
+
+# Se regeneran dentro del contenedor
+**/node_modules
+**/.next
+
+.git
+casa-castaneda

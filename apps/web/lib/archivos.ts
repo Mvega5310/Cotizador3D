@@ -1,12 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { randomBytes } from "crypto";
+import { DATA_DIR } from "@/lib/datos";
 
 // Guarda en disco los planos/fotos que el usuario subió, junto a su
 // descripción, como registro permanente del proyecto (antes se mandaban a la
 // IA y se descartaban — no quedaba nada para volver a consultar).
-// apps/web/.data/ está fuera de git (son archivos del usuario, no código).
-const BASE = path.join(process.cwd(), ".data", "planos");
+// DATA_DIR está fuera de git (son archivos del usuario, no código).
+const BASE = path.join(DATA_DIR, "planos");
 const NOMBRE_SEGURO = /^[A-Za-z0-9_.-]+$/;
 
 function carpetaProyecto(proyectoId: string) {

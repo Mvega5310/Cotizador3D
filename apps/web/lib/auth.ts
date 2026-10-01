@@ -6,6 +6,11 @@ import { SignJWT, jwtVerify } from "jose";
 // lib/actions/auth.ts y el modelo TokenAuth en prisma/schema.prisma.
 export const nuevoTokenAuth = () => randomBytes(24).toString("hex");
 
+// En producción no hay valor por defecto: con un secreto conocido cualquiera
+// podría firmar una sesión válida para cualquier cuenta.
+if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET && process.env.NEXT_PHASE !== "phase-production-build") {
+  throw new Error("Falta AUTH_SECRET en producción.");
+}
 const secret = new TextEncoder().encode(
   process.env.AUTH_SECRET || "dev-only-secret-change-before-deploying"
 );

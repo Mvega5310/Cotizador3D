@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { chromium } from "playwright-core";
 import { prisma } from "@/lib/db";
@@ -9,11 +8,14 @@ import { guardarPdf } from "@/lib/pdf";
 
 // Genera el PDF abriendo /p/<token>/imprimir en un Chrome sin interfaz y
 // esperando a que esa página capture sus propias vistas 3D (VisorImprimible).
-// Limitación conocida: esto lanza un navegador dentro del proceso del
-// servidor de Next.js. Funciona para correr localmente o en un servidor
-// propio; no funciona en hosting serverless (Vercel y similares no pueden
-// lanzar Chrome). Al reestructurar el despliegue, este paso hay que moverlo
-// a un worker aparte (ver apps/pipeline, que ya hace algo parecido).
+// Lanza un navegador dentro del proceso del servidor: funciona en local y en
+// un servidor con proceso persistente (Railway, con el Dockerfile de la raíz,
+// que trae Chromium); no en hosting serverless (Vercel y similares).
+//
+// PDF_CHROME_CHANNEL: en local "chrome" (el Chrome instalado en el equipo);
+// en el servidor se deja vacío y se usa el Chromium que trae la imagen.
+const CANAL = process.env.PDF_CHROME_CHANNEL ?? (process.env.NODE_ENV === "production" ? undefined : "chrome");
+
 export async function generarPdfAction(formData: FormData) {
   const proyectoId = String(formData.get("proyectoId") || "");
   if (!proyectoId) return;
@@ -24,11 +26,12 @@ export async function generarPdfAction(formData: FormData) {
   const token = version.resultado?.linkCompleto;
   if (!token) return;
 
-  const encabezados = await headers();
-  const base = `http://${encabezados.get("host")}`;
+  // El servidor se llama a sí mismo por la red interna, no por el dominio
+  // público: más rápido, y no depende del proxy/HTTPS de la plataforma.
+  const base = `http://127.0.0.1:${process.env.PORT || 3000}`;
 
   const navegador = await chromium.launch({
-    channel: "chrome",
+    channel: CANAL,
     args: ["--ignore-gpu-blocklist", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
   });
   try {

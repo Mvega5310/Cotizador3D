@@ -34,14 +34,14 @@ cd apps/web
 cp .env.local .env            # o créalos a mano; ver abajo
 
 npm run db:generate           # cliente de Prisma
-npm run db:migrate -- --name init   # crea prisma/dev.db (sqlite)
+npx prisma migrate deploy --schema=../../prisma/schema.prisma   # crea las tablas
 npm run dev
 ```
 
 `.env` / `.env.local` (ambos ignorados por git) con:
 
 ```
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://..."  # una base Postgres de desarrollo (NO la de producción)
 AUTH_SECRET="una-cadena-larga-y-aleatoria"
 ANTHROPIC_API_KEY="sk-ant-..."   # necesaria solo para "Subir planos (con IA)"
 RESEND_API_KEY="re_..."          # necesaria para que lleguen los correos de verificación/recuperación
@@ -50,12 +50,22 @@ RESEND_API_KEY="re_..."          # necesaria para que lleguen los correos de ver
 Abre `http://localhost:3000`, crea una cuenta y luego un proyecto. La
 primera compilación de cada página tarda (30 s o más en esta carpeta).
 
+## Producción (Railway)
+
+Se construye con el `Dockerfile` de la raíz del repo (imagen oficial de
+Playwright, que trae el Chromium que usa el PDF). Al arrancar aplica las
+migraciones (`prisma migrate deploy`) y levanta `next start`.
+
+Variables del servicio: `DATABASE_URL` (referencia al Postgres del mismo
+proyecto), `AUTH_SECRET` (aleatoria; sin ella el servidor no arranca),
+`ANTHROPIC_API_KEY`, `RESEND_API_KEY`, y `DATA_DIR=/data` con un Volumen
+montado en `/data` para que planos y PDF sobrevivan a cada despliegue.
+
 Notas:
 - Prisma está fijado en **6.19.3**. La 7.x exige `prisma.config.ts` y un
   adaptador de base de datos; la línea "latest" del CLI hoy es un RC 8.x.
   No subir de versión sin migrar ese cambio.
-- La base de datos vive en `prisma/dev.db` (raíz del repo). Para
-  producción, cambiar `provider` en `prisma/schema.prisma` a
-  `postgresql` y `DATABASE_URL` a la conexión real.
-- Cambiar `AUTH_SECRET` antes de desplegar; el valor por defecto es solo
-  para desarrollo.
+- `playwright-core` está fijado en **1.63.0**, igual que la imagen del
+  `Dockerfile`. Si se cambia uno, hay que cambiar el otro.
+- Postgres en todos los entornos. Las migraciones de la época SQLite se
+  reemplazaron por una sola `0_init` (siguen en el historial de git).
