@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { crearProyecto, confirmarPieza, corregirElementos, depurarEntradaIA, guardarArchivosEntrada } from "@/lib/proyectos";
 import { proponerElementos, type ArchivoLeido } from "@/lib/ia";
+import { chequearCupo } from "@/lib/planes";
 
 export type EstadoForm = { error?: string };
 
@@ -28,6 +29,13 @@ export async function crearDesdeIAAction(_prev: EstadoForm, formData: FormData):
   if (archivosForm.length > MAX_ARCHIVOS) return { error: `Máximo ${MAX_ARCHIVOS} archivos por proyecto.` };
   for (const a of archivosForm) if (a.size > MAX_BYTES_ARCHIVO) return { error: `"${a.name}" pesa más de 15 MB.` };
 
+  const usuario = await prisma.usuario.findUniqueOrThrow({ where: { id: session.userId } });
+  // Antes de la llamada a la IA (que cuesta dinero real), no después —
+  // así un cupo agotado no se gasta en una generación que de todos modos
+  // no se va a guardar.
+  const cupo = await chequearCupo(usuario.cuentaId);
+  if (!cupo.ok) return { error: cupo.motivo };
+
   // Se leen una sola vez a memoria: el mismo buffer se manda a la IA y se
   // guarda en disco si el proyecto se termina creando (ver más abajo).
   const archivos: ArchivoLeido[] = await Promise.all(
@@ -42,7 +50,6 @@ export async function crearDesdeIAAction(_prev: EstadoForm, formData: FormData):
     return { error: e instanceof Error ? e.message : "No se pudo generar el proyecto a partir de los planos." };
   }
 
-  const usuario = await prisma.usuario.findUniqueOrThrow({ where: { id: session.userId } });
   const proyecto = await crearProyecto({ usuarioId: usuario.id, cuentaId: usuario.cuentaId, cliente, tipoObra, entrada: resultado.entrada });
   await guardarArchivosEntrada(proyecto.id, archivos, descripcion);
 

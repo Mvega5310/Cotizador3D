@@ -43,6 +43,13 @@ Verificación de correo al registrarse (banner en el panel + reenviar si no lleg
 ## 10b. Guardar los planos subidos — HECHO
 Cada foto/PDF que se sube y la descripción quedan guardados (`.data/planos/<proyectoId>/` en disco, filas en `ArchivoEntrada`) y visibles en el proyecto bajo "Planos subidos" — antes se mandaban a la IA y se perdían. Servidos solo al dueño (`/projects/[id]/archivos/[archivo]`), nunca por el link público; probado el aislamiento entre cuentas. **Pendiente real:** esto guarda en el disco del servidor — para desplegar fuera de esta máquina hace falta moverlo a un storage de verdad (S3 o similar), igual que ya está anotado para los PDF.
 
+## 10c. Límites por plan — HECHO (falta el cobro de verdad)
+`lib/planes.ts::chequearCupo` bloquea crear un proyecto nuevo — antes de llamar a la IA, no después — cuando se agotó el cupo del mes (planes pagos) o el cupo total de la prueba gratuita de una sola vez (14 días o `cupoMes` proyectos, lo que llegue primero). El panel muestra cuántos proyectos van usados y, en la prueba, cuándo vence. Ver/editar/cotizar/exportar proyectos ya creados sigue funcionando aunque el cupo esté agotado — el límite es solo para crear proyectos nuevos. Probado: bloqueo inmediato (no espera a la IA), botón "+ Nuevo proyecto" desaparece, y el vencimiento de la prueba da su propio mensaje.
+
+**Sin cobro de verdad:** hoy el plan de una cuenta lo pone el código al registrarse (siempre "prueba"); subir a Personal/Profesional/Empresa requeriría pasar por una pasarela de pago (Stripe u otra) — no construido, necesita una cuenta de pagos real.
+
+**Límite conocido:** no hay bloqueo a nivel de base de datos contra dos creaciones casi simultáneas pasando el chequeo a la vez (condición de carrera de bajo riesgo en un cupo blando, no una cuenta bancaria).
+
 ## 10. Cuentas, suscripción y cobro
 Planes Personal / Profesional / Empresa con cupo por proyectos generados; prueba de 14 días o 2 proyectos; PDF con marca de agua en la prueba.
 
