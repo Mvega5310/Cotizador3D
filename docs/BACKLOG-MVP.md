@@ -14,8 +14,8 @@ Orden basado en el "siguiente paso" de la guía v3 (§10) y en la decisión de q
 ## 4. Segundo producto de otro rubro (prueba de aceptación)
 Cocina integral o portón con reja, con el mismo motor. Criterio: lo que se agregue al motor debe ser genérico y reutilizable (una forma, una pieza), no lógica propia de ese producto.
 
-## 5. `apps/web` sobre elementos — HECHO (falta edición de geometría)
-Crear desde ejemplo o JSON validado, visor por etapas, cantidades en cinco unidades, confirmación de piezas con versiones nuevas y cotización por pieza; probado de punta a punta en el navegador, incluido el aislamiento entre usuarios. Se eliminó el kit de cubierta y sus pantallas. Pendiente: editar geometría en la revisión. Rehacer crear proyecto / revisión / cuadro de cantidades / cotización sobre elementos (hoy están atados al kit de cubierta). Incluye la pantalla de revisión con origen (IA/usuario) y confirmación.
+## 5. `apps/web` sobre elementos — HECHO
+Subir planos con IA (único camino para crear un proyecto), visor por etapas, cantidades en cinco unidades, cotización por pieza, y edición de geometría: en cada línea del cuadro de cantidades, "Ver y corregir" abre los elementos de esa pieza con sus coordenadas (igual para las cuatro formas, ver `EditorElementos.tsx`); guardar crea una versión nueva con los valores corregidos y marca todo el grupo como confirmado/origen usuario. Probado de punta a punta, incluido el aislamiento entre usuarios. Rehacer crear proyecto / revisión / cuadro de cantidades / cotización sobre elementos (hoy están atados al kit de cubierta). Incluye la pantalla de revisión con origen (IA/usuario) y confirmación.
 
 ## 6. Generalizar el PDF — HECHO
 `/p/[token]/imprimir` (componente `VisorImprimible`) renderiza el proyecto sin interfaz, captura las 5 vistas de cámara del propio canvas (ya no hace falta un script de renders aparte) y arma portada + vistas + cuadro de cantidades + aviso legal. `lib/actions/pdf.ts` abre esa página con Playwright y llama `page.pdf()`. Probado de punta a punta: PDF de 4 páginas con las 5 vistas embebidas, servido en `/p/[token]/pdf`.

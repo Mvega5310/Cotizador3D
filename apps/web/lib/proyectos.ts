@@ -195,6 +195,40 @@ export async function obtenerProyectoPorToken(token: string) {
   return { proyecto: resultado.version.proyecto, version, entrada, calculo, modo, marcaAgua: version.resultado?.marcaAgua ?? true };
 }
 
+// Corregir la geometría de uno o más elementos: igual que confirmarPieza, no
+// se edita la versión existente — se crea la siguiente con esos elementos
+// con su geometría nueva, confirmados y con origen "usuario" (ya lo revisó
+// una persona, deja de ser un supuesto de la IA). Se valida cada elemento
+// tocado con el motor antes de guardar nada: si una corrección no tiene
+// sentido (p. ej. un punto repetido), se avisa cuál y por qué, sin tumbar
+// las demás correcciones de la misma tanda.
+export async function corregirElementos(projectId: string, correcciones: Record<string, Record<string, number[]>>): Promise<{ error?: string }> {
+  const { proyecto, version, entrada } = await obtenerProyecto(projectId);
+  const idsValidos = new Set(entrada.elementos.map((e) => e.id));
+  const idsCorregir = Object.keys(correcciones).filter((id) => idsValidos.has(id));
+  if (idsCorregir.length === 0) return { error: "No hay ningún elemento para corregir." };
+
+  const elementos = entrada.elementos.map((e) =>
+    correcciones[e.id] ? { ...e, geometria: correcciones[e.id], confirmado: true, origen: "usuario" as const } : e
+  );
+  for (const id of idsCorregir) {
+    const el = elementos.find((e) => e.id === id)!;
+    const m = medirElemento(el, entrada.catalogo);
+    if (!m.ok) return { error: `${el.nombre} (${id}): ${m.mensaje}` };
+  }
+
+  const piezaIds = Object.fromEntries(Object.keys(entrada.catalogo).map((k) => [k, k]));
+  const enlaces = { linkCompleto: version.resultado?.linkCompleto ?? nuevoToken(), linkCliente: version.resultado?.linkCliente ?? nuevoToken() };
+  await prisma.$transaction(
+    async (tx) => {
+      const v = await tx.versionProyecto.create({ data: { proyectoId: proyecto.id, numero: version.numero + 1 } });
+      await volcarVersion(tx, v.id, { ...entrada, elementos }, piezaIds, enlaces);
+    },
+    { timeout: 120000, maxWait: 30000 }
+  );
+  return {};
+}
+
 // Confirmar una pieza es una corrección: no se edita la versión existente, se
 // crea la siguiente con esos elementos marcados como confirmados por el usuario.
 export async function confirmarPieza(projectId: string, piezaId: string) {

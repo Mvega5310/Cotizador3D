@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
-import { crearProyecto, confirmarPieza, depurarEntradaIA, type EntradaMotor } from "@/lib/proyectos";
+import { crearProyecto, confirmarPieza, corregirElementos, depurarEntradaIA, type EntradaMotor } from "@/lib/proyectos";
 import { proponerElementos } from "@/lib/ia";
 
 export type EstadoForm = { error?: string };
@@ -55,4 +55,30 @@ export async function confirmarPiezaAction(formData: FormData) {
   if (!proyectoId || !piezaId) return;
   await confirmarPieza(proyectoId, piezaId);
   revalidatePath(`/projects/${proyectoId}`);
+}
+
+// Campos del formulario: "geo.<elementoId>.<campo>.<índice>" -> número.
+// Un solo envío puede corregir varios elementos a la vez (ver EditorElementos.tsx).
+const CAMPO_GEO = /^geo\.(.+)\.([^.]+)\.(\d)$/;
+
+export async function corregirElementosAction(_prev: EstadoForm, formData: FormData): Promise<EstadoForm> {
+  const proyectoId = String(formData.get("proyectoId") || "");
+  if (!proyectoId) return { error: "Falta el proyecto." };
+
+  const correcciones: Record<string, Record<string, number[]>> = {};
+  for (const [clave, valor] of formData.entries()) {
+    const m = clave.match(CAMPO_GEO);
+    if (!m) continue;
+    const [, id, campo, indice] = m;
+    const n = Number(valor);
+    if (!Number.isFinite(n)) return { error: `El valor de "${campo}" en ${id} no es un número.` };
+    (correcciones[id] ??= {});
+    (correcciones[id][campo] ??= [0, 0, 0])[Number(indice)] = n;
+  }
+  if (Object.keys(correcciones).length === 0) return { error: "No hay cambios para guardar." };
+
+  const resultado = await corregirElementos(proyectoId, correcciones);
+  if (resultado.error) return { error: resultado.error };
+  revalidatePath(`/projects/${proyectoId}`);
+  return {};
 }

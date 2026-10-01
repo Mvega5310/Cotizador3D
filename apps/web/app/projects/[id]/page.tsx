@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { obtenerProyecto } from "@/lib/proyectos";
 import { confirmarPiezaAction } from "@/lib/actions/proyectos";
@@ -7,6 +8,7 @@ import VisorProyecto from "@/components/VisorProyecto";
 import CotizadorProyecto from "@/components/CotizadorProyecto";
 import BotonPdf from "@/components/BotonPdf";
 import EnlaceCopiable from "@/components/EnlaceCopiable";
+import EditorElementos from "@/components/EditorElementos";
 
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean; origenes: string[] };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
@@ -19,6 +21,18 @@ export default async function ProyectoPage({
   const { proyecto, version, entrada, calculo } = await obtenerProyecto(id);
   const etapas = Object.entries(calculo.porEtapa as Record<string, EtapaCalculo>);
   const sinConfirmar = calculo.lineas.filter((l: Linea) => !l.confirmado).length;
+
+  // Agrupa los elementos igual que el motor agrupa las líneas del cuadro de
+  // cantidades (etapa + pieza + unidad resuelta), para poder editarlos en el
+  // bloque que corresponde a cada línea (ver EditorElementos.tsx).
+  const elementosPorLinea = new Map<string, { id: string; nombre: string; geometria: Record<string, number[]>; confirmado: boolean; origen: string }[]>();
+  for (const el of entrada.elementos) {
+    const unidad = el.unidad ?? entrada.catalogo[el.pieza]?.unidad;
+    const clave = `${el.etapa}|${el.pieza}|${unidad}`;
+    const lista = elementosPorLinea.get(clave) ?? [];
+    lista.push({ id: el.id, nombre: el.nombre, geometria: el.geometria as Record<string, number[]>, confirmado: el.confirmado, origen: el.origen });
+    elementosPorLinea.set(clave, lista);
+  }
 
   return (
     <main className="flex-1 mx-auto w-full max-w-4xl px-6 py-10 space-y-10">
@@ -75,23 +89,26 @@ export default async function ProyectoPage({
                   </thead>
                   <tbody>
                     {e.lineas.map((l) => (
-                      <tr key={`${l.piezaId}|${l.unidad}`} className="border-t border-neutral-200">
-                        <td className="px-3 py-1.5">{l.nombre}</td>
-                        <td className="px-3 py-1.5 text-right whitespace-nowrap">{cantidadTexto(l.cantidad, l.unidad)}</td>
-                        <td className="px-3 py-1.5 text-right">{l.n}</td>
-                        <td className="px-3 py-1.5">
-                          {l.confirmado ? (
-                            <span className="text-green-700">Confirmado</span>
-                          ) : (
-                            <form action={confirmarPiezaAction} className="flex items-center gap-2">
-                              <input type="hidden" name="proyectoId" value={proyecto.id} />
-                              <input type="hidden" name="piezaId" value={l.piezaId} />
-                              <span className="text-amber-700">Referencia</span>
-                              <button className="text-xs border border-neutral-300 rounded px-2 py-0.5 hover:bg-neutral-100">Confirmar</button>
-                            </form>
-                          )}
-                        </td>
-                      </tr>
+                      <Fragment key={`${l.piezaId}|${l.unidad}`}>
+                        <tr className="border-t border-neutral-200">
+                          <td className="px-3 py-1.5">{l.nombre}</td>
+                          <td className="px-3 py-1.5 text-right whitespace-nowrap">{cantidadTexto(l.cantidad, l.unidad)}</td>
+                          <td className="px-3 py-1.5 text-right">{l.n}</td>
+                          <td className="px-3 py-1.5">
+                            {l.confirmado ? (
+                              <span className="text-green-700">Confirmado</span>
+                            ) : (
+                              <form action={confirmarPiezaAction} className="flex items-center gap-2">
+                                <input type="hidden" name="proyectoId" value={proyecto.id} />
+                                <input type="hidden" name="piezaId" value={l.piezaId} />
+                                <span className="text-amber-700">Referencia</span>
+                                <button className="text-xs border border-neutral-300 rounded px-2 py-0.5 hover:bg-neutral-100">Confirmar</button>
+                              </form>
+                            )}
+                          </td>
+                        </tr>
+                        <EditorElementos proyectoId={proyecto.id} elementos={elementosPorLinea.get(`${l.etapa}|${l.piezaId}|${l.unidad}`) ?? []} />
+                      </Fragment>
                     ))}
                     <tr className="border-t border-neutral-300 bg-neutral-50 font-medium">
                       <td className="px-3 py-1.5">Total etapa</td>
