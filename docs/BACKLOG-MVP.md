@@ -37,6 +37,9 @@ Tubos y perfiles, teja y láminas, muros y losas, vidrio, madera y tableros, pue
 ## 9. Piloto con 3–5 usuarios de oficios distintos
 Mide costo real por proyecto, tiempo ahorrado y disposición a pagar. Sin esto, los precios de los planes son adivinanza.
 
+## 10a. Login completo — HECHO
+Verificación de correo al registrarse (banner en el panel + reenviar si no llegó) y recuperar contraseña, ambos con enlaces de un solo uso que vencen (modelo `TokenAuth`). El correo sale por Resend; sin `RESEND_API_KEY` configurada el registro y el login siguen funcionando, solo no se envía el correo (queda en el log del servidor). El mensaje de "recuperar contraseña" es idéntico exista o no la cuenta, para no revelar qué correos están registrados.
+
 ## 10. Cuentas, suscripción y cobro
 Planes Personal / Profesional / Empresa con cupo por proyectos generados; prueba de 14 días o 2 proyectos; PDF con marca de agua en la prueba.
 

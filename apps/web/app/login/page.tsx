@@ -20,7 +20,10 @@ export default function LoginPage() {
               className="w-full border border-neutral-300 rounded px-3 py-2" />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium" htmlFor="password">Contraseña</label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium" htmlFor="password">Contraseña</label>
+              <Link href="/olvide" className="text-xs text-neutral-500 hover:underline">¿Olvidaste tu contraseña?</Link>
+            </div>
             <input id="password" name="password" type="password" required autoComplete="current-password"
               className="w-full border border-neutral-300 rounded px-3 py-2" />
           </div>

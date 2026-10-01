@@ -1,5 +1,10 @@
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
+
+// Para enlaces de un solo uso (verificar correo, recuperar contraseña) — ver
+// lib/actions/auth.ts y el modelo TokenAuth en prisma/schema.prisma.
+export const nuevoTokenAuth = () => randomBytes(24).toString("hex");
 
 const secret = new TextEncoder().encode(
   process.env.AUTH_SECRET || "dev-only-secret-change-before-deploying"

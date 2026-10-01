@@ -41,6 +41,11 @@ enum OrigenParametro {
   usuario
 }
 
+enum TipoToken {
+  verificacion
+  recuperacion
+}
+
 model Cuenta {
   id          String    @id @default(cuid())
   nombre      String
@@ -56,15 +61,31 @@ model Cuenta {
 }
 
 model Usuario {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  nombre       String
-  passwordHash String
-  cuentaId     String
-  cuenta       Cuenta   @relation(fields: [cuentaId], references: [id])
-  creadoEn     DateTime @default(now())
+  id               String   @id @default(cuid())
+  email            String   @unique
+  nombre           String
+  passwordHash     String
+  emailVerificado  Boolean  @default(false)
+  cuentaId         String
+  cuenta           Cuenta   @relation(fields: [cuentaId], references: [id])
+  creadoEn         DateTime @default(now())
 
   proyectos Proyecto[]
+  tokens    TokenAuth[]
+}
+
+// Enlaces de un solo uso para verificar correo o recuperar contraseña — un
+// mismo mecanismo para los dos (lib/actions/auth.ts). `token` se genera con
+// crypto.randomBytes; de un solo uso (usadoEn) y con vencimiento (expiraEn).
+model TokenAuth {
+  id        String    @id @default(cuid())
+  usuarioId String
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id])
+  tipo      TipoToken
+  token     String    @unique
+  expiraEn  DateTime
+  usadoEn   DateTime?
+  creadoEn  DateTime  @default(now())
 }
 
 model Proyecto {

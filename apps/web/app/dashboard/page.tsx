@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { logoutAction } from "@/lib/actions/auth";
+import AvisoVerificacion from "@/components/AvisoVerificacion";
 
 export default async function DashboardPage() {
   const session = await requireSession();
@@ -27,6 +28,8 @@ export default async function DashboardPage() {
           <button className="text-sm underline text-neutral-600">Salir</button>
         </form>
       </div>
+
+      {!usuario.emailVerificado && <AvisoVerificacion />}
 
       <Link
         href="/projects/new"
