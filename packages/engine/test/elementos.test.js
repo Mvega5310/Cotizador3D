@@ -209,6 +209,8 @@ test('consumos por regla: pintura, soldadura, varilla y tornillos, juntos por no
   casi(linea('Soldadura E6013').cantidad, 300 * 0.03); // la del perfil sin peso no suma
   casi(linea('Acero de refuerzo').cantidad, 160);
   casi(linea('Tornillo 4×50').cantidad, 16);
+  casi(r.total.kg, 300 + 250, 'la soldadura y el acero de refuerzo no se suman al peso de la estructura');
+  assert.equal(r.total.und, 0); // el tornillo y la pintura tampoco
   assert.equal(r.errores.length, 0); // una regla mala no tumba el elemento
   assert.equal(r.avisos.length, 2);
   assert.match(r.avisos.join(' '), /no tiene esa medida/);

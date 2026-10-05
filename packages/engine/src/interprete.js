@@ -120,6 +120,9 @@ export function calcularProyecto({ elementos, catalogo = {}, etapas = [] }) {
   for (const l of listado) {
     const e = (porEtapa[l.etapa] ??= { nombre: nombreEtapa(l.etapa), lineas: [], totales: vacio() });
     e.lineas.push(l);
+    // Los totales son de lo que se construye: los consumos y el canto (líneas
+    // derivadas) no se suman — 9 kg de soldadura no son 9 kg más de estructura.
+    if (l.derivada) continue;
     e.totales[l.unidad] += l.cantidad;
     total[l.unidad] += l.cantidad;
   }
