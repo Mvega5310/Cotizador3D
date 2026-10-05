@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
-import { calcularProyecto, medirElemento } from "@cotizador3d/engine";
+import { calcularProyecto, claveConsumo, consumoValido, medirElemento } from "@cotizador3d/engine";
 import type { RespuestaIA } from "@/lib/ia";
 import { guardarArchivos } from "@/lib/archivos";
 import { COTIZACION_INICIAL, leerCotizacion } from "@/lib/cotizacion";
@@ -14,7 +14,16 @@ type UnidadClave = "kg" | "m2" | "m3" | "ml" | "und";
 const MAX_ELEMENTOS = 3000;
 
 export type Etapa = { numero: number; nombre: string };
-export type Pieza = { id: string; nombre: string; unidad: UnidadClave; dimensiones: Record<string, unknown>; factor?: number; tipo?: string };
+export type Consumo = { nombre: string; unidad: UnidadClave; base: string; factor: number; entero?: boolean };
+export type Pieza = {
+  id: string; nombre: string; unidad: UnidadClave; dimensiones: Record<string, unknown>; factor?: number; tipo?: string;
+  consumos?: Consumo[];
+};
+
+// Reglas de consumo guardadas (CatalogoPieza.consumos): solo las válidas.
+export function leerConsumos(crudo: unknown): Consumo[] {
+  return Array.isArray(crudo) ? (crudo.filter((c) => consumoValido(c)) as Consumo[]) : [];
+}
 // Elemento en el formato del motor (packages/engine/src/interprete.js)
 export type ElementoMotor = {
   id: string; nombre: string; forma: string; geometria: unknown; pieza: string;
@@ -34,7 +43,7 @@ export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; de
   const catalogo: Record<string, Pieza> = Object.fromEntries(
     Object.entries(resp.catalogo).map(([clave, p]) => [
       clave,
-      { id: clave, nombre: p.nombre, unidad: p.unidad, dimensiones: p.dimensiones ?? {}, factor: p.factor },
+      { id: clave, nombre: p.nombre, unidad: p.unidad, dimensiones: p.dimensiones ?? {}, factor: p.factor, consumos: leerConsumos(p.consumos) },
     ])
   );
   const elementos: ElementoMotor[] = resp.elementos.map((e) => ({
@@ -53,13 +62,21 @@ export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; de
     const lista = errores.slice(0, 5).map((e: { elementoId: string; mensaje: string }) => `${e.elementoId}: ${e.mensaje}`).join(" · ");
     throw new Error(`La IA no propuso ningún elemento interpretable. ${lista}`);
   }
-  // Precios que la IA leyó de la descripción: solo los de piezas que existen
-  // (o del canto de una pieza que existe).
+  // Precios que la IA leyó de la descripción: solo los de piezas que existen,
+  // del canto de una pieza que existe, o de un consumo que alguna pieza tiene
+  // (normalizado igual que en el motor, interprete.js::claveConsumo).
   let cotizacion = resp.cotizacion;
   if (cotizacion?.precios) {
-    const precios = Object.fromEntries(
-      Object.entries(cotizacion.precios).filter(([k]) => (k.endsWith("#canto") ? k.slice(0, -6) : k) in catalogo)
-    );
+    const consumos = new Set(Object.values(catalogo).flatMap((p) => (p.consumos ?? []).map((c) => claveConsumo(c.nombre))));
+    const precios: Record<string, number> = {};
+    for (const [k, v] of Object.entries(cotizacion.precios)) {
+      if (k.startsWith("consumo:")) {
+        const clave = claveConsumo(k.slice("consumo:".length));
+        if (consumos.has(clave)) precios[clave] = v;
+      } else if ((k.endsWith("#canto") ? k.slice(0, -6) : k) in catalogo) {
+        precios[k] = v;
+      }
+    }
     cotizacion = { ...cotizacion, precios };
   }
   return { entrada: { elementos: validos, catalogo, etapas }, descartados: invalidos.size, notas: resp.notas, cotizacion };
@@ -140,6 +157,7 @@ export async function completarProyecto(args: {
             data: {
               cuentaId, tipo: p.tipo ?? "pieza", nombre: p.nombre, unidad: p.unidad,
               dimensiones: p.dimensiones as Prisma.InputJsonValue, factor: p.factor,
+              consumos: p.consumos?.length ? (p.consumos as unknown as Prisma.InputJsonValue) : undefined,
             },
           })
         ).id;
@@ -150,6 +168,7 @@ export async function completarProyecto(args: {
       // reales del catálogo, que es como los nombra el cuadro de cantidades.
       const precios: Record<string, number> = {};
       for (const [k, v] of Object.entries(args.cotizacion?.precios ?? {})) {
+        if (k.startsWith("consumo:")) { precios[k] = v; continue; } // no lleva id de pieza
         const [clave, sufijo] = k.split("#");
         if (piezaIds[clave]) precios[sufijo ? `${piezaIds[clave]}#${sufijo}` : piezaIds[clave]] = v;
       }
@@ -198,7 +217,7 @@ type VersionCargada = Prisma.VersionProyectoGetPayload<{ include: { etapas: true
 async function armarEntrada(version: VersionCargada) {
   const piezas = await prisma.catalogoPieza.findMany({ where: { id: { in: [...new Set(version.elementos.map((e) => e.piezaId).filter((x): x is string => !!x))] } } });
   const catalogo: Record<string, Pieza> = Object.fromEntries(
-    piezas.map((p) => [p.id, { id: p.id, nombre: p.nombre, unidad: p.unidad as UnidadClave, dimensiones: p.dimensiones as Record<string, unknown>, factor: p.factor ?? undefined, tipo: p.tipo }])
+    piezas.map((p) => [p.id, { id: p.id, nombre: p.nombre, unidad: p.unidad as UnidadClave, dimensiones: p.dimensiones as Record<string, unknown>, factor: p.factor ?? undefined, tipo: p.tipo, consumos: leerConsumos(p.consumos) }])
   );
   const numeroDe = new Map(version.etapas.map((e) => [e.id, e.numero]));
   const etapas: Etapa[] = version.etapas.map((e) => ({ numero: e.numero, nombre: e.nombre }));

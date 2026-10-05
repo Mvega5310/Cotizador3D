@@ -195,6 +195,9 @@ model CatalogoPieza {
   unidad       Unidad // unidad en la que se cotiza
   dimensiones  Json // ancho, alto, espesor, etc.; depende de `tipo`
   factor       Float? // kg por unidad o rendimiento, cuando aplica (p. ej. kg/m de un perfil)
+  // Reglas de consumo derivado: [{ nombre, unidad, base, factor, entero? }]
+  // (pintura por superficie, soldadura por kg...). Ver engine/interprete.js.
+  consumos     Json?
   reutilizable Boolean  @default(true)
 
   parametros Parametro[]

@@ -15,6 +15,7 @@ La app de suscripción sobre el motor (`@cotizador3d/engine`): cuentas, login y 
 - **La IA trabaja en segundo plano** (`lib/generacion.ts`): "Generar proyecto" responde al instante con el proyecto en estado `procesando`; la lectura de planos (1–4 min) corre con `after()` y la página se refresca sola (`EsperandoIA.tsx`). Si falla, el proyecto queda en `error` con el motivo y un botón "Reintentar" que usa los planos ya guardados; un intento fallido no gasta cupo. Si un despliegue corta una generación, a los 15 min se marca como interrumpida.
 - **Supuestos de la IA guardados:** las notas de la IA (medidas asumidas, lo que no se pudo leer) quedan en el proyecto (`Proyecto.notasIA`) y se muestran siempre.
 - **Cotización guardada** (`lib/cotizacion.ts`, `Proyecto.cotizacion`): precios por pieza, desperdicio y mano de obra (% y/o valor fijo) se guardan solos mientras se escriben y salen desglosados en el link completo y en el PDF. Si el usuario escribe precios en la descripción, la IA los asigna a cada pieza (marcados "leído de tu descripción"); nunca inventa precios.
+- **Consumos por material** (`CatalogoPieza.consumos`, `EditorConsumos.tsx`): reglas tipo "anticorrosivo: 1 galón por 30 m² de superficie", "soldadura: 0,03 kg por kg de acero", "acero de refuerzo: 80 kg por m³", "8 tornillos por tablero". El motor las suma en una línea por consumo (aunque vengan de varias piezas), redondea hacia arriba lo que se compra entero y cada línea lleva su precio. La IA las propone como supuestos; el usuario las edita en la página del proyecto.
 - **Carpintería / ebanistería:** forma `tablero` (pieza de mueble con su espesor real), canto en metros lineales como línea aparte, despiece (lista de cortes en mm) y mínimo de láminas por material, en la página, el link completo y el PDF (`Despiece.tsx`).
 - **PDF y enlaces públicos:** cada proyecto tiene un link completo (visor + cantidades) y uno de cliente (solo visor), sin sesión, con marca de agua durante la prueba. "Generar PDF" abre `/p/<token>/imprimir` con Playwright, captura las 5 vistas de cámara y arma un PDF de varias páginas, servido en `/p/<token>/pdf`.
 
@@ -26,7 +27,6 @@ La app de suscripción sobre el motor (`@cotizador3d/engine`): cuentas, login y 
 - Generar el PDF fuera de un servidor propio (ver la limitación anotada en `lib/actions/pdf.ts`).
 - Guardar los planos en un storage de verdad (hoy quedan en el disco del servidor, `.data/planos/`) para cuando esto se despliegue fuera de esta máquina.
 - APU por ítem, AIU e impuestos; base de precios por cuenta reutilizable entre proyectos.
-- Consumos derivados por regla del catálogo (pintura por m², soldadura por kg, varilla por cuantía).
 - Formas más allá de `viga`, `panel`, `volumen`, `tablero` y `pieza`. Se agregan en `packages/engine/src/formas.js` cuando un producto las pida.
 
 ## Correr en local

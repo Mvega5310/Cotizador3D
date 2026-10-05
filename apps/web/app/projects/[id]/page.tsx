@@ -12,6 +12,7 @@ import BotonPdf from "@/components/BotonPdf";
 import EnlaceCopiable from "@/components/EnlaceCopiable";
 import EditorElementos from "@/components/EditorElementos";
 import Despiece from "@/components/Despiece";
+import EditorConsumos from "@/components/EditorConsumos";
 
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean; origenes: string[]; derivada?: boolean };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
@@ -155,7 +156,7 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
                           <td className="px-3 py-1.5">
                             {l.derivada ? (
                               <span className={l.confirmado ? "text-green-700" : "text-amber-700"}>
-                                {l.confirmado ? "Confirmado" : "Sigue a sus tableros"}
+                                {l.confirmado ? "Confirmado" : "Sigue a sus piezas"}
                               </span>
                             ) : l.confirmado ? (
                               <span className="text-green-700">Confirmado</span>
@@ -185,6 +186,17 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
               </div>
             ))}
           </section>
+
+          {calculo.avisos.length > 0 && (
+            <ul className="border border-amber-300 bg-amber-50 text-amber-800 rounded p-3 text-sm list-disc pl-6 space-y-0.5">
+              {calculo.avisos.map((a: string) => <li key={a}>{a}</li>)}
+            </ul>
+          )}
+
+          <EditorConsumos
+            proyectoId={proyecto.id}
+            piezas={Object.values(entrada.catalogo).map((p) => ({ id: p.id, nombre: p.nombre, consumos: p.consumos ?? [] }))}
+          />
 
           <Despiece despiece={calculo.despiece} laminas={calculo.laminas} conEstado />
 

@@ -7,7 +7,10 @@ import { v, beam, box, steelMat } from './helpers.js';
 //
 // Cada forma declara:
 //   validar(g, pieza)  -> null si está bien, o un texto con el problema
-//   medir(g, pieza)    -> medidas que se pueden cobrar: { ml?, m2?, m3?, und }
+//   medir(g, pieza)    -> medidas que se pueden cobrar: { ml?, m2?, m3?, und }, más
+//                         `superficie` (m² de cara exterior, para pintura y acabados:
+//                         perímetro × largo en una viga, una cara en un panel, todas
+//                         las caras en una caja)
 //   unidadBase         -> la medida sobre la que actúa `pieza.factor` para sacar kg
 //   bbox(g)            -> [[xmin,ymin,zmin],[xmax,ymax,zmax]] en metros
 //   dibujar(g, pieza, mat) -> THREE.Object3D (solo navegador)
@@ -45,7 +48,10 @@ export const FORMAS = {
       if (!positivo(dim(pieza).ancho) || !positivo(dim(pieza).alto)) return 'la pieza necesita dimensiones.ancho y dimensiones.alto (m).';
       return null;
     },
-    medir: (g) => ({ ml: dist(g.a, g.b), und: 1 }),
+    medir(g, pieza) {
+      const ml = dist(g.a, g.b);
+      return { ml, und: 1, superficie: 2 * (dim(pieza).ancho + dim(pieza).alto) * ml };
+    },
     bbox: (g) => bboxDePuntos([g.a, g.b]),
     dibujar: (g, pieza, mat) => beam(v(...g.a), v(...g.b), dim(pieza).ancho, dim(pieza).alto, mat || steelMat(color(pieza, 0x9aa3ae))),
   },
@@ -62,7 +68,7 @@ export const FORMAS = {
     },
     medir(g, pieza) {
       const m2 = norm(cross(g.u, g.v));
-      const m = { m2, und: 1 };
+      const m = { m2, und: 1, superficie: m2 };
       if (positivo(dim(pieza).espesor)) m.m3 = m2 * dim(pieza).espesor;
       return m;
     },
@@ -88,7 +94,7 @@ export const FORMAS = {
       if (![0, 1, 2].every((i) => g.max[i] > g.min[i])) return 'max debe ser mayor que min en los tres ejes.';
       return null;
     },
-    medir: (g) => ({ m3: (g.max[0] - g.min[0]) * (g.max[1] - g.min[1]) * (g.max[2] - g.min[2]), und: 1 }),
+    medir: (g) => ({ m3: (g.max[0] - g.min[0]) * (g.max[1] - g.min[1]) * (g.max[2] - g.min[2]), und: 1, superficie: caras(sub(g.max, g.min)) }),
     bbox: (g) => [g.min, g.max],
     dibujar: (g, pieza, mat) => box(g.min[0], g.min[1], g.min[2], g.max[0], g.max[1], g.max[2],
       mat || new THREE.MeshStandardMaterial({ color: color(pieza, 0xc9c3b6), roughness: 0.9 })),
@@ -119,7 +125,7 @@ export const FORMAS = {
     },
     medir(g) {
       const { largo, ancho, espesor } = corte(g);
-      return { m2: largo * ancho, m3: largo * ancho * espesor, und: 1 };
+      return { m2: largo * ancho, m3: largo * ancho * espesor, und: 1, superficie: 2 * largo * ancho };
     },
     extras(g, pieza) {
       const { largo, ancho, cantos } = corte(g);
@@ -142,7 +148,7 @@ export const FORMAS = {
       if (!g.tam.every(positivo)) return 'tam debe ser positivo en los tres ejes.';
       return null;
     },
-    medir: () => ({ und: 1 }),
+    medir: (g) => ({ und: 1, superficie: caras(g.tam) }),
     bbox: (g) => [[0, 1, 2].map((i) => g.pos[i] - g.tam[i] / 2), [0, 1, 2].map((i) => g.pos[i] + g.tam[i] / 2)],
     dibujar: (g, pieza, mat) => box(
       g.pos[0] - g.tam[0] / 2, g.pos[1] - g.tam[1] / 2, g.pos[2] - g.tam[2] / 2,
@@ -154,6 +160,9 @@ export const FORMAS = {
 function sumar(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
 
 const mm = (m) => Math.round(m * 1000);
+
+// Área de las seis caras de una caja de lados [a, b, c].
+const caras = ([a, b, c]) => 2 * (a * b + b * c + c * a);
 
 // Medidas de corte de un tablero: de mayor a menor, largo, ancho y espesor.
 function corte(g) {

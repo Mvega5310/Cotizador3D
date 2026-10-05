@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
-import { crearProyectoPendiente, confirmarPieza, corregirElementos, guardarArchivosEntrada, obtenerEstadoProyecto } from "@/lib/proyectos";
+import { crearProyectoPendiente, confirmarPieza, corregirElementos, guardarArchivosEntrada, obtenerEstadoProyecto, obtenerProyecto } from "@/lib/proyectos";
+import { consumoValido } from "@cotizador3d/engine";
 import type { ArchivoLeido } from "@/lib/ia";
 import { generarEnSegundoPlano } from "@/lib/generacion";
 import { leerArchivoGuardado } from "@/lib/archivos";
@@ -93,6 +94,24 @@ export async function guardarCotizacionAction(proyectoId: string, datos: unknown
   const cotizacion = leerCotizacion(datos);
   await prisma.proyecto.update({ where: { id: proyecto.id }, data: { cotizacion } });
   return { ok: true };
+}
+
+// Reglas de consumo de un material del proyecto (EditorConsumos.tsx). Son
+// parámetros de cotización, como los precios: se editan sobre la pieza del
+// catálogo y no crean una versión nueva del proyecto.
+export async function guardarConsumosAction(proyectoId: string, piezaId: string, reglas: unknown): Promise<{ error?: string }> {
+  const { entrada } = await obtenerProyecto(proyectoId);
+  if (!entrada.catalogo[piezaId]) return { error: "Ese material no es de este proyecto." };
+  if (!Array.isArray(reglas) || reglas.length > 20) return { error: "Lista de consumos inválida." };
+  const limpias = reglas.map((r) => ({
+    nombre: String(r?.nombre ?? "").trim().slice(0, 120), unidad: r?.unidad, base: r?.base,
+    factor: Number(r?.factor), ...(r?.entero ? { entero: true } : {}),
+  }));
+  const mala = limpias.findIndex((r) => !consumoValido(r));
+  if (mala >= 0) return { error: `El consumo ${mala + 1} está incompleto: necesita nombre y una cantidad mayor que 0.` };
+  await prisma.catalogoPieza.update({ where: { id: piezaId }, data: { consumos: limpias } });
+  revalidatePath(`/projects/${proyectoId}`);
+  return {};
 }
 
 export async function confirmarPiezaAction(formData: FormData) {

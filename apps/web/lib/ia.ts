@@ -33,6 +33,13 @@ const PiezaIA = z.object({
   unidad: z.enum(["kg", "m2", "m3", "ml", "und"]),
   dimensiones: z.record(z.string(), z.number()).optional(),
   factor: z.number().optional().describe("kg por unidad base de la forma (kg/m para viga o panel, kg/m² para panel, etc). Solo si se va a cotizar esa pieza en kg."),
+  consumos: z.array(z.object({
+    nombre: z.string().min(1),
+    unidad: z.enum(["kg", "m2", "m3", "ml", "und"]),
+    base: z.enum(["ml", "m2", "m3", "kg", "und", "superficie"]),
+    factor: z.number().positive(),
+    entero: z.boolean().optional(),
+  })).optional(),
 });
 
 const RespuestaIA = z.object({
@@ -70,8 +77,14 @@ etapas: si el proyecto tiene partes que se ejecutan por separado (como en el pla
 
 Nunca devuelvas una respuesta mínima, de ejemplo o de marcador de posición. Analiza la imagen de verdad y lista TODOS los elementos estructurales que puedas identificar (cerchas o arcos, columnas, correas, cimentación, cobertura...), con tu mejor estimación numérica de coordenadas a partir de lo que se ve y se acota en el plano — aproximado es aceptable, vacío no. Cada clave que uses en el campo "pieza" de un elemento debe existir como entrada en "catalogo": revísalo antes de responder.
 
+Consumos (campo "consumos" de una pieza del catálogo, opcional): materiales que no se dibujan pero se gastan en proporción a la pieza. Cada regla: { "nombre", "unidad" (en qué se compra: kg, m2, m3, ml, und), "base" (sobre qué medida de cada elemento se calcula), "factor" (cantidad por unidad de base), "entero" (true si se compra por unidades enteras, p. ej. galones o cajas) }. Bases: "ml" (largo de una viga), "m2" (área de un panel o tablero), "m3" (volumen), "kg" (peso, solo si la pieza tiene factor de peso), "und" (cada elemento), "superficie" (m² de cara exterior: perímetro × largo en perfiles, para pintura). Ejemplos:
+- Perfiles de acero: { "nombre": "Anticorrosivo (galón)", "unidad": "und", "base": "superficie", "factor": 0.033, "entero": true }, { "nombre": "Esmalte (galón)", ... }, { "nombre": "Soldadura E6013", "unidad": "kg", "base": "kg", "factor": 0.03 }.
+- Concreto sin varillas dibujadas: { "nombre": "Acero de refuerzo", "unidad": "kg", "base": "m3", "factor": 80 } (cuantía en kg/m³).
+- Tableros de mueble: { "nombre": "Tornillo 4x50", "unidad": "und", "base": "und", "factor": 8 }.
+Usa el MISMO "nombre" exacto cuando el mismo consumo aplica a varias piezas (así se suma en una línea). Agrégalos cuando el usuario los pida o cuando sean parte normal del oficio (pintura de una estructura metálica, soldadura); los rendimientos que no te dio el usuario son supuestos: dilos en "notas". Si el usuario pide pintura o un acabado sin decir el rendimiento, usa uno usual del oficio y dilo en notas.
+
 Precios (campo "cotizacion", opcional): llénalo SOLO con precios, porcentajes o valores que el usuario haya escrito explícitamente en su descripción o en los planos. NUNCA estimes, supongas ni completes precios de mercado: si el usuario no dio el precio de una pieza, esa pieza no va en "precios". Si el usuario no dio ningún precio, omite "cotizacion" por completo.
-- precios: { "clave del catálogo": precio por UNA unidad de cotización de esa pieza (la "unidad" de su entrada en el catálogo), en la moneda del usuario }. Para el canto/tapacanto de un material de tablero, la clave es "<clave del material>#canto" y el precio es por metro lineal.
+- precios: { "clave del catálogo": precio por UNA unidad de cotización de esa pieza (la "unidad" de su entrada en el catálogo), en la moneda del usuario }. Para el canto/tapacanto de un material de tablero, la clave es "<clave del material>#canto" y el precio es por metro lineal. Para un consumo, la clave es "consumo:<nombre del consumo>" y el precio es por su unidad (p. ej. por galón).
 - Si el usuario da el precio en otra presentación (por lámina, por tubo de 6 m, por galón), conviértelo a la unidad de cotización (p. ej. precio de lámina ÷ área de la lámina en m²) y explica la conversión en "notas".
 - desperdicioPct y manoObraPct: porcentajes, solo si el usuario los da. manoObraValor: un valor total fijo de mano de obra, si el usuario lo da así (p. ej. "la mano de obra vale 400.000").
 
@@ -83,7 +96,7 @@ Reglas:
 Responde ÚNICAMENTE con un objeto JSON válido — sin texto antes ni después, sin explicaciones, sin bloques de código markdown (sin \`\`\`). Forma exacta:
 {
   "etapas": [{ "numero": 1, "nombre": "texto" }],
-  "catalogo": { "clave-corta": { "nombre": "texto", "unidad": "kg" | "m2" | "m3" | "ml" | "und", "dimensiones": { "campo": numero }, "factor": numero } },
+  "catalogo": { "clave-corta": { "nombre": "texto", "unidad": "kg" | "m2" | "m3" | "ml" | "und", "dimensiones": { "campo": numero }, "factor": numero, "consumos": [ { "nombre": "texto", "unidad": "...", "base": "...", "factor": numero, "entero": true } ] } },
   "elementos": [{ "id": "texto único", "nombre": "texto", "forma": "viga" | "panel" | "volumen" | "tablero" | "pieza", "pieza": "clave del catálogo", "etapa": numero, "geometria": { ... según la forma, ver arriba } }],
   "notas": "texto opcional",
   "cotizacion": { "precios": { "clave-corta": numero }, "desperdicioPct": numero, "manoObraPct": numero, "manoObraValor": numero }  (opcional, solo con datos dados por el usuario)

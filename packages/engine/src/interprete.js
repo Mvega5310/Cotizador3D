@@ -50,6 +50,7 @@ export function medirElemento(el, catalogo = {}) {
  */
 export function calcularProyecto({ elementos, catalogo = {}, etapas = [] }) {
   const errores = [];
+  const avisos = new Set();
   const validos = [];
   const lineas = new Map();
   const nombreEtapa = (n) => etapas.find((e) => e.numero === n)?.nombre ?? `Etapa ${n}`;
@@ -82,8 +83,33 @@ export function calcularProyecto({ elementos, catalogo = {}, etapas = [] }) {
       lx.origenes.add(el.origen ?? 'usuario');
       lineas.set(claveEx, lx);
     }
+    // Consumos por regla del catálogo (pieza.consumos): pintura por superficie,
+    // soldadura por kg, tornillos por tablero... Los que se llaman igual se
+    // juntan en una sola línea aunque vengan de piezas distintas (el
+    // anticorrosivo de todos los perfiles es una compra).
+    for (const c of pieza.consumos ?? []) {
+      if (!consumoValido(c)) { avisos.add(`La regla de consumo "${c?.nombre ?? '?'}" de "${pieza.nombre}" no es válida.`); continue; }
+      const base = m.medidas[c.base];
+      if (!Number.isFinite(base)) {
+        avisos.add(`"${c.nombre}" se calcula por ${c.base}, pero "${pieza.nombre}" no tiene esa medida${c.base === 'kg' ? ' (le falta su peso, factor)' : ''}.`);
+        continue;
+      }
+      const piezaId = claveConsumo(c.nombre);
+      const claveC = `${etapa}|${piezaId}|${c.unidad}`;
+      const lc = lineas.get(claveC) ?? { etapa, piezaId, nombre: c.nombre.trim(), unidad: c.unidad, cantidad: 0, n: 0, confirmado: true, origenes: new Set(), derivada: true, consumo: true, entero: false };
+      lc.cantidad += base * c.factor;
+      lc.n += 1;
+      lc.entero = lc.entero || c.entero === true;
+      lc.confirmado = lc.confirmado && el.confirmado !== false;
+      lc.origenes.add(el.origen ?? 'usuario');
+      lineas.set(claveC, lc);
+    }
     validos.push({ ...el, _forma: forma, _pieza: pieza });
   }
+
+  // Lo que se compra entero (galones, cajas) se redondea hacia arriba sobre
+  // el total de la línea, no pieza por pieza.
+  for (const l of lineas.values()) if (l.entero) l.cantidad = Math.ceil(l.cantidad - 1e-9);
 
   const listado = [...lineas.values()]
     .map((l) => ({ ...l, origenes: [...l.origenes] }))
@@ -99,7 +125,24 @@ export function calcularProyecto({ elementos, catalogo = {}, etapas = [] }) {
   }
 
   const { despiece, laminas } = calcularDespiece(validos);
-  return { lineas: listado, porEtapa, total, bbox: calcularBbox(validos), errores, validos, despiece, laminas };
+  return { lineas: listado, porEtapa, total, bbox: calcularBbox(validos), errores, avisos: [...avisos], validos, despiece, laminas };
+}
+
+// Regla de consumo de una pieza del catálogo:
+//   { nombre, unidad, base, factor, entero? }
+//   cantidad = (medida `base` de cada elemento) × factor
+//   base: 'ml' | 'm2' | 'm3' | 'kg' | 'und' | 'superficie' (ver formas.js::medir)
+//   entero: redondear hacia arriba el total de la línea (galones, cajas)
+export const BASES_CONSUMO = ['ml', 'm2', 'm3', 'kg', 'und', 'superficie'];
+export function consumoValido(c) {
+  return !!c && typeof c.nombre === 'string' && c.nombre.trim().length > 0 && UNIDADES.includes(c.unidad)
+    && BASES_CONSUMO.includes(c.base) && Number.isFinite(c.factor) && c.factor > 0;
+}
+
+// Clave de la línea (y del precio) de un consumo: por nombre, sin importar
+// mayúsculas ni espacios, para que "Anticorrosivo" de dos perfiles sea una línea.
+export function claveConsumo(nombre) {
+  return `consumo:${String(nombre).trim().toLowerCase().replace(/\s+/g, ' ')}`;
 }
 
 // Lista de cortes: las piezas de las formas que tienen `despiece` (tableros),

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calcularProyecto } from '../src/interprete.js';
+import { calcularProyecto, claveConsumo, consumoValido } from '../src/interprete.js';
 import { calcCotizacion } from '../src/pricing.js';
 
 const casi = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg ?? ''} ${a} != ${b}`);
@@ -177,6 +177,42 @@ test('tablero: espesor que no coincide con la pieza, cantos inválidos y pieza q
   assert.deepEqual(r.errores.map((e) => e.elementoId), ['grueso', 'cantos']);
   assert.match(r.errores[0].mensaje, /25 mm.*18 mm/);
   assert.equal(r.laminas[0].noCaben, 1);
+});
+
+test('consumos por regla: pintura, soldadura, varilla y tornillos, juntos por nombre y redondeados', () => {
+  const pintura = { nombre: 'Anticorrosivo (galón)', unidad: 'und', base: 'superficie', factor: 1 / 30, entero: true };
+  const cat = {
+    // tubo 50×50: superficie = 4 × 0,05 = 0,2 m² por metro
+    t50: { nombre: 'Tubo 50×50', unidad: 'kg', dimensiones: { ancho: 0.05, alto: 0.05 }, factor: 3, consumos: [pintura, { nombre: 'Soldadura E6013', unidad: 'kg', base: 'kg', factor: 0.03 }] },
+    // tubo 100×50: 0,3 m² por metro; mismo anticorrosivo (otro espacio/mayúsculas)
+    t100: { nombre: 'Tubo 100×50', unidad: 'kg', dimensiones: { ancho: 0.1, alto: 0.05 }, factor: 5, consumos: [{ ...pintura, nombre: ' anticorrosivo  (Galón) ' }] },
+    conc: { nombre: 'Concreto 3000 psi', unidad: 'm3', dimensiones: {}, consumos: [{ nombre: 'Acero de refuerzo', unidad: 'kg', base: 'm3', factor: 80 }] },
+    mel: { nombre: 'Melamina 18', unidad: 'm2', dimensiones: { espesor: 0.018 }, consumos: [{ nombre: 'Tornillo 4×50', unidad: 'und', base: 'und', factor: 8 }] },
+    malo: { nombre: 'Sin peso', unidad: 'ml', dimensiones: { ancho: 0.02, alto: 0.02 }, consumos: [{ nombre: 'Soldadura E6013', unidad: 'kg', base: 'kg', factor: 0.03 }, { nombre: '', unidad: 'kg', base: 'kg', factor: 1 }] },
+  };
+  const r = calcularProyecto({
+    catalogo: cat,
+    elementos: [
+      { id: 1, forma: 'viga', pieza: 't50', geometria: { a: [0, 0, 0], b: [100, 0, 0] } }, // 100 m: 20 m², 300 kg
+      { id: 2, forma: 'viga', pieza: 't100', geometria: { a: [0, 0, 0], b: [50, 0, 0] } }, // 50 m: 15 m²
+      { id: 3, forma: 'volumen', pieza: 'conc', geometria: { min: [0, 0, 0], max: [2, 2, 0.5] } }, // 2 m³
+      { id: 4, forma: 'tablero', pieza: 'mel', geometria: { min: [0, 0, 0], max: [0.6, 0.5, 0.018] } },
+      { id: 5, forma: 'tablero', pieza: 'mel', geometria: { min: [0, 0, 0], max: [0.6, 0.5, 0.018] } },
+      { id: 6, forma: 'viga', pieza: 'malo', geometria: { a: [0, 0, 0], b: [1, 0, 0] } },
+    ],
+  });
+  const linea = (nombre) => r.lineas.find((l) => l.piezaId === claveConsumo(nombre));
+  const pin = linea('Anticorrosivo (galón)');
+  assert.equal(pin.cantidad, 2); // (20 + 15) / 30 = 1,17 → 2 galones
+  assert.equal(pin.n, 2);
+  assert.equal(pin.consumo, true);
+  casi(linea('Soldadura E6013').cantidad, 300 * 0.03); // la del perfil sin peso no suma
+  casi(linea('Acero de refuerzo').cantidad, 160);
+  casi(linea('Tornillo 4×50').cantidad, 16);
+  assert.equal(r.errores.length, 0); // una regla mala no tumba el elemento
+  assert.equal(r.avisos.length, 2);
+  assert.match(r.avisos.join(' '), /no tiene esa medida/);
+  assert.equal(consumoValido({ nombre: 'x', unidad: 'kg', base: 'pulgadas', factor: 1 }), false);
 });
 
 // Prueba de aceptación (guía v3, §10): un producto de otro rubro, sin una
