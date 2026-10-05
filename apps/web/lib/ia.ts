@@ -53,6 +53,14 @@ const RespuestaIA = z.object({
     desperdicioPct: z.number().min(0).max(100).optional(),
     manoObraPct: z.number().min(0).max(1000).optional(),
     manoObraValor: z.number().min(0).optional(),
+    apu: z.record(z.string(), z.object({
+      desperdicioPct: z.number().min(0).max(100).optional(),
+      manoObra: z.number().min(0).optional(),
+      equipo: z.number().min(0).optional(),
+      transporte: z.number().min(0).optional(),
+    })).optional(),
+    aiu: z.object({ a: z.number().min(0).max(100).optional(), i: z.number().min(0).max(100).optional(), u: z.number().min(0).max(100).optional() }).optional(),
+    iva: z.object({ regimen: z.enum(["ninguno", "utilidad", "total"]).optional(), tarifa: z.number().min(0).max(100).optional() }).optional(),
   }).optional(),
 });
 
@@ -87,6 +95,9 @@ Precios (campo "cotizacion", opcional): llénalo SOLO con precios, porcentajes o
 - precios: { "clave del catálogo": precio por UNA unidad de cotización de esa pieza (la "unidad" de su entrada en el catálogo), en la moneda del usuario }. Para el canto/tapacanto de un material de tablero, la clave es "<clave del material>#canto" y el precio es por metro lineal. Para un consumo, la clave es "consumo:<nombre del consumo>" y el precio es por su unidad (p. ej. por galón).
 - Si el usuario da el precio en otra presentación (por lámina, por tubo de 6 m, por galón), conviértelo a la unidad de cotización (p. ej. precio de lámina ÷ área de la lámina en m²) y explica la conversión en "notas".
 - desperdicioPct y manoObraPct: porcentajes, solo si el usuario los da. manoObraValor: un valor total fijo de mano de obra, si el usuario lo da así (p. ej. "la mano de obra vale 400.000").
+- apu: análisis de precio unitario por ítem, con las mismas claves que "precios": { "clave": { "manoObra": $ por unidad, "equipo": $ por unidad, "transporte": $ por unidad, "desperdicioPct": % } }, solo con lo que el usuario dio (p. ej. "mano de obra de montaje a 2.500 por kg" → manoObra 2500 en cada perfil cotizado en kg).
+- aiu: { "a", "i", "u" } en % (administración, imprevistos, utilidad), si el usuario los da (p. ej. "AIU 25 %: A 10, I 5, U 10").
+- iva: { "regimen", "tarifa" } si el usuario dice cómo factura: "utilidad" para contrato de obra con AIU (IVA sobre la utilidad), "total" para venta o suministro (IVA sobre todo), "ninguno" si no es responsable de IVA. No lo deduzcas si no lo dice.
 
 Reglas:
 - Usa solo las medidas que puedas leer o inferir razonablemente de lo que se te dio. Cuando una medida sea un supuesto (no está acotada en el plano), dilo en "notas" en vez de inventarla con falsa precisión.
@@ -99,7 +110,7 @@ Responde ÚNICAMENTE con un objeto JSON válido — sin texto antes ni después,
   "catalogo": { "clave-corta": { "nombre": "texto", "unidad": "kg" | "m2" | "m3" | "ml" | "und", "dimensiones": { "campo": numero }, "factor": numero, "consumos": [ { "nombre": "texto", "unidad": "...", "base": "...", "factor": numero, "entero": true } ] } },
   "elementos": [{ "id": "texto único", "nombre": "texto", "forma": "viga" | "panel" | "volumen" | "tablero" | "pieza", "pieza": "clave del catálogo", "etapa": numero, "geometria": { ... según la forma, ver arriba } }],
   "notas": "texto opcional",
-  "cotizacion": { "precios": { "clave-corta": numero }, "desperdicioPct": numero, "manoObraPct": numero, "manoObraValor": numero }  (opcional, solo con datos dados por el usuario)
+  "cotizacion": { "precios": { "clave-corta": numero }, "apu": { "clave-corta": { "manoObra": numero } }, "desperdicioPct": numero, "manoObraPct": numero, "manoObraValor": numero, "aiu": { "a": numero, "i": numero, "u": numero }, "iva": { "regimen": "utilidad", "tarifa": 19 } }  (opcional, solo con datos dados por el usuario)
 }`;
 
 function tipoMedia(nombre: string, tipo: string): "image" | "pdf" | null {

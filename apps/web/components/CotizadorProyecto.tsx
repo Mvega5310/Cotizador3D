@@ -1,72 +1,73 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { calcCotizacion } from "@cotizador3d/engine";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { calcPresupuesto } from "@cotizador3d/engine";
 import { cantidadTexto, cop } from "@/lib/format";
 import { guardarCotizacionAction } from "@/lib/actions/proyectos";
-import type { Cotizacion } from "@/lib/cotizacion";
+import { NOMBRE_REGIMEN, type ApuItem, type Cotizacion, type RegimenIva } from "@/lib/cotizacion";
 
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean };
 type Calculo = { lineas: Linea[]; porEtapa: Record<string, { nombre: string; lineas: Linea[] }> };
+type Detalle = Linea & { desperdicioPct: number; material: number; valorUnitario: number; subtotal: number; conApu: boolean };
 
 const CAMPO = "w-full border border-neutral-300 rounded px-2 py-1 text-right";
-const texto = (n: number) => (n > 0 ? String(n) : "");
 
-// Precios y parámetros de la cotización. Arranca de lo guardado en el
-// proyecto (incluidos los precios que la IA leyó de la descripción del
-// usuario) y guarda solo, un momento después de cada cambio.
+// Campo numérico que deja escribir decimales a medias ("0,") sin perder lo
+// tecleado: guarda el texto y reporta el número.
+function Num({ valor, onCambio, placeholder = "0", className = CAMPO, label }: { valor: number | undefined; onCambio: (n: number | undefined) => void; placeholder?: string; className?: string; label?: string }) {
+  const [texto, setTexto] = useState(valor !== undefined && valor !== 0 ? String(valor) : "");
+  return (
+    <input type="number" min="0" step="any" inputMode="decimal" placeholder={placeholder} aria-label={label} value={texto} className={className}
+      onChange={(e) => { setTexto(e.target.value); onCambio(e.target.value === "" ? undefined : Number(e.target.value)); }} />
+  );
+}
+
+// Presupuesto del proyecto: APU por ítem, AIU, IVA y retenciones
+// (engine/pricing.js::calcPresupuesto). Arranca de lo guardado y guarda solo,
+// un momento después de cada cambio.
 export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { proyectoId: string; calculo: Calculo; inicial: Cotizacion }) {
   const [etapa, setEtapa] = useState("todo");
-  const [precios, setPrecios] = useState<Record<string, string>>(() =>
-    Object.fromEntries(Object.entries(inicial.precios).map(([k, v]) => [k, String(v)]))
-  );
-  const [desperdicio, setDesperdicio] = useState(String(inicial.desperdicioPct));
-  const [manoObra, setManoObra] = useState(texto(inicial.manoObraPct));
-  const [manoObraValor, setManoObraValor] = useState(texto(inicial.manoObraValor));
-  const [deDescripcion, setDeDescripcion] = useState<string[]>(inicial.deDescripcion);
+  const [cot, setCot] = useState<Cotizacion>(inicial);
+  const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
   const [guardado, setGuardado] = useState<"listo" | "pendiente" | "guardando" | "error">("listo");
 
-  const datos = useMemo(() => {
-    const p: Record<string, number> = {};
-    for (const [k, v] of Object.entries(precios)) if (Number(v) > 0) p[k] = Number(v);
-    return {
-      precios: p, desperdicioPct: Number(desperdicio) || 0, manoObraPct: Number(manoObra) || 0,
-      manoObraValor: Number(manoObraValor) || 0, deDescripcion,
-    };
-  }, [precios, desperdicio, manoObra, manoObraValor, deDescripcion]);
+  const r = useMemo(() => calcPresupuesto(calculo, { ...cot, etapa }), [calculo, cot, etapa]);
 
-  const cot = useMemo(() => calcCotizacion(calculo, { ...datos, etapa }), [calculo, datos, etapa]);
-
-  // Guardado con pausa: no en cada tecla, sino 800 ms después del último cambio.
   const primera = useRef(true);
   useEffect(() => {
     if (primera.current) { primera.current = false; return; }
     const t = setTimeout(async () => {
       setGuardado("guardando");
       try {
-        await guardarCotizacionAction(proyectoId, datos);
+        await guardarCotizacionAction(proyectoId, cot);
         setGuardado("listo");
       } catch {
         setGuardado("error");
       }
     }, 800);
     return () => clearTimeout(t);
-  }, [proyectoId, datos]);
+  }, [proyectoId, cot]);
 
-  const cambiarPrecio = (piezaId: string, valor: string) => {
-    setGuardado("pendiente");
-    setPrecios({ ...precios, [piezaId]: valor });
-    if (deDescripcion.includes(piezaId)) setDeDescripcion(deDescripcion.filter((k) => k !== piezaId));
-  };
-  const cambiar = (f: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => { setGuardado("pendiente"); f(e.target.value); };
+  const actualizar = (f: (c: Cotizacion) => Cotizacion) => { setGuardado("pendiente"); setCot(f); };
+  const cambiarPrecio = (k: string, n: number | undefined) => actualizar((c) => {
+    const precios = { ...c.precios };
+    if (n && n > 0) precios[k] = n; else delete precios[k];
+    return { ...c, precios, deDescripcion: c.deDescripcion.filter((x) => x !== k) };
+  });
+  const cambiarApu = (k: string, campo: keyof ApuItem, n: number | undefined) => actualizar((c) => {
+    const item = { ...c.apu[k] };
+    if (n === undefined) delete item[campo]; else item[campo] = n;
+    return { ...c, apu: { ...c.apu, [k]: item } };
+  });
+  const alternar = (k: string) => setAbiertos((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; });
 
   const etapas = Object.entries(calculo.porEtapa);
 
   return (
-    <div className="border border-neutral-200 rounded p-4 space-y-5">
+    <div className="border border-neutral-200 rounded p-4 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="font-medium">Cotización</h2>
+          <h2 className="font-medium">Cotización (APU)</h2>
           <p className={`text-xs ${guardado === "error" ? "text-red-600" : "text-neutral-400"}`}>
             {guardado === "error" ? "No se pudo guardar; revisa tu conexión." : guardado === "listo" ? "Guardada en el proyecto" : "Guardando…"}
           </p>
@@ -86,56 +87,150 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
         <label className="space-y-1">
-          <span className="block text-neutral-500">Desperdicio %</span>
-          <input type="number" min="0" value={desperdicio} onChange={cambiar(setDesperdicio)} className={CAMPO} />
+          <span className="block text-neutral-500">Desperdicio general %</span>
+          <Num valor={cot.desperdicioPct} onCambio={(n) => actualizar((c) => ({ ...c, desperdicioPct: n ?? 0 }))} />
+          <span className="block text-xs text-neutral-400">No aplica a lo que se cuenta por unidad.</span>
         </label>
         <label className="space-y-1">
-          <span className="block text-neutral-500">Mano de obra % sobre materiales</span>
-          <input type="number" min="0" placeholder="0" value={manoObra} onChange={cambiar(setManoObra)} className={CAMPO} />
+          <span className="block text-neutral-500">Mano de obra global, % sobre materiales</span>
+          <Num valor={cot.manoObraPct} onCambio={(n) => actualizar((c) => ({ ...c, manoObraPct: n ?? 0 }))} />
         </label>
         <label className="space-y-1">
-          <span className="block text-neutral-500">Mano de obra, valor fijo $</span>
-          <input type="number" min="0" placeholder="0" value={manoObraValor} onChange={cambiar(setManoObraValor)} className={CAMPO} />
+          <span className="block text-neutral-500">Mano de obra global, valor fijo $</span>
+          <Num valor={cot.manoObraValor} onCambio={(n) => actualizar((c) => ({ ...c, manoObraValor: n ?? 0 }))} />
         </label>
       </div>
 
       <div className="overflow-x-auto -mx-4 px-4">
-      <table className="w-full text-sm min-w-[32rem]">
-        <thead className="text-left text-neutral-500">
-          <tr>
-            <th className="py-1 font-medium">Pieza</th>
-            <th className="py-1 font-medium text-right">Cantidad + desperdicio</th>
-            <th className="py-1 font-medium text-right w-36 min-w-28">Precio por unidad</th>
-            <th className="py-1 font-medium text-right">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          {cot.detalle.map((d: Linea & { cantidadConDesperdicio: number; subtotal: number }) => (
-            <tr key={`${d.etapa}|${d.piezaId}|${d.unidad}`} className="border-t border-neutral-200">
-              <td className="py-1.5 pr-2">
-                {d.nombre}
-                {deDescripcion.includes(d.piezaId) && (
-                  <span className="block text-xs text-blue-700">Precio leído de tu descripción</span>
-                )}
-              </td>
-              <td className="py-1.5 text-right whitespace-nowrap">{cantidadTexto(d.cantidadConDesperdicio, d.unidad)}</td>
-              <td className="py-1.5 pl-2">
-                <input type="number" min="0" placeholder="0" value={precios[d.piezaId] ?? ""}
-                  onChange={(e) => cambiarPrecio(d.piezaId, e.target.value)} className={CAMPO} />
-              </td>
-              <td className="py-1.5 text-right whitespace-nowrap">{d.subtotal > 0 ? cop(d.subtotal) : "—"}</td>
+        <table className="w-full text-sm min-w-[36rem]">
+          <thead className="text-left text-neutral-500">
+            <tr>
+              <th className="py-1 font-medium">Ítem</th>
+              <th className="py-1 font-medium text-right">Cantidad</th>
+              <th className="py-1 font-medium text-right w-32">Material $/u</th>
+              <th className="py-1 font-medium text-right">Valor unitario</th>
+              <th className="py-1 font-medium text-right">Subtotal</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {(r.detalle as Detalle[]).map((d) => {
+              const k = d.piezaId;
+              const abierto = abiertos.has(k);
+              return (
+                <Fragment key={`${d.etapa}|${k}|${d.unidad}`}>
+                  <tr className="border-t border-neutral-200 align-top">
+                    <td className="py-1.5 pr-2">
+                      {d.nombre}
+                      {cot.deDescripcion.includes(k) && <span className="block text-xs text-blue-700">Precio leído de tu descripción</span>}
+                      <button type="button" onClick={() => alternar(k)} className="block text-xs text-blue-700 hover:underline">
+                        {abierto ? "Ocultar APU" : d.conApu || cot.apu[k]?.desperdicioPct !== undefined ? "APU ✓" : "APU"} {abierto ? "▲" : "▼"}
+                      </button>
+                    </td>
+                    <td className="py-1.5 text-right whitespace-nowrap">{cantidadTexto(d.cantidad, d.unidad)}</td>
+                    <td className="py-1.5 pl-2">
+                      <Num valor={cot.precios[k]} onCambio={(n) => cambiarPrecio(k, n)} label={`Precio de ${d.nombre}`} />
+                    </td>
+                    <td className="py-1.5 text-right whitespace-nowrap">{d.valorUnitario > 0 ? cop(d.valorUnitario) : "—"}</td>
+                    <td className="py-1.5 text-right whitespace-nowrap">{d.subtotal > 0 ? cop(d.subtotal) : "—"}</td>
+                  </tr>
+                  {abierto && (
+                    <tr>
+                      <td colSpan={5} className="pb-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-neutral-50 border border-neutral-200 rounded p-2 text-xs">
+                          <label className="space-y-0.5"><span className="block text-neutral-500">Desperdicio % (ahora {d.desperdicioPct})</span>
+                            <Num valor={cot.apu[k]?.desperdicioPct} placeholder="general" onCambio={(n) => cambiarApu(k, "desperdicioPct", n)} /></label>
+                          <label className="space-y-0.5"><span className="block text-neutral-500">Mano de obra $/{d.unidad}</span>
+                            <Num valor={cot.apu[k]?.manoObra} onCambio={(n) => cambiarApu(k, "manoObra", n)} /></label>
+                          <label className="space-y-0.5"><span className="block text-neutral-500">Equipo y herramienta $/{d.unidad}</span>
+                            <Num valor={cot.apu[k]?.equipo} onCambio={(n) => cambiarApu(k, "equipo", n)} /></label>
+                          <label className="space-y-0.5"><span className="block text-neutral-500">Transporte $/{d.unidad}</span>
+                            <Num valor={cot.apu[k]?.transporte} onCambio={(n) => cambiarApu(k, "transporte", n)} /></label>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
-      <div className="space-y-1 text-sm text-right">
-        <p className="text-neutral-600">Materiales {cot.tienePrecio ? cop(cot.materiales) : "—"}</p>
-        <p className="text-neutral-600">Mano de obra {cot.tienePrecio ? cop(cot.manoObra) : "—"}</p>
-        <p className="text-2xl font-semibold">{cot.tienePrecio ? cop(cot.total) : "Ingresa tus precios"}</p>
-        {cot.tienePrecio && <p className="text-xs text-neutral-400">El PDF toma estos precios al generarlo (todas las etapas).</p>}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-sm">
+        <div className="space-y-3">
+          <h3 className="font-medium">AIU e impuestos</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {([["a", "Administración %"], ["i", "Imprevistos %"], ["u", "Utilidad %"]] as const).map(([campo, texto]) => (
+              <label key={campo} className="space-y-1">
+                <span className="block text-neutral-500 text-xs">{texto}</span>
+                <Num valor={cot.aiu[campo]} onCambio={(n) => actualizar((c) => ({ ...c, aiu: { ...c.aiu, [campo]: n ?? 0 } }))} />
+              </label>
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <label className="col-span-2 space-y-1">
+              <span className="block text-neutral-500 text-xs">Régimen de IVA</span>
+              <select value={cot.iva.regimen} onChange={(e) => actualizar((c) => ({ ...c, iva: { ...c.iva, regimen: e.target.value as RegimenIva } }))}
+                className="w-full border border-neutral-300 rounded px-2 py-1">
+                {(Object.keys(NOMBRE_REGIMEN) as RegimenIva[]).map((k) => <option key={k} value={k}>{NOMBRE_REGIMEN[k]}</option>)}
+              </select>
+            </label>
+            <label className="space-y-1">
+              <span className="block text-neutral-500 text-xs">Tarifa IVA %</span>
+              <Num valor={cot.iva.tarifa} onCambio={(n) => actualizar((c) => ({ ...c, iva: { ...c.iva, tarifa: n ?? 0 } }))} />
+            </label>
+          </div>
+          <div>
+            <span className="block text-neutral-500 text-xs mb-1">Retenciones que te practica el cliente (referencia)</span>
+            <div className="grid grid-cols-3 gap-2">
+              <label className="space-y-1"><span className="block text-neutral-400 text-xs">Retefuente %</span>
+                <Num valor={cot.retenciones.fuente} onCambio={(n) => actualizar((c) => ({ ...c, retenciones: { ...c.retenciones, fuente: n ?? 0 } }))} /></label>
+              <label className="space-y-1"><span className="block text-neutral-400 text-xs">ReteIVA % del IVA</span>
+                <Num valor={cot.retenciones.iva} onCambio={(n) => actualizar((c) => ({ ...c, retenciones: { ...c.retenciones, iva: n ?? 0 } }))} /></label>
+              <label className="space-y-1"><span className="block text-neutral-400 text-xs">ReteICA por mil</span>
+                <Num valor={cot.retenciones.ica} onCambio={(n) => actualizar((c) => ({ ...c, retenciones: { ...c.retenciones, ica: n ?? 0 } }))} /></label>
+            </div>
+          </div>
+          <p className="text-xs text-neutral-400">
+            Las tarifas y bases dependen de tu régimen, del tipo de contrato y del municipio: confírmalas con tu contador.
+          </p>
+        </div>
+
+        <dl className="space-y-1 self-end">
+          <Fila t="Materiales" v={r.materiales} />
+          <Fila t="Mano de obra" v={r.manoObra} />
+          {r.equipo > 0 && <Fila t="Equipo y herramienta" v={r.equipo} />}
+          {r.transporte > 0 && <Fila t="Transporte" v={r.transporte} />}
+          <Fila t="Costo directo" v={r.costoDirecto} fuerte />
+          {cot.aiu.a > 0 && <Fila t={`Administración (${cot.aiu.a} %)`} v={r.administracion} />}
+          {cot.aiu.i > 0 && <Fila t={`Imprevistos (${cot.aiu.i} %)`} v={r.imprevistos} />}
+          {cot.aiu.u > 0 && <Fila t={`Utilidad (${cot.aiu.u} %)`} v={r.utilidad} />}
+          {(cot.aiu.a > 0 || cot.aiu.i > 0 || cot.aiu.u > 0) && <Fila t="Subtotal" v={r.subtotal} fuerte />}
+          {r.iva.regimen !== "ninguno" && <Fila t={`IVA ${r.iva.tarifa} % sobre ${r.iva.regimen === "utilidad" ? "la utilidad" : "el total"}`} v={r.iva.valor} />}
+          <div className="flex justify-between items-baseline pt-1 border-t border-neutral-300">
+            <dt className="font-medium">Total</dt>
+            <dd className="text-2xl font-semibold">{r.tienePrecio ? cop(r.total) : "Ingresa tus precios"}</dd>
+          </div>
+          {r.retenciones.total > 0 && (
+            <>
+              {r.retenciones.fuente > 0 && <Fila t="− Retefuente" v={r.retenciones.fuente} gris />}
+              {r.retenciones.iva > 0 && <Fila t="− ReteIVA" v={r.retenciones.iva} gris />}
+              {r.retenciones.ica > 0 && <Fila t="− ReteICA" v={r.retenciones.ica} gris />}
+              <Fila t="Neto a recibir" v={r.neto} fuerte />
+            </>
+          )}
+          {r.tienePrecio && <p className="text-xs text-neutral-400 text-right">El PDF toma estos valores al generarlo (todas las etapas).</p>}
+        </dl>
       </div>
+    </div>
+  );
+}
+
+function Fila({ t, v, fuerte, gris }: { t: string; v: number; fuerte?: boolean; gris?: boolean }) {
+  return (
+    <div className={`flex justify-between gap-3 ${fuerte ? "font-medium" : ""} ${gris ? "text-neutral-500" : "text-neutral-700"}`}>
+      <dt>{t}</dt>
+      <dd className="whitespace-nowrap">{cop(v)}</dd>
     </div>
   );
 }

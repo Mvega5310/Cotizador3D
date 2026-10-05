@@ -66,20 +66,29 @@ export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; de
   // del canto de una pieza que existe, o de un consumo que alguna pieza tiene
   // (normalizado igual que en el motor, interprete.js::claveConsumo).
   let cotizacion = resp.cotizacion;
-  if (cotizacion?.precios) {
+  if (cotizacion) {
     const consumos = new Set(Object.values(catalogo).flatMap((p) => (p.consumos ?? []).map((c) => claveConsumo(c.nombre))));
-    const precios: Record<string, number> = {};
-    for (const [k, v] of Object.entries(cotizacion.precios)) {
+    const valida = (k: string): string | null => {
       if (k.startsWith("consumo:")) {
         const clave = claveConsumo(k.slice("consumo:".length));
-        if (consumos.has(clave)) precios[clave] = v;
-      } else if ((k.endsWith("#canto") ? k.slice(0, -6) : k) in catalogo) {
-        precios[k] = v;
+        return consumos.has(clave) ? clave : null;
       }
-    }
-    cotizacion = { ...cotizacion, precios };
+      return (k.endsWith("#canto") ? k.slice(0, -6) : k) in catalogo ? k : null;
+    };
+    cotizacion = { ...cotizacion, precios: filtrarClaves(cotizacion.precios, valida), apu: filtrarClaves(cotizacion.apu, valida) };
   }
   return { entrada: { elementos: validos, catalogo, etapas }, descartados: invalidos.size, notas: resp.notas, cotizacion };
+}
+
+// Rehace un objeto { clave: valor } pasando cada clave por `mapear`; las que
+// devuelven null se descartan. Lo usan los precios y el APU que vienen de la IA.
+function filtrarClaves<T>(obj: Record<string, T> | undefined, mapear: (k: string) => string | null): Record<string, T> {
+  const out: Record<string, T> = {};
+  for (const [k, v] of Object.entries(obj ?? {})) {
+    const nueva = mapear(k);
+    if (nueva) out[nueva] = v;
+  }
+  return out;
 }
 
 // ---------- Guardar ----------
@@ -166,14 +175,15 @@ export async function completarProyecto(args: {
 
       // Los precios vienen con las claves de la IA; se guardan con los ids
       // reales del catálogo, que es como los nombra el cuadro de cantidades.
-      const precios: Record<string, number> = {};
-      for (const [k, v] of Object.entries(args.cotizacion?.precios ?? {})) {
-        if (k.startsWith("consumo:")) { precios[k] = v; continue; } // no lleva id de pieza
+      const aId = (k: string): string | null => {
+        if (k.startsWith("consumo:")) return k; // no lleva id de pieza
         const [clave, sufijo] = k.split("#");
-        if (piezaIds[clave]) precios[sufijo ? `${piezaIds[clave]}#${sufijo}` : piezaIds[clave]] = v;
-      }
+        return piezaIds[clave] ? (sufijo ? `${piezaIds[clave]}#${sufijo}` : piezaIds[clave]) : null;
+      };
+      const precios = filtrarClaves(args.cotizacion?.precios, aId);
       const cotizacion = leerCotizacion({
-        ...COTIZACION_INICIAL, ...args.cotizacion, precios, deDescripcion: Object.keys(precios),
+        ...COTIZACION_INICIAL, ...args.cotizacion, precios, apu: filtrarClaves(args.cotizacion?.apu, aId),
+        deDescripcion: Object.keys(precios),
       });
 
       return tx.proyecto.update({

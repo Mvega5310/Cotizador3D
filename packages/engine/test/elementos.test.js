@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { calcularProyecto, claveConsumo, consumoValido } from '../src/interprete.js';
-import { calcCotizacion } from '../src/pricing.js';
+import { calcCotizacion, calcPresupuesto } from '../src/pricing.js';
 
 const casi = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg ?? ''} ${a} != ${b}`);
 
@@ -215,6 +215,44 @@ test('consumos por regla: pintura, soldadura, varilla y tornillos, juntos por no
   assert.equal(r.avisos.length, 2);
   assert.match(r.avisos.join(' '), /no tiene esa medida/);
   assert.equal(consumoValido({ nombre: 'x', unidad: 'kg', base: 'pulgadas', factor: 1 }), false);
+});
+
+test('presupuesto: APU por ítem, desperdicio por tipo, AIU, IVA según régimen y retenciones', () => {
+  const calculo = calcularProyecto({
+    catalogo,
+    elementos: [
+      { id: 1, forma: 'viga', pieza: 'tubo50', geometria: { a: [0, 0, 0], b: [10, 0, 0] } }, // 30 kg
+      { id: 2, forma: 'pieza', pieza: 'bisagra', geometria: { pos: [0, 0, 0], tam: [1, 1, 1] } }, // 1 und
+    ],
+  });
+  const p = calcPresupuesto(calculo, {
+    precios: { tubo50: 10, bisagra: 100 },
+    apu: { tubo50: { manoObra: 4, equipo: 1, transporte: 0.5 } },
+    desperdicioPct: 10,
+  });
+  const tubo = p.detalle.find((d) => d.piezaId === 'tubo50');
+  const bis = p.detalle.find((d) => d.piezaId === 'bisagra');
+  casi(tubo.valorUnitario, 10 * 1.1 + 4 + 1 + 0.5);
+  casi(tubo.subtotal, 30 * 16.5); // la cantidad no se infla: el desperdicio encarece el material
+  assert.equal(bis.desperdicioPct, 0); // lo que se cuenta por unidad no lleva desperdicio por defecto
+  casi(p.costoDirecto, 30 * 16.5 + 100);
+  casi(p.materiales, 30 * 11 + 100);
+  casi(p.manoObra, 120);
+  // el desperdicio del ítem manda sobre el general
+  casi(calcPresupuesto(calculo, { precios: { bisagra: 100 }, apu: { bisagra: { desperdicioPct: 5 } } }).costoDirecto, 105);
+
+  const cd = 1000;
+  const conAiu = (iva) => calcPresupuesto(calculo, { precios: { tubo50: cd / 30 }, aiu: { a: 10, i: 5, u: 10 }, iva, retenciones: { fuente: 2, iva: 15, ica: 9.66 } });
+  const obra = conAiu({ regimen: 'utilidad', tarifa: 19 });
+  casi(obra.subtotal, 1250);
+  casi(obra.iva.valor, 100 * 0.19); // contrato de obra: IVA solo sobre la utilidad
+  casi(obra.total, 1250 + 19);
+  casi(obra.retenciones.fuente, 25);
+  casi(obra.retenciones.iva, 19 * 0.15);
+  casi(obra.retenciones.ica, 1250 * 9.66 / 1000);
+  casi(obra.neto, obra.total - obra.retenciones.total);
+  casi(conAiu({ regimen: 'total' }).iva.valor, 1250 * 0.19); // venta/suministro: sobre todo, tarifa 19 por defecto
+  assert.equal(conAiu({}).iva.valor, 0); // no responsable de IVA
 });
 
 // Prueba de aceptación (guía v3, §10): un producto de otro rubro, sin una
