@@ -22,7 +22,11 @@ async function setSessionCookie(userId: string, email: string) {
   });
 }
 
+// Dirección base de los enlaces de los correos. En producción va fija en
+// APP_URL: armarla con el encabezado Host de la petición dejaría que alguien
+// mande un correo de recuperación con un enlace a otro dominio.
 async function origen() {
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/+$/, "");
   const h = await headers();
   const proto = h.get("x-forwarded-proto") || (process.env.NODE_ENV === "production" ? "https" : "http");
   return `${proto}://${h.get("host")}`;

@@ -67,7 +67,7 @@ migraciones (`prisma migrate deploy`) y levanta `next start`.
 
 Variables del servicio: `DATABASE_URL` (referencia al Postgres del mismo
 proyecto), `AUTH_SECRET` (aleatoria; sin ella el servidor no arranca),
-`ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `ADMIN_EMAILS` (correos separados por coma que pueden ver `/admin/uso`), y `DATA_DIR=/data` con un Volumen
+`ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `ADMIN_EMAILS` (correos separados por coma que pueden ver `/admin/uso`), `APP_URL` (dirección pública, base de los enlaces de los correos), y `DATA_DIR=/data` con un Volumen
 montado en `/data` para que planos y PDF sobrevivan a cada despliegue.
 
 Notas:
