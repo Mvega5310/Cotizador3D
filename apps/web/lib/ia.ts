@@ -113,6 +113,28 @@ Responde ÚNICAMENTE con un objeto JSON válido — sin texto antes ni después,
   "cotizacion": { "precios": { "clave-corta": numero }, "apu": { "clave-corta": { "manoObra": numero } }, "desperdicioPct": numero, "manoObraPct": numero, "manoObraValor": numero, "aiu": { "a": numero, "i": numero, "u": numero }, "iva": { "regimen": "utilidad", "tarifa": 19 } }  (opcional, solo con datos dados por el usuario)
 }`;
 
+// El error crudo de la API (en inglés, con JSON) no le sirve al usuario: se
+// traduce a qué pasó y qué hacer. El crudo queda en el log del servidor.
+function mensajeErrorApi(e: unknown): string {
+  console.error("[ia] error de la API:", e instanceof Error ? e.message : e);
+  if (e instanceof Anthropic.APIConnectionError) return "No se pudo conectar con el servicio de IA. Revisa la conexión del servidor y reintenta.";
+  if (!(e instanceof Anthropic.APIError)) return "El servicio de IA falló inesperadamente. Reintenta en unos minutos.";
+  const texto = e.message.toLowerCase();
+  if (texto.includes("credit balance")) {
+    return "El servicio de IA de la plataforma se quedó sin crédito. Es un problema de la cuenta de la plataforma, no de tus planos: avisa al administrador y reintenta cuando lo recargue.";
+  }
+  // Tope mensual del nivel de la cuenta (429 sin retry-after) o límite de gasto
+  // puesto por el administrador (400): reintentar no sirve hasta que se suba.
+  if (texto.includes("enforced_spend_limit_reached") || texto.includes("monthly api usage threshold") || texto.includes("specified api usage limits") || texto.includes("specified workspace api usage limits")) {
+    return "La plataforma alcanzó su límite mensual de uso de IA. Avisa al administrador para que lo amplíe; tus planos quedan guardados para reintentar.";
+  }
+  if (e.status === 401 || e.status === 403) return "La clave del servicio de IA no es válida. Avisa al administrador de la plataforma.";
+  if (e.status === 429) return "El servicio de IA está recibiendo demasiadas solicitudes. Reintenta en unos minutos.";
+  if (e.status === 529 || (e.status ?? 0) >= 500) return "El servicio de IA está saturado o caído en este momento. Reintenta en unos minutos.";
+  if (e.status === 413 || texto.includes("too large") || texto.includes("too long")) return "Los archivos son demasiado grandes para leerlos de una vez. Sube menos páginas o imágenes más livianas.";
+  return "El servicio de IA rechazó la solicitud. Revisa que los archivos sean imágenes o PDF legibles y reintenta.";
+}
+
 function tipoMedia(nombre: string, tipo: string): "image" | "pdf" | null {
   if (tipo.startsWith("image/")) return "image";
   if (tipo === "application/pdf" || nombre.toLowerCase().endsWith(".pdf")) return "pdf";
@@ -153,7 +175,12 @@ export async function proponerElementos(args: { archivos: ArchivoLeido[]; descri
     messages: [{ role: "user", content }],
     output_config: { effort: "high" },
   });
-  const response = await stream.finalMessage();
+  let response: Anthropic.Messages.Message;
+  try {
+    response = await stream.finalMessage();
+  } catch (e) {
+    throw new Error(mensajeErrorApi(e));
+  }
   const texto = response.content.filter((b) => b.type === "text").map((b) => b.text).join("");
 
   console.log("[ia] stop_reason:", response.stop_reason, "| caracteres de respuesta:", texto.length);
