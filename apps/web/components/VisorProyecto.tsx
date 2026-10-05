@@ -62,7 +62,7 @@ export default function VisorProyecto({ entrada }: { entrada: EntradaMotor }) {
           </>
         )}
       </div>
-      <div ref={stageRef} className="w-full aspect-video bg-[#121821] rounded overflow-hidden">
+      <div ref={stageRef} className="w-full aspect-[4/3] sm:aspect-video bg-[#121821] rounded overflow-hidden">
         <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
     </div>

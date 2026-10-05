@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { calcPresupuesto } from "@cotizador3d/engine";
 import { cantidadTexto, cop } from "@/lib/format";
 import { guardarCotizacionAction } from "@/lib/actions/proyectos";
@@ -10,7 +10,19 @@ type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; c
 type Calculo = { lineas: Linea[]; porEtapa: Record<string, { nombre: string; lineas: Linea[] }> };
 type Detalle = Linea & { desperdicioPct: number; material: number; valorUnitario: number; subtotal: number; conApu: boolean };
 
-const CAMPO = "w-full border border-neutral-300 rounded px-2 py-1 text-right";
+const CAMPO = "w-full min-w-0 border border-neutral-300 rounded px-2 py-1 text-right";
+// Columnas de un ítem desde sm: nombre, cantidad, material, valor unitario, subtotal.
+const COLS = "sm:grid-cols-[minmax(0,1fr)_6rem_8rem_7.5rem_7.5rem]";
+
+// Un dato de un ítem: en el celular con su rótulo arriba; desde sm, solo el valor.
+function Celda({ rotulo, fuerte, children }: { rotulo: string; fuerte?: boolean; children: React.ReactNode }) {
+  return (
+    <div className={`min-w-0 sm:text-right sm:pt-1 ${fuerte ? "font-medium" : ""}`}>
+      <span className="sm:hidden block text-xs text-neutral-500 font-normal">{rotulo}</span>
+      <span className="whitespace-nowrap">{children}</span>
+    </div>
+  );
+}
 
 // Campo numérico que deja escribir decimales a medias ("0,") sin perder lo
 // tecleado: guarda el texto y reporta el número.
@@ -86,108 +98,98 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-        <label className="space-y-1">
+        <label className="space-y-1 min-w-0">
           <span className="block text-neutral-500">Desperdicio general %</span>
           <Num valor={cot.desperdicioPct} onCambio={(n) => actualizar((c) => ({ ...c, desperdicioPct: n ?? 0 }))} />
           <span className="block text-xs text-neutral-400">No aplica a lo que se cuenta por unidad.</span>
         </label>
-        <label className="space-y-1">
+        <label className="space-y-1 min-w-0">
           <span className="block text-neutral-500">Mano de obra global, % sobre materiales</span>
           <Num valor={cot.manoObraPct} onCambio={(n) => actualizar((c) => ({ ...c, manoObraPct: n ?? 0 }))} />
         </label>
-        <label className="space-y-1">
+        <label className="space-y-1 min-w-0">
           <span className="block text-neutral-500">Mano de obra global, valor fijo $</span>
           <Num valor={cot.manoObraValor} onCambio={(n) => actualizar((c) => ({ ...c, manoObraValor: n ?? 0 }))} />
         </label>
       </div>
 
-      <div className="overflow-x-auto -mx-4 px-4">
-        <table className="w-full text-sm min-w-[36rem]">
-          <thead className="text-left text-neutral-500">
-            <tr>
-              <th className="py-1 font-medium">Ítem</th>
-              <th className="py-1 font-medium text-right">Cantidad</th>
-              <th className="py-1 font-medium text-right w-32">Material $/u</th>
-              <th className="py-1 font-medium text-right">Valor unitario</th>
-              <th className="py-1 font-medium text-right">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(r.detalle as Detalle[]).map((d) => {
-              const k = d.piezaId;
-              const abierto = abiertos.has(k);
-              return (
-                <Fragment key={`${d.etapa}|${k}|${d.unidad}`}>
-                  <tr className="border-t border-neutral-200 align-top">
-                    <td className="py-1.5 pr-2">
-                      {d.nombre}
-                      {cot.deDescripcion.includes(k) && <span className="block text-xs text-blue-700">Precio leído de tu descripción</span>}
-                      <button type="button" onClick={() => alternar(k)} className="block text-xs text-blue-700 hover:underline">
-                        {abierto ? "Ocultar APU" : d.conApu || cot.apu[k]?.desperdicioPct !== undefined ? "APU ✓" : "APU"} {abierto ? "▲" : "▼"}
-                      </button>
-                    </td>
-                    <td className="py-1.5 text-right whitespace-nowrap">{cantidadTexto(d.cantidad, d.unidad)}</td>
-                    <td className="py-1.5 pl-2">
-                      <Num valor={cot.precios[k]} onCambio={(n) => cambiarPrecio(k, n)} label={`Precio de ${d.nombre}`} />
-                    </td>
-                    <td className="py-1.5 text-right whitespace-nowrap">{d.valorUnitario > 0 ? cop(d.valorUnitario) : "—"}</td>
-                    <td className="py-1.5 text-right whitespace-nowrap">{d.subtotal > 0 ? cop(d.subtotal) : "—"}</td>
-                  </tr>
-                  {abierto && (
-                    <tr>
-                      <td colSpan={5} className="pb-2">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-neutral-50 border border-neutral-200 rounded p-2 text-xs">
-                          <label className="space-y-0.5"><span className="block text-neutral-500">Desperdicio % (ahora {d.desperdicioPct})</span>
-                            <Num valor={cot.apu[k]?.desperdicioPct} placeholder="general" onCambio={(n) => cambiarApu(k, "desperdicioPct", n)} /></label>
-                          <label className="space-y-0.5"><span className="block text-neutral-500">Mano de obra $/{d.unidad}</span>
-                            <Num valor={cot.apu[k]?.manoObra} onCambio={(n) => cambiarApu(k, "manoObra", n)} /></label>
-                          <label className="space-y-0.5"><span className="block text-neutral-500">Equipo y herramienta $/{d.unidad}</span>
-                            <Num valor={cot.apu[k]?.equipo} onCambio={(n) => cambiarApu(k, "equipo", n)} /></label>
-                          <label className="space-y-0.5"><span className="block text-neutral-500">Transporte $/{d.unidad}</span>
-                            <Num valor={cot.apu[k]?.transporte} onCambio={(n) => cambiarApu(k, "transporte", n)} /></label>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* Ítems: tarjetas en el celular (un dato debajo de otro, con su
+          rótulo) y filas de tabla desde sm. Es una sola lista con grid, no
+          dos versiones: los campos tienen estado propio (Num) y no deben
+          duplicarse. */}
+      <div className="text-sm">
+        <div className={`hidden sm:grid ${COLS} gap-x-3 pb-1 text-neutral-500 font-medium`}>
+          <span>Ítem</span><span className="text-right">Cantidad</span><span className="text-right">Material $/u</span>
+          <span className="text-right">Valor unitario</span><span className="text-right">Subtotal</span>
+        </div>
+        {(r.detalle as Detalle[]).map((d) => {
+          const k = d.piezaId;
+          const abierto = abiertos.has(k);
+          return (
+            <div key={`${d.etapa}|${k}|${d.unidad}`} className={`grid grid-cols-2 ${COLS} gap-x-3 gap-y-1.5 py-2.5 border-t border-neutral-200 sm:items-start`}>
+              <div className="col-span-2 sm:col-span-1 min-w-0">
+                <span className="font-medium sm:font-normal">{d.nombre}</span>
+                {cot.deDescripcion.includes(k) && <span className="block text-xs text-blue-700">Precio leído de tu descripción</span>}
+                <button type="button" onClick={() => alternar(k)} className="block text-xs text-blue-700 hover:underline py-0.5">
+                  {abierto ? "Ocultar APU" : d.conApu || cot.apu[k]?.desperdicioPct !== undefined ? "APU ✓" : "APU"} {abierto ? "▲" : "▼"}
+                </button>
+              </div>
+              <Celda rotulo="Cantidad">{cantidadTexto(d.cantidad, d.unidad)}</Celda>
+              <label className="min-w-0">
+                <span className="sm:hidden block text-xs text-neutral-500">Material $/{d.unidad}</span>
+                <Num valor={cot.precios[k]} onCambio={(n) => cambiarPrecio(k, n)} label={`Precio de ${d.nombre}`} />
+              </label>
+              <Celda rotulo="Valor unitario">{d.valorUnitario > 0 ? cop(d.valorUnitario) : "—"}</Celda>
+              <Celda rotulo="Subtotal" fuerte>{d.subtotal > 0 ? cop(d.subtotal) : "—"}</Celda>
+              {abierto && (
+                <div className="col-span-full grid grid-cols-2 sm:grid-cols-4 gap-2 bg-neutral-50 border border-neutral-200 rounded p-2 text-xs">
+                  <label className="min-w-0 space-y-0.5"><span className="block text-neutral-500">Desperdicio % (ahora {d.desperdicioPct})</span>
+                    <Num valor={cot.apu[k]?.desperdicioPct} placeholder="general" onCambio={(n) => cambiarApu(k, "desperdicioPct", n)} /></label>
+                  <label className="min-w-0 space-y-0.5"><span className="block text-neutral-500">Mano de obra $/{d.unidad}</span>
+                    <Num valor={cot.apu[k]?.manoObra} onCambio={(n) => cambiarApu(k, "manoObra", n)} /></label>
+                  <label className="min-w-0 space-y-0.5"><span className="block text-neutral-500">Equipo y herram. $/{d.unidad}</span>
+                    <Num valor={cot.apu[k]?.equipo} onCambio={(n) => cambiarApu(k, "equipo", n)} /></label>
+                  <label className="min-w-0 space-y-0.5"><span className="block text-neutral-500">Transporte $/{d.unidad}</span>
+                    <Num valor={cot.apu[k]?.transporte} onCambio={(n) => cambiarApu(k, "transporte", n)} /></label>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-sm">
-        <div className="space-y-3">
+        <div className="space-y-3 min-w-0">
           <h3 className="font-medium">AIU e impuestos</h3>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 items-end">
             {([["a", "Administración %"], ["i", "Imprevistos %"], ["u", "Utilidad %"]] as const).map(([campo, texto]) => (
-              <label key={campo} className="space-y-1">
+              <label key={campo} className="space-y-1 min-w-0">
                 <span className="block text-neutral-500 text-xs">{texto}</span>
                 <Num valor={cot.aiu[campo]} onCambio={(n) => actualizar((c) => ({ ...c, aiu: { ...c.aiu, [campo]: n ?? 0 } }))} />
               </label>
             ))}
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <label className="col-span-2 space-y-1">
+          <div className="grid grid-cols-3 gap-2 items-end">
+            <label className="col-span-2 space-y-1 min-w-0">
               <span className="block text-neutral-500 text-xs">Régimen de IVA</span>
               <select value={cot.iva.regimen} onChange={(e) => actualizar((c) => ({ ...c, iva: { ...c.iva, regimen: e.target.value as RegimenIva } }))}
-                className="w-full border border-neutral-300 rounded px-2 py-1">
+                className="w-full min-w-0 max-w-full border border-neutral-300 rounded px-2 py-1 text-ellipsis">
                 {(Object.keys(NOMBRE_REGIMEN) as RegimenIva[]).map((k) => <option key={k} value={k}>{NOMBRE_REGIMEN[k]}</option>)}
               </select>
             </label>
-            <label className="space-y-1">
+            <label className="space-y-1 min-w-0">
               <span className="block text-neutral-500 text-xs">Tarifa IVA %</span>
               <Num valor={cot.iva.tarifa} onCambio={(n) => actualizar((c) => ({ ...c, iva: { ...c.iva, tarifa: n ?? 0 } }))} />
             </label>
           </div>
           <div>
             <span className="block text-neutral-500 text-xs mb-1">Retenciones que te practica el cliente (referencia)</span>
-            <div className="grid grid-cols-3 gap-2">
-              <label className="space-y-1"><span className="block text-neutral-400 text-xs">Retefuente %</span>
+            <div className="grid grid-cols-3 gap-2 items-end">
+              <label className="space-y-1 min-w-0"><span className="block text-neutral-400 text-xs">Retefuente %</span>
                 <Num valor={cot.retenciones.fuente} onCambio={(n) => actualizar((c) => ({ ...c, retenciones: { ...c.retenciones, fuente: n ?? 0 } }))} /></label>
-              <label className="space-y-1"><span className="block text-neutral-400 text-xs">ReteIVA % del IVA</span>
+              <label className="space-y-1 min-w-0"><span className="block text-neutral-400 text-xs">ReteIVA % del IVA</span>
                 <Num valor={cot.retenciones.iva} onCambio={(n) => actualizar((c) => ({ ...c, retenciones: { ...c.retenciones, iva: n ?? 0 } }))} /></label>
-              <label className="space-y-1"><span className="block text-neutral-400 text-xs">ReteICA por mil</span>
+              <label className="space-y-1 min-w-0"><span className="block text-neutral-400 text-xs">ReteICA por mil</span>
                 <Num valor={cot.retenciones.ica} onCambio={(n) => actualizar((c) => ({ ...c, retenciones: { ...c.retenciones, ica: n ?? 0 } }))} /></label>
             </div>
           </div>
@@ -196,7 +198,7 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
           </p>
         </div>
 
-        <dl className="space-y-1 self-end">
+        <dl className="space-y-1 self-end min-w-0">
           <Fila t="Materiales" v={r.materiales} />
           <Fila t="Mano de obra" v={r.manoObra} />
           {r.equipo > 0 && <Fila t="Equipo y herramienta" v={r.equipo} />}

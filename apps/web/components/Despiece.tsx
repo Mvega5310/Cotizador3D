@@ -21,7 +21,15 @@ function textoCantos([largos, cortos]: number[]) {
   return partes.join(" · ") || "—";
 }
 
-const m2Texto = (n: number) => `${n.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`;
+// Piezas iguales agrupadas pueden sumar muchos nombres ("Cajón 1 - costado
+// izquierdo", "Cajón 1 - costado derecho", …): se muestran dos y cuántos más.
+function resumenNombres(nombres: string[]) {
+  if (nombres.length === 0) return "—";
+  if (nombres.length <= 2) return nombres.join(", ");
+  return `${nombres.slice(0, 2).join(", ")} y ${nombres.length - 2} más`;
+}
+
+const m2Texto =(n: number) => `${n.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`;
 
 export default function Despiece({ despiece, laminas, conEstado = false }: { despiece: FilaDespiece[]; laminas: LaminaMaterial[]; conEstado?: boolean }) {
   if (despiece.length === 0) return null;
@@ -36,7 +44,7 @@ export default function Despiece({ despiece, laminas, conEstado = false }: { des
       </div>
 
       <div className="border border-neutral-200 rounded overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-xs sm:text-sm">
           <thead className="text-left text-neutral-500 bg-neutral-50">
             <tr>
               <th className="px-3 py-1.5 font-medium">Pieza</th>
@@ -69,7 +77,7 @@ export default function Despiece({ despiece, laminas, conEstado = false }: { des
                   </tr>
                   {filas.map((f) => (
                     <tr key={`${f.largo}|${f.ancho}|${f.espesor}|${f.cantos.join(",")}`} className="border-t border-neutral-200">
-                      <td className="px-3 py-1">{f.nombres.join(", ") || "—"}</td>
+                      <td className="px-3 py-1 min-w-32" title={f.nombres.join(", ")}>{resumenNombres(f.nombres)}</td>
                       <td className="px-3 py-1 text-right">{f.cantidad}</td>
                       <td className="px-3 py-1 text-right whitespace-nowrap font-mono">{f.largo} × {f.ancho} × {f.espesor}</td>
                       <td className="px-3 py-1 whitespace-nowrap">{textoCantos(f.cantos)}</td>
