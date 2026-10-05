@@ -42,6 +42,17 @@ export function guardarArchivos(proyectoId: string, archivos: { nombre: string; 
   });
 }
 
+// Lee de vuelta un archivo guardado a partir de su url
+// (/projects/<id>/archivos/<nombre>), p. ej. para reintentar la lectura con IA.
+export function leerArchivoGuardado(proyectoId: string, url: string): { nombre: string; mime: string; datos: Buffer } | null {
+  const nombre = url.split("/").pop() ?? "";
+  try {
+    return { nombre, mime: mimePorExtension(nombre), datos: fs.readFileSync(rutaArchivo(proyectoId, nombre)) };
+  } catch {
+    return null;
+  }
+}
+
 export function mimePorExtension(nombreArchivo: string): string {
   const ext = path.extname(nombreArchivo).toLowerCase();
   return Object.entries(EXT_POR_MIME).find(([, e]) => e === ext)?.[0] ?? "application/octet-stream";

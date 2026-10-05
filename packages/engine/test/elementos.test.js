@@ -108,6 +108,72 @@ test('cotización: precio por unidad, desperdicio y mano de obra', () => {
   assert.throws(() => calcCotizacion(calculo, { etapa: 99 }), /Etapa desconocida/);
 });
 
+// Ebanistería: un gabinete inferior de cocina de 60 × 56 × 72 cm en melamina
+// de 18 mm con fondo de MDF de 3 mm. Cada tablero es una caja min/max; el
+// lado más delgado es el espesor.
+test('tablero: gabinete con canto, despiece y láminas', () => {
+  const cat = {
+    mel18: { id: 'mel18', nombre: 'Melamina blanca 18 mm', unidad: 'm2', dimensiones: { espesor: 0.018, lamina_largo: 2.44, lamina_ancho: 1.83 } },
+    mdf3: { id: 'mdf3', nombre: 'MDF 3 mm', unidad: 'm2', dimensiones: { espesor: 0.003 } },
+    bisagra: { id: 'bisagra', nombre: 'Bisagra cazoleta', unidad: 'und', dimensiones: {} },
+  };
+  const t = (id, nombre, pieza, min, max, cantos) => ({ id, nombre, forma: 'tablero', pieza, geometria: { min, max, ...(cantos && { cantos }) } });
+  const elementos = [
+    t('li', 'Lateral', 'mel18', [0, 0, 0], [0.018, 0.56, 0.72], [1, 0]),
+    t('ld', 'Lateral', 'mel18', [0.582, 0, 0], [0.6, 0.56, 0.72], [1, 0]),
+    t('pi', 'Piso', 'mel18', [0.018, 0, 0], [0.582, 0.56, 0.018], [1, 0]),
+    t('te', 'Techo', 'mel18', [0.018, 0, 0.702], [0.582, 0.56, 0.72], [1, 0]),
+    t('fo', 'Fondo', 'mdf3', [0, 0.56, 0], [0.6, 0.563, 0.72]),
+    { id: 'b1', nombre: 'Bisagra', forma: 'pieza', pieza: 'bisagra', geometria: { pos: [0.02, 0, 0.1], tam: [0.035, 0.035, 0.012] } },
+    { id: 'b2', nombre: 'Bisagra', forma: 'pieza', pieza: 'bisagra', geometria: { pos: [0.02, 0, 0.6], tam: [0.035, 0.035, 0.012] } },
+  ];
+  const r = calcularProyecto({ catalogo: cat, elementos });
+  assert.equal(r.errores.length, 0);
+
+  const linea = (id) => r.lineas.find((l) => l.piezaId === id);
+  casi(linea('mel18').cantidad, 2 * 0.72 * 0.56 + 2 * 0.564 * 0.56, 'm2 melamina');
+  casi(linea('mdf3').cantidad, 0.72 * 0.6, 'm2 fondo');
+  casi(linea('bisagra').cantidad, 2);
+  // canto: un borde largo de cada lateral (0,72) y de piso y techo (0,564)
+  const canto = linea('mel18#canto');
+  casi(canto.cantidad, 2 * 0.72 + 2 * 0.564, 'ml canto');
+  assert.equal(canto.unidad, 'ml');
+  assert.equal(canto.derivada, true);
+  assert.equal(linea('mdf3#canto'), undefined); // sin cantos, sin línea
+
+  // despiece: piezas iguales se agrupan; medidas de corte en mm, de mayor a menor
+  const lat = r.despiece.find((d) => d.nombres.includes('Lateral'));
+  assert.deepEqual([lat.largo, lat.ancho, lat.espesor, lat.cantidad], [720, 560, 18, 2]);
+  const piso = r.despiece.find((d) => d.nombres.includes('Piso'));
+  assert.deepEqual([piso.largo, piso.ancho, piso.cantidad], [564, 560, 2]); // piso y techo son el mismo corte
+  assert.deepEqual(piso.nombres.sort(), ['Piso', 'Techo']);
+  assert.equal(r.despiece.length, 3);
+
+  const mel = r.laminas.find((l) => l.piezaId === 'mel18');
+  assert.equal(mel.minimo, 1);
+  assert.equal(mel.noCaben, 0);
+  assert.equal(r.laminas.find((l) => l.piezaId === 'mdf3').minimo, null); // sin tamaño de lámina en el catálogo
+
+  // el canto se cobra aparte, con su propio precio
+  const c = calcCotizacion(r, { precios: { mel18: 100, 'mel18#canto': 10 } });
+  casi(c.materiales, linea('mel18').cantidad * 100 + canto.cantidad * 10);
+});
+
+test('tablero: espesor que no coincide con la pieza, cantos inválidos y pieza que no cabe en la lámina', () => {
+  const cat = { mel18: { id: 'mel18', nombre: 'Melamina 18', unidad: 'm2', dimensiones: { espesor: 0.018, lamina_largo: 2.44, lamina_ancho: 1.83 } } };
+  const r = calcularProyecto({
+    catalogo: cat,
+    elementos: [
+      { id: 'grueso', forma: 'tablero', pieza: 'mel18', geometria: { min: [0, 0, 0], max: [0.5, 0.5, 0.025] } },
+      { id: 'cantos', forma: 'tablero', pieza: 'mel18', geometria: { min: [0, 0, 0], max: [0.5, 0.5, 0.018], cantos: [3, 0] } },
+      { id: 'largo', forma: 'tablero', pieza: 'mel18', geometria: { min: [0, 0, 0], max: [2.6, 0.4, 0.018] } },
+    ],
+  });
+  assert.deepEqual(r.errores.map((e) => e.elementoId), ['grueso', 'cantos']);
+  assert.match(r.errores[0].mensaje, /25 mm.*18 mm/);
+  assert.equal(r.laminas[0].noCaben, 1);
+});
+
 // Prueba de aceptación (guía v3, §10): un producto de otro rubro, sin una
 // sola línea de código propia. Portón con reja de 3 × 2 m: marco, barrotes,
 // lámina inferior y bisagras, todo con las formas que ya existen.

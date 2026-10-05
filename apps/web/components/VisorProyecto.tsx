@@ -5,7 +5,7 @@ import { Viewer, construirEscena } from "@cotizador3d/engine";
 import type { EntradaMotor } from "@/lib/proyectos";
 
 const VISTAS = [
-  ["iso", "Isométrica"], ["norte", "Norte"], ["sur", "Sur"], ["lateral", "Lateral"], ["planta", "Planta"],
+  ["iso", "Isométrica"], ["norte", "Frente"], ["sur", "Posterior"], ["lateral", "Lateral"], ["planta", "Planta"],
 ] as const;
 
 export default function VisorProyecto({ entrada }: { entrada: EntradaMotor }) {

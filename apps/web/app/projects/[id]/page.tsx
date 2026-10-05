@@ -1,7 +1,8 @@
 import { Fragment } from "react";
 import Link from "next/link";
-import { obtenerProyecto } from "@/lib/proyectos";
-import { confirmarPiezaAction } from "@/lib/actions/proyectos";
+import { obtenerEstadoProyecto, obtenerProyecto } from "@/lib/proyectos";
+import { confirmarPiezaAction, reintentarGeneracionAction } from "@/lib/actions/proyectos";
+import EsperandoIA from "@/components/EsperandoIA";
 import { generarPdfAction } from "@/lib/actions/pdf";
 import { cantidadTexto } from "@/lib/format";
 import VisorProyecto from "@/components/VisorProyecto";
@@ -9,18 +10,44 @@ import CotizadorProyecto from "@/components/CotizadorProyecto";
 import BotonPdf from "@/components/BotonPdf";
 import EnlaceCopiable from "@/components/EnlaceCopiable";
 import EditorElementos from "@/components/EditorElementos";
+import Despiece from "@/components/Despiece";
 
-type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean; origenes: string[] };
+type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean; origenes: string[]; derivada?: boolean };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
 
-export default async function ProyectoPage({
-  params, searchParams,
-}: { params: Promise<{ id: string }>; searchParams: Promise<{ aviso?: string }> }) {
+export default async function ProyectoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { aviso } = await searchParams;
+
+  // Mientras la IA trabaja (o si falló) el proyecto todavía no tiene versión.
+  const estado = await obtenerEstadoProyecto(id);
+  if (estado.estado === "procesando" || estado.estado === "error") {
+    return (
+      <main className="flex-1 mx-auto w-full max-w-4xl px-4 sm:px-6 py-10 space-y-8">
+        <div>
+          <Link href="/dashboard" className="text-sm text-neutral-500 hover:underline">← Tus proyectos</Link>
+          <h1 className="text-2xl font-semibold mt-1">{estado.cliente}</h1>
+          <p className="text-sm text-neutral-500">{estado.tipoObra}</p>
+        </div>
+        {estado.estado === "procesando" ? (
+          <EsperandoIA iniciado={(estado.iniciadoIA ?? estado.creadoEn).toISOString()} />
+        ) : (
+          <section className="border border-red-300 bg-red-50 rounded p-4 space-y-3">
+            <h2 className="font-medium text-red-800">No se pudo generar el proyecto</h2>
+            <p className="text-sm text-red-700 whitespace-pre-line">{estado.errorIA ?? "Error desconocido."}</p>
+            <p className="text-sm text-neutral-600">Puedes reintentar con los mismos planos y descripción. Este intento fallido no gastó cupo.</p>
+            <form action={reintentarGeneracionAction}>
+              <input type="hidden" name="proyectoId" value={estado.id} />
+              <button className="bg-neutral-900 text-white rounded px-4 py-2 text-sm font-medium">Reintentar</button>
+            </form>
+          </section>
+        )}
+      </main>
+    );
+  }
+
   const { proyecto, version, entrada, calculo } = await obtenerProyecto(id);
   const etapas = Object.entries(calculo.porEtapa as Record<string, EtapaCalculo>);
-  const sinConfirmar = calculo.lineas.filter((l: Linea) => !l.confirmado).length;
+  const sinConfirmar = calculo.lineas.filter((l: Linea) => !l.confirmado && !l.derivada).length;
 
   // Agrupa los elementos igual que el motor agrupa las líneas del cuadro de
   // cantidades (etapa + pieza + unidad resuelta), para poder editarlos en el
@@ -35,7 +62,7 @@ export default async function ProyectoPage({
   }
 
   return (
-    <main className="flex-1 mx-auto w-full max-w-4xl px-6 py-10 space-y-10">
+    <main className="flex-1 mx-auto w-full max-w-4xl px-4 sm:px-6 py-10 space-y-10">
       <div>
         <Link href="/dashboard" className="text-sm text-neutral-500 hover:underline">← Tus proyectos</Link>
         <h1 className="text-2xl font-semibold mt-1">{proyecto.cliente}</h1>
@@ -44,8 +71,14 @@ export default async function ProyectoPage({
         </p>
       </div>
 
-      {aviso && (
-        <p className="border border-orange-300 bg-orange-50 text-orange-800 rounded p-3 text-sm">{aviso}</p>
+      {(proyecto.notasIA || proyecto.descartadosIA > 0) && (
+        <section className="border border-orange-300 bg-orange-50 text-orange-800 rounded p-3 text-sm space-y-1">
+          <h2 className="font-medium">Supuestos de la IA — confírmalos con el cliente o el plano</h2>
+          {proyecto.notasIA && <p className="whitespace-pre-line">{proyecto.notasIA}</p>}
+          {proyecto.descartadosIA > 0 && (
+            <p>{proyecto.descartadosIA} elemento(s) propuestos no se pudieron interpretar y se descartaron.</p>
+          )}
+        </section>
       )}
 
       {proyecto.archivos.length > 0 && (
@@ -100,14 +133,14 @@ export default async function ProyectoPage({
             </div>
 
             {etapas.map(([n, e]) => (
-              <div key={n} className="border border-neutral-200 rounded overflow-hidden">
+              <div key={n} className="border border-neutral-200 rounded overflow-x-auto">
                 <div className="bg-neutral-100 px-3 py-2 text-sm font-medium">Etapa {n} · {e.nombre}</div>
                 <table className="w-full text-sm">
                   <thead className="text-left text-neutral-500">
                     <tr>
                       <th className="px-3 py-1.5 font-medium">Pieza</th>
                       <th className="px-3 py-1.5 font-medium text-right">Cantidad</th>
-                      <th className="px-3 py-1.5 font-medium text-right">Elementos</th>
+                      <th className="px-3 py-1.5 font-medium text-right hidden sm:table-cell">Elementos</th>
                       <th className="px-3 py-1.5 font-medium">Estado</th>
                     </tr>
                   </thead>
@@ -117,9 +150,13 @@ export default async function ProyectoPage({
                         <tr className="border-t border-neutral-200">
                           <td className="px-3 py-1.5">{l.nombre}</td>
                           <td className="px-3 py-1.5 text-right whitespace-nowrap">{cantidadTexto(l.cantidad, l.unidad)}</td>
-                          <td className="px-3 py-1.5 text-right">{l.n}</td>
+                          <td className="px-3 py-1.5 text-right hidden sm:table-cell">{l.n}</td>
                           <td className="px-3 py-1.5">
-                            {l.confirmado ? (
+                            {l.derivada ? (
+                              <span className={l.confirmado ? "text-green-700" : "text-amber-700"}>
+                                {l.confirmado ? "Confirmado" : "Sigue a sus tableros"}
+                              </span>
+                            ) : l.confirmado ? (
                               <span className="text-green-700">Confirmado</span>
                             ) : (
                               <form action={confirmarPiezaAction} className="flex items-center gap-2">
@@ -131,7 +168,9 @@ export default async function ProyectoPage({
                             )}
                           </td>
                         </tr>
-                        <EditorElementos proyectoId={proyecto.id} elementos={elementosPorLinea.get(`${l.etapa}|${l.piezaId}|${l.unidad}`) ?? []} />
+                        {!l.derivada && (
+                          <EditorElementos proyectoId={proyecto.id} elementos={elementosPorLinea.get(`${l.etapa}|${l.piezaId}|${l.unidad}`) ?? []} />
+                        )}
                       </Fragment>
                     ))}
                     <tr className="border-t border-neutral-300 bg-neutral-50 font-medium">
@@ -145,6 +184,8 @@ export default async function ProyectoPage({
               </div>
             ))}
           </section>
+
+          <Despiece despiece={calculo.despiece} laminas={calculo.laminas} conEstado />
 
           <CotizadorProyecto calculo={{ lineas: calculo.lineas, porEtapa: calculo.porEtapa }} />
 

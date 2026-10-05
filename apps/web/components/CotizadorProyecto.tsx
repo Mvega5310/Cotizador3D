@@ -40,7 +40,7 @@ export default function CotizadorProyecto({ calculo }: { calculo: Calculo }) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
         <label className="space-y-1">
           <span className="block text-neutral-500">Desperdicio %</span>
           <input type="number" min="0" value={desperdicio} onChange={(e) => setDesperdicio(e.target.value)} className={CAMPO} />
@@ -51,12 +51,13 @@ export default function CotizadorProyecto({ calculo }: { calculo: Calculo }) {
         </label>
       </div>
 
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto -mx-4 px-4">
+      <table className="w-full text-sm min-w-[32rem]">
         <thead className="text-left text-neutral-500">
           <tr>
             <th className="py-1 font-medium">Pieza</th>
             <th className="py-1 font-medium text-right">Cantidad + desperdicio</th>
-            <th className="py-1 font-medium text-right w-36">Precio por unidad</th>
+            <th className="py-1 font-medium text-right w-36 min-w-28">Precio por unidad</th>
             <th className="py-1 font-medium text-right">Subtotal</th>
           </tr>
         </thead>
@@ -74,6 +75,7 @@ export default function CotizadorProyecto({ calculo }: { calculo: Calculo }) {
           ))}
         </tbody>
       </table>
+      </div>
 
       <div className="space-y-1 text-sm text-right">
         <p className="text-neutral-600">Materiales {cot.tienePrecio ? cop(cot.materiales) : "—"}</p>

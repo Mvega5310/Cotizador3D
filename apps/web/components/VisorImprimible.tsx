@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { Viewer, construirEscena } from "@cotizador3d/engine";
 import type { EntradaMotor } from "@/lib/proyectos";
 import { cantidadTexto } from "@/lib/format";
+import Despiece, { type FilaDespiece, type LaminaMaterial } from "@/components/Despiece";
 
 type Captura = { clave: string; etiqueta: string; url: string };
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
-type Calculo = { porEtapa: Record<string, EtapaCalculo> };
+type Calculo = { porEtapa: Record<string, EtapaCalculo>; despiece: FilaDespiece[]; laminas: LaminaMaterial[] };
 
 const ORDEN_VISTAS = ["iso", "norte", "sur", "lateral", "planta"];
 
@@ -144,6 +145,8 @@ function Documento({
           ))}
         </section>
       )}
+
+      {modo === "completo" && <Despiece despiece={calculo.despiece} laminas={calculo.laminas} />}
 
       <footer className="text-xs text-neutral-400 border-t border-neutral-200 pt-4">
         Este modelo y sus cantidades son de referencia para visualizar y cotizar. No reemplazan el diseño

@@ -6,8 +6,9 @@ import VisorImprimible from "@/components/VisorImprimible";
 export default async function PaginaImprimir({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const { proyecto, entrada, calculo, modo, marcaAgua } = await obtenerProyectoPorToken(token);
-  // Solo `porEtapa` cruza a un componente cliente: `calculo` completo trae
+  // Solo datos planos cruzan a un componente cliente: `calculo` completo trae
   // `validos[]._forma`/`_pieza` con funciones del motor, que no se pueden
   // serializar hacia el cliente.
-  return <VisorImprimible entrada={entrada} calculo={{ porEtapa: calculo.porEtapa }} cliente={proyecto.cliente} tipoObra={proyecto.tipoObra} modo={modo} marcaAgua={marcaAgua} />;
+  const datos = { porEtapa: calculo.porEtapa, despiece: calculo.despiece, laminas: calculo.laminas };
+  return <VisorImprimible entrada={entrada} calculo={datos} cliente={proyecto.cliente} tipoObra={proyecto.tipoObra} modo={modo} marcaAgua={marcaAgua} />;
 }

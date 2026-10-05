@@ -12,6 +12,9 @@ La app de suscripción sobre el motor (`@cotizador3d/engine`): cuentas, login y 
 - **Límites por plan:** crear un proyecto se bloquea (antes de llamar a la IA) si se agotó el cupo del mes o, en la prueba gratuita, el cupo total de una sola vez. El panel muestra cuántos proyectos van usados (`lib/planes.ts`).
 - **Guarda los planos que subes:** cada archivo (foto o PDF) y tu descripción quedan guardados en el proyecto (`ArchivoEntrada`, en disco bajo `.data/planos/<id>/`), visibles en una sección "Planos subidos" — antes se mandaban a la IA y se perdían. Solo los puede ver el dueño del proyecto (`/projects/[id]/archivos/[archivo]`), nunca por el link público.
 - **Subir planos con IA (único camino para crear un proyecto):** en `/projects/new`, subir fotos o PDF de planos + una descripción libre. `lib/ia.ts` se los manda a Claude (visión, JSON pedido en el texto y validado con Zod — ver nota en el archivo sobre por qué no se usa salida estructurada) pidiendo *solo datos* — catálogo y elementos con el mismo contrato de formas del motor, nunca código. Cada elemento sale marcado `origen: "ia"` y sin confirmar; lo que no se pueda interpretar se descarta y se avisa en vez de tumbar el proyecto. Necesita `ANTHROPIC_API_KEY` en el entorno. Probado con un plano real (ver `docs/BACKLOG-MVP.md`, ítem 7): funciona bien para piezas simples, inconsistente para estructuras metálicas complejas.
+- **La IA trabaja en segundo plano** (`lib/generacion.ts`): "Generar proyecto" responde al instante con el proyecto en estado `procesando`; la lectura de planos (1–4 min) corre con `after()` y la página se refresca sola (`EsperandoIA.tsx`). Si falla, el proyecto queda en `error` con el motivo y un botón "Reintentar" que usa los planos ya guardados; un intento fallido no gasta cupo. Si un despliegue corta una generación, a los 15 min se marca como interrumpida.
+- **Supuestos de la IA guardados:** las notas de la IA (medidas asumidas, lo que no se pudo leer) quedan en el proyecto (`Proyecto.notasIA`) y se muestran siempre.
+- **Carpintería / ebanistería:** forma `tablero` (pieza de mueble con su espesor real), canto en metros lineales como línea aparte, despiece (lista de cortes en mm) y mínimo de láminas por material, en la página, el link completo y el PDF (`Despiece.tsx`).
 - **PDF y enlaces públicos:** cada proyecto tiene un link completo (visor + cantidades) y uno de cliente (solo visor), sin sesión, con marca de agua durante la prueba. "Generar PDF" abre `/p/<token>/imprimir` con Playwright, captura las 5 vistas de cámara y arma un PDF de varias páginas, servido en `/p/<token>/pdf`.
 
 ## Qué no hace todavía (ver `docs/BACKLOG-MVP.md`)
@@ -21,7 +24,9 @@ La app de suscripción sobre el motor (`@cotizador3d/engine`): cuentas, login y 
 - Cobro de verdad (Stripe u otro) — hoy el plan de una cuenta es siempre `prueba`, puesto por el código; el límite de proyectos ya se hace cumplir, pero no hay forma de pasar a un plan pago.
 - Generar el PDF fuera de un servidor propio (ver la limitación anotada en `lib/actions/pdf.ts`).
 - Guardar los planos en un storage de verdad (hoy quedan en el disco del servidor, `.data/planos/`) para cuando esto se despliegue fuera de esta máquina.
-- Formas más allá de `viga`, `panel`, `volumen` y `pieza`. Se agregan en `packages/engine/src/formas.js` cuando un producto las pida.
+- Guardar los precios de la cotización (hoy viven solo en la pantalla y no salen en el PDF), APU, AIU e impuestos.
+- Consumos derivados por regla del catálogo (pintura por m², soldadura por kg, varilla por cuantía).
+- Formas más allá de `viga`, `panel`, `volumen`, `tablero` y `pieza`. Se agregan en `packages/engine/src/formas.js` cuando un producto las pida.
 
 ## Correr en local
 

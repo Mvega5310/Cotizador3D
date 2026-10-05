@@ -7,15 +7,16 @@ type Elemento = { id: string; nombre: string; geometria: Record<string, number[]
 
 const ETIQUETA_CAMPO: Record<string, string> = {
   a: "Punto A", b: "Punto B", origen: "Origen", u: "Lado U", v: "Lado V",
-  min: "Mínimo", max: "Máximo", pos: "Posición", tam: "Tamaño",
+  min: "Mínimo", max: "Máximo", pos: "Posición", tam: "Tamaño", cantos: "Cantos (largos, cortos)",
 };
 
 const inicial: EstadoForm = {};
 
-// Edita las coordenadas [x,y,z] de uno o varios elementos a la vez. Es
-// genérico a propósito: cualquier forma del motor (viga, panel, volumen,
-// pieza) guarda su geometría como { clave: [x,y,z] }, así que no hace falta
-// un formulario distinto por tipo — ver packages/engine/src/formas.js.
+// Edita la geometría de uno o varios elementos a la vez. Es genérico a
+// propósito: cualquier forma del motor guarda su geometría como
+// { clave: [números] } — puntos [x,y,z] o, en un tablero, cantos [largos,
+// cortos] —, así que no hace falta un formulario distinto por tipo (ver
+// packages/engine/src/formas.js).
 export default function EditorElementos({ proyectoId, elementos }: { proyectoId: string; elementos: Elemento[] }) {
   const [abierto, setAbierto] = useState(false);
   const [estado, accion, pendiente] = useActionState(corregirElementosAction, inicial);
@@ -42,9 +43,9 @@ export default function EditorElementos({ proyectoId, elementos }: { proyectoId:
                     {Object.entries(el.geometria).map(([campo, valor]) => (
                       <div key={campo} className="flex items-center gap-2 text-xs">
                         <span className="w-20 shrink-0 text-neutral-500">{ETIQUETA_CAMPO[campo] ?? campo}</span>
-                        {[0, 1, 2].map((i) => (
+                        {valor.map((x, i) => (
                           <input
-                            key={i} type="number" step="any" defaultValue={valor[i]}
+                            key={i} type="number" step="any" defaultValue={x}
                             name={`geo.${el.id}.${campo}.${i}`}
                             className="w-20 border border-neutral-300 rounded px-1.5 py-0.5"
                           />

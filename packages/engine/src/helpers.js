@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 
-// Modelo (X este, Y sur, Z arriba)  ->  three (x, y, z) = (X, Z, Y)
-export const v = (X, Y, Z) => new THREE.Vector3(X, Z, Y);
+// Modelo: ejes de plano, mano derecha — mirando el frente, X crece hacia la
+// derecha, Y hacia el fondo y Z hacia arriba.  ->  three (x, y, z) = (X, Z, -Y)
+// (Antes era (X, Z, Y), un sistema de mano izquierda: todo lo asimétrico —
+// una puerta a la izquierda, las bisagras de un lado — se veía en espejo.)
+export const v = (X, Y, Z) => new THREE.Vector3(X, Z, -Y);
 
 export const mats = {
   wall: new THREE.MeshStandardMaterial({ color: 0xe8e4da, roughness: 0.92, metalness: 0 }),
@@ -48,7 +51,7 @@ export function beam(p0, p1, w, h, material) {
 export function box(X0, Y0, Z0, X1, Y1, Z1, material, edges = false) {
   const g = new THREE.BoxGeometry(Math.abs(X1 - X0), Math.abs(Z1 - Z0), Math.abs(Y1 - Y0));
   const m = new THREE.Mesh(g, material);
-  m.position.set((X0 + X1) / 2, (Z0 + Z1) / 2, (Y0 + Y1) / 2);
+  m.position.copy(v((X0 + X1) / 2, (Y0 + Y1) / 2, (Z0 + Z1) / 2));
   m.castShadow = true;
   m.receiveShadow = true;
   if (edges) addEdges(m, 0x6b665b, 0.55);

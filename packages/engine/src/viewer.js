@@ -151,7 +151,8 @@ export class Viewer {
   setCut(axis, pos, flip = false) {
     const planes = [];
     if (axis) {
-      const n = axis === 'x' ? new THREE.Vector3(-1, 0, 0) : new THREE.Vector3(0, 0, -1);
+      // deja lo que está en X <= pos (o Y <= pos); el Y del modelo es -z en three (helpers.js::v)
+      const n = axis === 'x' ? new THREE.Vector3(-1, 0, 0) : new THREE.Vector3(0, 0, 1);
       if (flip) n.negate();
       planes.push(new THREE.Plane(n, flip ? -pos : pos));
     }
@@ -226,8 +227,8 @@ export class Viewer {
 
   camera_(pos, tgt, fov) {
     this.tween = null;
-    this.camera.position.set(pos[0], pos[2], pos[1]);
-    this.controls.target.set(tgt[0], tgt[2], tgt[1]);
+    this.camera.position.copy(v(...pos));
+    this.controls.target.copy(v(...tgt));
     this.camera.fov = fov;
     this.camera.updateProjectionMatrix();
     this.controls.update();

@@ -96,20 +96,35 @@ async function volcarVersion(
   });
 
   const calculo = calcularProyecto({ elementos, catalogo: catalogoPorId, etapas: entrada.etapas });
-  const { lineas, porEtapa, total, bbox } = calculo;
+  const { lineas, porEtapa, total, bbox, despiece, laminas } = calculo;
   await tx.resultado.create({
     data: {
-      versionId, renders: [], bom: { lineas, porEtapa, total, bbox } as unknown as Prisma.InputJsonValue, marcaAgua: true,
+      versionId, renders: [], bom: { lineas, porEtapa, total, bbox, despiece, laminas } as unknown as Prisma.InputJsonValue, marcaAgua: true,
       linkCompleto: enlaces.linkCompleto, linkCliente: enlaces.linkCliente,
     },
   });
 }
 
-export async function crearProyecto(args: { usuarioId: string; cuentaId: string; cliente: string; tipoObra: string; entrada: EntradaMotor }) {
-  const { usuarioId, cuentaId, cliente, tipoObra, entrada } = args;
+// Crear un proyecto son dos pasos, porque la IA tarda minutos: primero el
+// proyecto vacío en estado "procesando" (respuesta inmediata al usuario) y,
+// cuando la IA termina en segundo plano (lib/generacion.ts), completarProyecto
+// le agrega la versión 1.
+export async function crearProyectoPendiente(args: { usuarioId: string; cuentaId: string; cliente: string; tipoObra: string }) {
+  return prisma.proyecto.create({
+    data: { cuentaId: args.cuentaId, creadoPorId: args.usuarioId, cliente: args.cliente, tipoObra: args.tipoObra, estado: "procesando", iniciadoIA: new Date() },
+  });
+}
+
+export async function completarProyecto(args: {
+  proyectoId: string; cuentaId: string; entrada: EntradaMotor; notasIA?: string; descartadosIA?: number;
+}) {
+  const { proyectoId, cuentaId, entrada, notasIA, descartadosIA } = args;
   return prisma.$transaction(
     async (tx) => {
-      const proyecto = await tx.proyecto.create({ data: { cuentaId, creadoPorId: usuarioId, cliente, tipoObra, estado: "generado" } });
+      const proyecto = await tx.proyecto.update({
+        where: { id: proyectoId },
+        data: { estado: "generado", notasIA: notasIA || null, descartadosIA: descartadosIA ?? 0, errorIA: null },
+      });
       const version = await tx.versionProyecto.create({ data: { proyectoId: proyecto.id, numero: 1 } });
       const piezaIds: Record<string, string> = {};
       for (const [clave, p] of Object.entries(entrada.catalogo)) {
@@ -168,6 +183,26 @@ async function armarEntrada(version: VersionCargada) {
   }));
   const entrada: EntradaMotor = { elementos, catalogo, etapas };
   return { entrada, calculo: calcularProyecto(entrada) };
+}
+
+// Una generación que lleva más que esto en "procesando" se cortó (p. ej. un
+// despliegue reinició el servidor a mitad de camino): la IA nunca tarda tanto.
+const GENERACION_MAX_MS = 15 * 60 * 1000;
+
+// Solo el proyecto y su estado, sin versión — para la página mientras la IA
+// trabaja o si falló. Mismo aislamiento por cuenta que obtenerProyecto.
+export async function obtenerEstadoProyecto(projectId: string) {
+  const session = await requireSession();
+  const usuario = await prisma.usuario.findUniqueOrThrow({ where: { id: session.userId } });
+  let proyecto = await prisma.proyecto.findFirst({ where: { id: projectId, cuentaId: usuario.cuentaId } });
+  if (!proyecto) notFound();
+  if (proyecto.estado === "procesando" && proyecto.iniciadoIA && Date.now() - proyecto.iniciadoIA.getTime() > GENERACION_MAX_MS) {
+    proyecto = await prisma.proyecto.update({
+      where: { id: proyecto.id },
+      data: { estado: "error", errorIA: "La lectura de los planos se interrumpió antes de terminar." },
+    });
+  }
+  return proyecto;
 }
 
 // Siempre restringido a la cuenta del usuario en sesión: es lo que separa los

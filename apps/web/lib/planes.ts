@@ -13,7 +13,9 @@ function inicioDelPeriodo(plan: string): Date {
 
 export async function resumenCupo(cuentaId: string) {
   const cuenta = await prisma.cuenta.findUniqueOrThrow({ where: { id: cuentaId } });
-  const usados = await prisma.proyecto.count({ where: { cuentaId, creadoEn: { gte: inicioDelPeriodo(cuenta.plan) } } });
+  // Un proyecto cuya generación falló no gasta cupo (se puede reintentar; si
+  // se reintenta y sale bien, vuelve a contar).
+  const usados = await prisma.proyecto.count({ where: { cuentaId, creadoEn: { gte: inicioDelPeriodo(cuenta.plan) }, estado: { not: "error" } } });
   return { plan: cuenta.plan, cupo: cuenta.cupoMes, usados, pruebaHasta: cuenta.pruebaHasta };
 }
 

@@ -30,6 +30,8 @@ enum Unidad {
 }
 
 enum EstadoProyecto {
+  procesando // la IA está leyendo los planos, en segundo plano (lib/generacion.ts)
+  error      // la generación falló; se puede reintentar con los planos guardados
   borrador
   en_revision
   generado
@@ -97,6 +99,13 @@ model Proyecto {
   cliente     String // nombre del cliente final, para el PDF
   tipoObra    String // tipo de producto, texto abierto (no enum): 'cubierta_cercha', 'cocina_integral', 'porton_reja', ...
   estado      EstadoProyecto @default(borrador)
+  // Supuestos y advertencias que la IA dejó al leer los planos, y cuántos
+  // elementos suyos no se pudieron interpretar. Se muestran siempre en la
+  // página del proyecto (antes viajaban en la URL y se perdían al recargar).
+  notasIA       String?
+  descartadosIA Int            @default(0)
+  errorIA       String? // por qué falló la última generación (estado = error)
+  iniciadoIA    DateTime? // cuándo arrancó la última generación, para detectar las que se cortaron
   creadoEn    DateTime       @default(now())
 
   archivos ArchivoEntrada[]

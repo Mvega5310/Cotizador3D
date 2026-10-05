@@ -13,16 +13,18 @@ import { z } from "zod";
 // internando ante una respuesta larga que no valida a la primera. Se le pide
 // el JSON en el texto de la respuesta y se valida acá con el mismo esquema
 // Zod; así se ve exactamente qué generó el modelo si algo sale mal.
-const Vec3 = z.array(z.number()).length(3);
+// Puntos [x,y,z]; los cantos de un tablero son un par [largos, cortos]. El
+// motor valida cada forma con su propio contrato (formas.js::validar).
+const ValorGeo = z.array(z.number()).min(2).max(3);
 
 const ElementoIA = z.object({
   id: z.string(),
   nombre: z.string(),
-  forma: z.enum(["viga", "panel", "volumen", "pieza"]),
+  forma: z.enum(["viga", "panel", "volumen", "tablero", "pieza"]),
   pieza: z.string(),
   etapa: z.number().int().min(1),
-  geometria: z.record(z.string(), Vec3).describe(
-    "viga: {a,b}. panel: {origen,u,v}. volumen: {min,max}. pieza: {pos,tam}. Cada valor es [x,y,z] en metros."
+  geometria: z.record(z.string(), ValorGeo).describe(
+    "viga: {a,b}. panel: {origen,u,v}. volumen: {min,max}. tablero: {min,max,cantos?}. pieza: {pos,tam}. Los puntos son [x,y,z] en metros."
   ),
 });
 
@@ -48,11 +50,14 @@ Formas disponibles (son las únicas que existen, no inventes otras):
 - viga: pieza larga recta entre dos puntos. geometria: { a: [x,y,z], b: [x,y,z] }. Para tubos, perfiles, columnas, vigas, listones.
 - panel: superficie plana rectangular. geometria: { origen: [x,y,z], u: [x,y,z], v: [x,y,z] } — u y v son los dos lados del rectángulo, como vectores desde origen. Para teja, lámina, drywall, vidrio, tablero, piso.
 - volumen: sólido tipo caja. geometria: { min: [x,y,z], max: [x,y,z] }. Para concreto, relleno, excavación.
+- tablero: pieza plana de un mueble con su espesor real (melamina, MDF, aglomerado, triplex, madera maciza): laterales, piso, techo, entrepaños, fondo, puertas, frentes y costados de cajón. geometria: { min: [x,y,z], max: [x,y,z], cantos: [largos, cortos] } — una caja cuyo lado más delgado es el espesor del tablero; los otros dos son el largo y el ancho de corte. cantos: cuántos de sus 2 bordes largos y de sus 2 bordes cortos llevan canto/tapacanto (0, 1 o 2 cada uno; normalmente los bordes vistos). Cada tablero es UNA pieza de corte: no juntes dos piezas en una caja.
 - pieza: objeto que se cuenta por unidad, dibujado como una caja de tamaño 'tam' centrada en 'pos'. geometria: { pos: [x,y,z], tam: [dx,dy,dz] }. Para puertas, ventanas, luminarias, muebles, equipos.
 
-Ejes del modelo, en metros: X = largo, Y = profundidad, Z = altura (0 = nivel de piso). Todas las coordenadas van en esa unidad y ese sistema.
+Ejes del modelo, en metros, como en un plano: parado frente al proyecto, X crece hacia la derecha, Y hacia el fondo (alejándose de ti) y Z hacia arriba (0 = nivel de piso). El frente (fachada principal, frentes de puertas y cajones) es el lado de Y menor. Respeta los lados del plano: lo que en la vista frontal está a la izquierda va en X menor. Todas las coordenadas van en esa unidad y ese sistema.
 
 catalogo: un objeto con una entrada por tipo de pieza que uses (perfil, lámina, material...). La clave es un identificador corto tuyo (p.ej. "tubo50"); cada elemento la referencia en su campo 'pieza'. No repitas piezas equivalentes con claves distintas. Cada pieza usada por una 'viga' DEBE traer dimensiones.ancho y dimensiones.alto (metros, la sección transversal del perfil): para un tubo cuadrado o rectangular son el ancho y el peralte; para un tubo redondo o un ángulo, usa el diámetro o el lado mayor en ambos. Sin esos dos campos la pieza no es válida y el elemento se descarta entero.
+
+Muebles y carpintería (cocinas integrales, closets, gabinetes, cajoneras, escritorios, muebles de baño): cada pieza de tablero es un elemento 'tablero'; la pieza del catálogo es el material (p. ej. "Melamina blanca 18 mm"), con unidad "m2", dimensiones.espesor en metros (0.018 para 18 mm — el espesor de cada tablero debe coincidir con el de su material) y, si conoces el formato comercial, dimensiones.lamina_largo y dimensiones.lamina_ancho (p. ej. 2.44 y 1.83). Arma las piezas como se fabrican de verdad: los laterales van de piso a techo y el piso y el techo entran entre los laterales, los fondos suelen ser de MDF o HDF de 3 a 5 mm, cada cajón lleva frente, dos costados, contrafrente y fondo. Herrajes (bisagras, correderas, manijas, patas, tornillería si se pide) van como 'pieza', unidad "und". Ubica cada mueble y cada pieza en su posición real, para que el 3D se vea armado. Si las medidas internas (holguras de cajón, retrocesos del fondo) no están en el plano, usa las usuales del oficio y dilo en "notas".
 
 etapas: si el proyecto tiene partes que se ejecutan por separado (como en el plano o en la descripción del usuario), sepáralas; si no, una sola etapa.
 
@@ -60,14 +65,14 @@ Nunca devuelvas una respuesta mínima, de ejemplo o de marcador de posición. An
 
 Reglas:
 - Usa solo las medidas que puedas leer o inferir razonablemente de lo que se te dio. Cuando una medida sea un supuesto (no está acotada en el plano), dilo en "notas" en vez de inventarla con falsa precisión.
-- No agregues elementos decorativos ni de contexto (terreno, mobiliario) salvo que el usuario los pida — solo lo que se vaya a cotizar o mostrar.
+- No agregues elementos decorativos ni de contexto (terreno, mobiliario que no es parte del trabajo) salvo que el usuario los pida — solo lo que se vaya a cotizar o mostrar.
 - Cada "id" de elemento debe ser único dentro de la respuesta.
 
 Responde ÚNICAMENTE con un objeto JSON válido — sin texto antes ni después, sin explicaciones, sin bloques de código markdown (sin \`\`\`). Forma exacta:
 {
   "etapas": [{ "numero": 1, "nombre": "texto" }],
   "catalogo": { "clave-corta": { "nombre": "texto", "unidad": "kg" | "m2" | "m3" | "ml" | "und", "dimensiones": { "campo": numero }, "factor": numero } },
-  "elementos": [{ "id": "texto único", "nombre": "texto", "forma": "viga" | "panel" | "volumen" | "pieza", "pieza": "clave del catálogo", "etapa": numero, "geometria": { ... según la forma, ver arriba } }],
+  "elementos": [{ "id": "texto único", "nombre": "texto", "forma": "viga" | "panel" | "volumen" | "tablero" | "pieza", "pieza": "clave del catálogo", "etapa": numero, "geometria": { ... según la forma, ver arriba } }],
   "notas": "texto opcional"
 }`;
 

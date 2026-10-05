@@ -10,7 +10,7 @@ export default function FormularioSubirPlanos() {
   const [estado, accion, pendiente] = useActionState(crearDesdeIAAction, inicial);
 
   return (
-    <main className="flex-1 mx-auto w-full max-w-2xl px-6 py-10 space-y-6">
+    <main className="flex-1 mx-auto w-full max-w-2xl px-4 sm:px-6 py-10 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold mb-1">Nuevo proyecto</h1>
         <p className="text-sm text-neutral-500">
@@ -20,7 +20,7 @@ export default function FormularioSubirPlanos() {
       </div>
 
       <form action={accion} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <label htmlFor="cliente-ia" className="text-sm font-medium">Cliente</label>
             <input id="cliente-ia" name="cliente" type="text" required className={CAMPO} />
@@ -41,7 +41,7 @@ export default function FormularioSubirPlanos() {
         </div>
         {estado.error && <p className="text-sm text-red-600">{estado.error}</p>}
         <button type="submit" disabled={pendiente} className="bg-orange-600 text-white rounded px-5 py-2.5 font-medium disabled:opacity-60">
-          {pendiente ? "Leyendo los planos… (puede tardar unos minutos)" : "Generar proyecto"}
+          {pendiente ? "Subiendo los planos…" : "Generar proyecto"}
         </button>
       </form>
     </main>

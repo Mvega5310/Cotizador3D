@@ -21,7 +21,7 @@ export default async function DashboardPage() {
   const agotado = cupo.usados >= cupo.cupo;
 
   return (
-    <main className="flex-1 mx-auto w-full max-w-3xl px-6 py-10">
+    <main className="flex-1 mx-auto w-full max-w-3xl px-4 sm:px-6 py-10">
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold">Tus proyectos</h1>
@@ -58,8 +58,10 @@ export default async function DashboardPage() {
               {p.cliente}
             </Link>
             <span className="ml-2 text-sm text-neutral-500">
-              {p.tipoObra} · {p.estado}
+              {p.tipoObra}
             </span>
+            {p.estado === "procesando" && <span className="ml-2 text-xs rounded bg-orange-100 text-orange-800 px-1.5 py-0.5">La IA está leyendo los planos…</span>}
+            {p.estado === "error" && <span className="ml-2 text-xs rounded bg-red-100 text-red-800 px-1.5 py-0.5">No se pudo generar</span>}
           </li>
         ))}
         {proyectos.length === 0 && (
