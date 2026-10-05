@@ -18,7 +18,10 @@ export async function generarEnSegundoPlano(args: {
   try {
     const propuesta = await proponerElementos({ archivos, descripcion });
     const resultado = depurarEntradaIA(propuesta);
-    await completarProyecto({ proyectoId, cuentaId, entrada: resultado.entrada, notasIA: resultado.notas, descartadosIA: resultado.descartados });
+    await completarProyecto({
+      proyectoId, cuentaId, entrada: resultado.entrada, notasIA: resultado.notas, descartadosIA: resultado.descartados,
+      cotizacion: resultado.cotizacion,
+    });
     console.log(`[ia] proyecto ${proyectoId} generado en ${Math.round((Date.now() - inicio) / 1000)} s`);
   } catch (e) {
     const motivo = e instanceof Error ? e.message : "No se pudo generar el proyecto a partir de los planos.";

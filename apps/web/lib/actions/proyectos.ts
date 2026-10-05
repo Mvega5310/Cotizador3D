@@ -10,6 +10,7 @@ import type { ArchivoLeido } from "@/lib/ia";
 import { generarEnSegundoPlano } from "@/lib/generacion";
 import { leerArchivoGuardado } from "@/lib/archivos";
 import { chequearCupo } from "@/lib/planes";
+import { leerCotizacion } from "@/lib/cotizacion";
 
 export type EstadoForm = { error?: string };
 
@@ -83,6 +84,15 @@ export async function reintentarGeneracionAction(formData: FormData) {
   await prisma.proyecto.update({ where: { id: proyecto.id }, data: { estado: "procesando", errorIA: null, iniciadoIA: new Date() } });
   after(() => generarEnSegundoPlano({ proyectoId: proyecto.id, cuentaId: proyecto.cuentaId, archivos, descripcion }));
   revalidatePath(`/projects/${proyecto.id}`);
+}
+
+// La pantalla de cotización guarda sola mientras el usuario escribe (con una
+// pausa, ver CotizadorProyecto.tsx). Se valida todo en leerCotizacion.
+export async function guardarCotizacionAction(proyectoId: string, datos: unknown): Promise<{ ok: boolean }> {
+  const proyecto = await obtenerEstadoProyecto(proyectoId);
+  const cotizacion = leerCotizacion(datos);
+  await prisma.proyecto.update({ where: { id: proyecto.id }, data: { cotizacion } });
+  return { ok: true };
 }
 
 export async function confirmarPiezaAction(formData: FormData) {

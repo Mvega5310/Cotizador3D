@@ -102,6 +102,11 @@ test('cotización: precio por unidad, desperdicio y mano de obra', () => {
   casi(c.total, c.materiales * 1.2);
   assert.equal(c.tienePrecio, true);
   assert.equal(calcCotizacion(calculo).tienePrecio, false);
+  // mano de obra como valor fijo, sumado al porcentaje
+  const fija = calcCotizacion(calculo, { precios: { kg: 10 }, manoObraPct: 10, manoObraValor: 500 });
+  casi(fija.manoObra, 300 * 0.1 + 500);
+  casi(fija.total, 300 + 30 + 500);
+  assert.equal(calcCotizacion(calculo, { manoObraValor: 500 }).tienePrecio, true);
   // un precio por pieza gana sobre el precio general de la unidad
   const porPieza = calcCotizacion(calculo, { precios: { und: 50, bisagra: 200 } });
   casi(porPieza.materiales, 200);

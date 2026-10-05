@@ -1,13 +1,14 @@
 // Cotización sobre el cálculo del intérprete (interprete.js::calcularProyecto).
 // Cada línea se cobra en su propia unidad: precio por unidad, desperdicio sobre
-// cantidades y mano de obra como porcentaje sobre materiales.
+// cantidades y mano de obra como porcentaje sobre materiales, más un valor
+// fijo si se cotiza así ("mano de obra $400.000").
 //   precios: precio por unidad, por clave de pieza o, si no hay, por unidad ({ tubo50: 9000, kg: 8500, und: 500 })
 /**
  * @param {any} calculo  resultado de calcularProyecto (basta { lineas, porEtapa })
- * @param {{ precios?: Record<string, number>, desperdicioPct?: number, manoObraPct?: number, etapa?: string | number }} [opciones]
+ * @param {{ precios?: Record<string, number>, desperdicioPct?: number, manoObraPct?: number, manoObraValor?: number, etapa?: string | number }} [opciones]
  * @returns {any}
  */
-export function calcCotizacion(calculo, { precios = {}, desperdicioPct = 0, manoObraPct = 0, etapa = 'todo' } = {}) {
+export function calcCotizacion(calculo, { precios = {}, desperdicioPct = 0, manoObraPct = 0, manoObraValor = 0, etapa = 'todo' } = {}) {
   const lineas = etapa === 'todo' ? calculo.lineas : calculo.porEtapa[etapa]?.lineas;
   if (!lineas) throw new Error(`Etapa desconocida: ${etapa}`);
   const factor = 1 + Math.max(0, desperdicioPct) / 100;
@@ -17,6 +18,7 @@ export function calcCotizacion(calculo, { precios = {}, desperdicioPct = 0, mano
     return { ...l, cantidadConDesperdicio, precio, subtotal: cantidadConDesperdicio * precio };
   });
   const materiales = detalle.reduce((a, d) => a + d.subtotal, 0);
-  const manoObra = (materiales * Math.max(0, manoObraPct)) / 100;
-  return { etapa, detalle, materiales, manoObra, total: materiales + manoObra, tienePrecio: detalle.some((d) => d.precio > 0) };
+  const manoObra = (materiales * Math.max(0, manoObraPct)) / 100 + Math.max(0, manoObraValor);
+  const tienePrecio = detalle.some((d) => d.precio > 0) || manoObraValor > 0;
+  return { etapa, detalle, materiales, manoObra, total: materiales + manoObra, tienePrecio };
 }

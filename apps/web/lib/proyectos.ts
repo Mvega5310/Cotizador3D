@@ -6,6 +6,7 @@ import { requireSession } from "@/lib/session";
 import { calcularProyecto, medirElemento } from "@cotizador3d/engine";
 import type { RespuestaIA } from "@/lib/ia";
 import { guardarArchivos } from "@/lib/archivos";
+import { COTIZACION_INICIAL, leerCotizacion } from "@/lib/cotizacion";
 
 const nuevoToken = () => randomBytes(16).toString("hex");
 
@@ -28,7 +29,7 @@ export type EntradaMotor = { elementos: ElementoMotor[]; catalogo: Record<string
 // en una sola pieza de cincuenta. Todo lo que entra queda con origen "ia" y
 // sin confirmar: nada avanza sin que el usuario lo revise (ver
 // docs/ARQUITECTURA.md, sección 2).
-export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; descartados: number; notas?: string } {
+export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; descartados: number; notas?: string; cotizacion?: RespuestaIA["cotizacion"] } {
   if (resp.elementos.length > MAX_ELEMENTOS) throw new Error(`La IA propuso ${resp.elementos.length} elementos; el máximo por proyecto es ${MAX_ELEMENTOS}.`);
   const catalogo: Record<string, Pieza> = Object.fromEntries(
     Object.entries(resp.catalogo).map(([clave, p]) => [
@@ -52,7 +53,16 @@ export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; de
     const lista = errores.slice(0, 5).map((e: { elementoId: string; mensaje: string }) => `${e.elementoId}: ${e.mensaje}`).join(" · ");
     throw new Error(`La IA no propuso ningún elemento interpretable. ${lista}`);
   }
-  return { entrada: { elementos: validos, catalogo, etapas }, descartados: invalidos.size, notas: resp.notas };
+  // Precios que la IA leyó de la descripción: solo los de piezas que existen
+  // (o del canto de una pieza que existe).
+  let cotizacion = resp.cotizacion;
+  if (cotizacion?.precios) {
+    const precios = Object.fromEntries(
+      Object.entries(cotizacion.precios).filter(([k]) => (k.endsWith("#canto") ? k.slice(0, -6) : k) in catalogo)
+    );
+    cotizacion = { ...cotizacion, precios };
+  }
+  return { entrada: { elementos: validos, catalogo, etapas }, descartados: invalidos.size, notas: resp.notas, cotizacion };
 }
 
 // ---------- Guardar ----------
@@ -117,15 +127,12 @@ export async function crearProyectoPendiente(args: { usuarioId: string; cuentaId
 
 export async function completarProyecto(args: {
   proyectoId: string; cuentaId: string; entrada: EntradaMotor; notasIA?: string; descartadosIA?: number;
+  cotizacion?: RespuestaIA["cotizacion"];
 }) {
   const { proyectoId, cuentaId, entrada, notasIA, descartadosIA } = args;
   return prisma.$transaction(
     async (tx) => {
-      const proyecto = await tx.proyecto.update({
-        where: { id: proyectoId },
-        data: { estado: "generado", notasIA: notasIA || null, descartadosIA: descartadosIA ?? 0, errorIA: null },
-      });
-      const version = await tx.versionProyecto.create({ data: { proyectoId: proyecto.id, numero: 1 } });
+      const version = await tx.versionProyecto.create({ data: { proyectoId, numero: 1 } });
       const piezaIds: Record<string, string> = {};
       for (const [clave, p] of Object.entries(entrada.catalogo)) {
         piezaIds[clave] = (
@@ -138,7 +145,25 @@ export async function completarProyecto(args: {
         ).id;
       }
       await volcarVersion(tx, version.id, entrada, piezaIds, { linkCompleto: nuevoToken(), linkCliente: nuevoToken() });
-      return proyecto;
+
+      // Los precios vienen con las claves de la IA; se guardan con los ids
+      // reales del catálogo, que es como los nombra el cuadro de cantidades.
+      const precios: Record<string, number> = {};
+      for (const [k, v] of Object.entries(args.cotizacion?.precios ?? {})) {
+        const [clave, sufijo] = k.split("#");
+        if (piezaIds[clave]) precios[sufijo ? `${piezaIds[clave]}#${sufijo}` : piezaIds[clave]] = v;
+      }
+      const cotizacion = leerCotizacion({
+        ...COTIZACION_INICIAL, ...args.cotizacion, precios, deDescripcion: Object.keys(precios),
+      });
+
+      return tx.proyecto.update({
+        where: { id: proyectoId },
+        data: {
+          estado: "generado", notasIA: notasIA || null, descartadosIA: descartadosIA ?? 0, errorIA: null,
+          cotizacion: cotizacion as unknown as Prisma.InputJsonValue,
+        },
+      });
     },
     { timeout: 120000, maxWait: 30000 }
   );

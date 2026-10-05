@@ -5,11 +5,13 @@ import { Viewer, construirEscena } from "@cotizador3d/engine";
 import type { EntradaMotor } from "@/lib/proyectos";
 import { cantidadTexto } from "@/lib/format";
 import Despiece, { type FilaDespiece, type LaminaMaterial } from "@/components/Despiece";
+import TablaCotizacion from "@/components/TablaCotizacion";
+import type { ResumenCotizacion } from "@/lib/cotizacion";
 
 type Captura = { clave: string; etiqueta: string; url: string };
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
-type Calculo = { porEtapa: Record<string, EtapaCalculo>; despiece: FilaDespiece[]; laminas: LaminaMaterial[] };
+type Calculo = { porEtapa: Record<string, EtapaCalculo>; despiece: FilaDespiece[]; laminas: LaminaMaterial[]; cotizacion: ResumenCotizacion };
 
 const ORDEN_VISTAS = ["iso", "norte", "sur", "lateral", "planta"];
 
@@ -145,6 +147,8 @@ function Documento({
           ))}
         </section>
       )}
+
+      {modo === "completo" && <TablaCotizacion cotizacion={calculo.cotizacion} />}
 
       {modo === "completo" && <Despiece despiece={calculo.despiece} laminas={calculo.laminas} />}
 

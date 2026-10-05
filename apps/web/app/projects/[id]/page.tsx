@@ -3,6 +3,7 @@ import Link from "next/link";
 import { obtenerEstadoProyecto, obtenerProyecto } from "@/lib/proyectos";
 import { confirmarPiezaAction, reintentarGeneracionAction } from "@/lib/actions/proyectos";
 import EsperandoIA from "@/components/EsperandoIA";
+import { leerCotizacion } from "@/lib/cotizacion";
 import { generarPdfAction } from "@/lib/actions/pdf";
 import { cantidadTexto } from "@/lib/format";
 import VisorProyecto from "@/components/VisorProyecto";
@@ -187,7 +188,7 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
 
           <Despiece despiece={calculo.despiece} laminas={calculo.laminas} conEstado />
 
-          <CotizadorProyecto calculo={{ lineas: calculo.lineas, porEtapa: calculo.porEtapa }} />
+          <CotizadorProyecto proyectoId={proyecto.id} calculo={{ lineas: calculo.lineas, porEtapa: calculo.porEtapa }} inicial={leerCotizacion(proyecto.cotizacion)} />
 
           <section className="border border-neutral-200 rounded p-4 space-y-4">
             <h2 className="font-medium">PDF y enlaces para presentar</h2>

@@ -40,6 +40,13 @@ const RespuestaIA = z.object({
   catalogo: z.record(z.string(), PiezaIA),
   elementos: z.array(ElementoIA).min(1),
   notas: z.string().optional().describe("Medidas o piezas que no se pudieron leer con confianza en los planos, para que el usuario las revise."),
+  // Solo lo que el usuario escribió: la IA nunca estima precios (ver SISTEMA).
+  cotizacion: z.object({
+    precios: z.record(z.string(), z.number().positive()).optional(),
+    desperdicioPct: z.number().min(0).max(100).optional(),
+    manoObraPct: z.number().min(0).max(1000).optional(),
+    manoObraValor: z.number().min(0).optional(),
+  }).optional(),
 });
 
 export type RespuestaIA = z.infer<typeof RespuestaIA>;
@@ -63,6 +70,11 @@ etapas: si el proyecto tiene partes que se ejecutan por separado (como en el pla
 
 Nunca devuelvas una respuesta mínima, de ejemplo o de marcador de posición. Analiza la imagen de verdad y lista TODOS los elementos estructurales que puedas identificar (cerchas o arcos, columnas, correas, cimentación, cobertura...), con tu mejor estimación numérica de coordenadas a partir de lo que se ve y se acota en el plano — aproximado es aceptable, vacío no. Cada clave que uses en el campo "pieza" de un elemento debe existir como entrada en "catalogo": revísalo antes de responder.
 
+Precios (campo "cotizacion", opcional): llénalo SOLO con precios, porcentajes o valores que el usuario haya escrito explícitamente en su descripción o en los planos. NUNCA estimes, supongas ni completes precios de mercado: si el usuario no dio el precio de una pieza, esa pieza no va en "precios". Si el usuario no dio ningún precio, omite "cotizacion" por completo.
+- precios: { "clave del catálogo": precio por UNA unidad de cotización de esa pieza (la "unidad" de su entrada en el catálogo), en la moneda del usuario }. Para el canto/tapacanto de un material de tablero, la clave es "<clave del material>#canto" y el precio es por metro lineal.
+- Si el usuario da el precio en otra presentación (por lámina, por tubo de 6 m, por galón), conviértelo a la unidad de cotización (p. ej. precio de lámina ÷ área de la lámina en m²) y explica la conversión en "notas".
+- desperdicioPct y manoObraPct: porcentajes, solo si el usuario los da. manoObraValor: un valor total fijo de mano de obra, si el usuario lo da así (p. ej. "la mano de obra vale 400.000").
+
 Reglas:
 - Usa solo las medidas que puedas leer o inferir razonablemente de lo que se te dio. Cuando una medida sea un supuesto (no está acotada en el plano), dilo en "notas" en vez de inventarla con falsa precisión.
 - No agregues elementos decorativos ni de contexto (terreno, mobiliario que no es parte del trabajo) salvo que el usuario los pida — solo lo que se vaya a cotizar o mostrar.
@@ -73,7 +85,8 @@ Responde ÚNICAMENTE con un objeto JSON válido — sin texto antes ni después,
   "etapas": [{ "numero": 1, "nombre": "texto" }],
   "catalogo": { "clave-corta": { "nombre": "texto", "unidad": "kg" | "m2" | "m3" | "ml" | "und", "dimensiones": { "campo": numero }, "factor": numero } },
   "elementos": [{ "id": "texto único", "nombre": "texto", "forma": "viga" | "panel" | "volumen" | "tablero" | "pieza", "pieza": "clave del catálogo", "etapa": numero, "geometria": { ... según la forma, ver arriba } }],
-  "notas": "texto opcional"
+  "notas": "texto opcional",
+  "cotizacion": { "precios": { "clave-corta": numero }, "desperdicioPct": numero, "manoObraPct": numero, "manoObraValor": numero }  (opcional, solo con datos dados por el usuario)
 }`;
 
 function tipoMedia(nombre: string, tipo: string): "image" | "pdf" | null {
@@ -140,6 +153,7 @@ export async function proponerElementos(args: { archivos: ArchivoLeido[]; descri
   console.log(
     "[ia] elementos:", parseo.data.elementos.length,
     "| piezas del catálogo:", Object.keys(parseo.data.catalogo).join(", "),
+    "| precios dados por el usuario:", Object.keys(parseo.data.cotizacion?.precios ?? {}).length,
     "| notas:", parseo.data.notas ?? "-"
   );
   return parseo.data;

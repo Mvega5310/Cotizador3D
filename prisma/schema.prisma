@@ -106,6 +106,9 @@ model Proyecto {
   descartadosIA Int            @default(0)
   errorIA       String? // por qué falló la última generación (estado = error)
   iniciadoIA    DateTime? // cuándo arrancó la última generación, para detectar las que se cortaron
+  // Precios y parámetros de la cotización (lib/cotizacion.ts): por proyecto y
+  // no por versión — corregir una medida no debe borrar los precios.
+  cotizacion    Json?
   creadoEn    DateTime       @default(now())
 
   archivos ArchivoEntrada[]

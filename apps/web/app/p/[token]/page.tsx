@@ -2,6 +2,8 @@ import { obtenerProyectoPorToken } from "@/lib/proyectos";
 import { cantidadTexto } from "@/lib/format";
 import VisorProyecto from "@/components/VisorProyecto";
 import Despiece from "@/components/Despiece";
+import TablaCotizacion from "@/components/TablaCotizacion";
+import { leerCotizacion, resumirCotizacion } from "@/lib/cotizacion";
 
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
@@ -51,6 +53,8 @@ export default async function PaginaCompartida({ params }: { params: Promise<{ t
           ))}
         </section>
       )}
+
+      {modo === "completo" && <TablaCotizacion cotizacion={resumirCotizacion(calculo, leerCotizacion(proyecto.cotizacion))} />}
 
       {modo === "completo" && <Despiece despiece={calculo.despiece} laminas={calculo.laminas} />}
 
