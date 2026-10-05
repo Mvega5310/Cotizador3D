@@ -17,6 +17,7 @@ La app de suscripción sobre el motor (`@cotizador3d/engine`): cuentas, login y 
 - **Cotización guardada** (`lib/cotizacion.ts`, `Proyecto.cotizacion`): precios por pieza, desperdicio y mano de obra (% y/o valor fijo) se guardan solos mientras se escriben y salen desglosados en el link completo y en el PDF. Si el usuario escribe precios en la descripción, la IA los asigna a cada pieza (marcados "leído de tu descripción"); nunca inventa precios.
 - **APU, AIU, IVA y retenciones** (`engine/pricing.js::calcPresupuesto`): cada línea del cuadro es un ítem con valor unitario = material × (1 + desperdicio del ítem) + mano de obra + equipo + transporte, por unidad. Lo que se cuenta por unidad no lleva desperdicio salvo que el ítem lo diga. Costo directo + AIU (% de administración, imprevistos y utilidad), IVA según régimen (no responsable / sobre la utilidad en contrato de obra / sobre el total en venta) y retenciones de referencia (retefuente, reteIVA, reteICA) hasta el neto a recibir. El PDF muestra el presupuesto, el AIU, el IVA y un anexo de APU; las retenciones solo se ven en la página del proyecto.
 - **Consumos por material** (`CatalogoPieza.consumos`, `EditorConsumos.tsx`): reglas tipo "anticorrosivo: 1 galón por 30 m² de superficie", "soldadura: 0,03 kg por kg de acero", "acero de refuerzo: 80 kg por m³", "8 tornillos por tablero". El motor las suma en una línea por consumo (aunque vengan de varias piezas), redondea hacia arriba lo que se compra entero y cada línea lleva su precio. La IA las propone como supuestos; el usuario las edita en la página del proyecto.
+- **Costo de la IA medido** (`GeneracionIA`, `lib/costos.ts`): cada llamada guarda modelo, tokens, costo estimado en US$ con la tarifa pública, duración y si salió bien (también las fallidas, que igual pueden gastar tokens). `/admin/uso` muestra el gasto del mes, el promedio por proyecto y el gasto por cuenta; solo la ven los correos de `ADMIN_EMAILS`.
 - **Carpintería / ebanistería:** forma `tablero` (pieza de mueble con su espesor real), canto en metros lineales como línea aparte, despiece (lista de cortes en mm) y mínimo de láminas por material, en la página, el link completo y el PDF (`Despiece.tsx`).
 - **PDF y enlaces públicos:** cada proyecto tiene un link completo (visor + cantidades) y uno de cliente (solo visor), sin sesión, con marca de agua durante la prueba. "Generar PDF" abre `/p/<token>/imprimir` con Playwright, captura las 5 vistas de cámara y arma un PDF de varias páginas, servido en `/p/<token>/pdf`.
 
@@ -66,7 +67,7 @@ migraciones (`prisma migrate deploy`) y levanta `next start`.
 
 Variables del servicio: `DATABASE_URL` (referencia al Postgres del mismo
 proyecto), `AUTH_SECRET` (aleatoria; sin ella el servidor no arranca),
-`ANTHROPIC_API_KEY`, `RESEND_API_KEY`, y `DATA_DIR=/data` con un Volumen
+`ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `ADMIN_EMAILS` (correos separados por coma que pueden ver `/admin/uso`), y `DATA_DIR=/data` con un Volumen
 montado en `/data` para que planos y PDF sobrevivan a cada despliegue.
 
 Notas:

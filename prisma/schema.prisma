@@ -113,6 +113,30 @@ model Proyecto {
 
   archivos ArchivoEntrada[]
   versiones VersionProyecto[]
+  generaciones GeneracionIA[]
+}
+
+// Una llamada a la IA (lib/generacion.ts): tokens y costo, para saber cuánto
+// cuesta de verdad cada proyecto y cada cuenta. Se registra también cuando
+// falla: una respuesta que no se pudo leer igual gastó tokens.
+model GeneracionIA {
+  id            String   @id @default(cuid())
+  proyectoId    String
+  proyecto      Proyecto @relation(fields: [proyectoId], references: [id])
+  cuentaId      String
+  modelo        String
+  inputTokens   Int      @default(0) // sin caché
+  outputTokens  Int      @default(0)
+  cacheLectura  Int      @default(0)
+  cacheEscritura Int     @default(0)
+  costoUsd      Float    @default(0) // calculado con lib/costos.ts al momento de la llamada
+  duracionMs    Int
+  exito         Boolean
+  error         String?
+  creadoEn      DateTime @default(now())
+
+  @@index([cuentaId, creadoEn])
+  @@index([creadoEn])
 }
 
 model ArchivoEntrada {

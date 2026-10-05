@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { logoutAction } from "@/lib/actions/auth";
 import { resumenCupo } from "@/lib/planes";
 import AvisoVerificacion from "@/components/AvisoVerificacion";
+import { esAdmin } from "@/lib/admin";
 
 const NOMBRE_PLAN: Record<string, string> = { prueba: "Prueba", personal: "Personal", profesional: "Profesional", empresa: "Empresa" };
 
@@ -31,9 +32,12 @@ export default async function DashboardPage() {
             {cupo.plan === "prueba" && cupo.pruebaHasta && ` · vence el ${cupo.pruebaHasta.toLocaleDateString("es-CO")}`}
           </p>
         </div>
-        <form action={logoutAction}>
-          <button className="text-sm underline text-neutral-600">Salir</button>
-        </form>
+        <div className="flex items-center gap-4">
+          {esAdmin(usuario.email) && <Link href="/admin/uso" className="text-sm underline text-neutral-600">Uso de IA</Link>}
+          <form action={logoutAction}>
+            <button className="text-sm underline text-neutral-600">Salir</button>
+          </form>
+        </div>
       </div>
 
       {!usuario.emailVerificado && <AvisoVerificacion />}

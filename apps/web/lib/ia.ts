@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import type { UsoIA } from "@/lib/costos";
 
 // La IA nunca escribe ni ejecuta código: solo llena esta forma de datos, con
 // el mismo contrato que el motor ya conoce (packages/engine/src/formas.js).
@@ -146,7 +147,19 @@ function tipoMedia(nombre: string, tipo: string): "image" | "pdf" | null {
 // lib/actions/proyectos.ts, que hace las dos cosas con el mismo buffer).
 export type ArchivoLeido = { nombre: string; mime: string; datos: Buffer };
 
-export async function proponerElementos(args: { archivos: ArchivoLeido[]; descripcion: string }): Promise<RespuestaIA> {
+const MODELO = "claude-opus-5";
+
+const usoVacio = (): UsoIA => ({ modelo: MODELO, inputTokens: 0, outputTokens: 0, cacheLectura: 0, cacheEscritura: 0 });
+
+// Error de la lectura con IA que lleva lo que se alcanzó a gastar (ver
+// lib/generacion.ts, que lo registra en GeneracionIA).
+export class ErrorIA extends Error {
+  constructor(mensaje: string, public uso: UsoIA) {
+    super(mensaje);
+  }
+}
+
+export async function proponerElementos(args: { archivos: ArchivoLeido[]; descripcion: string }): Promise<{ respuesta: RespuestaIA; uso: UsoIA }> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("Falta configurar ANTHROPIC_API_KEY en el servidor para usar la lectura de planos con IA.");
 
@@ -169,7 +182,7 @@ export async function proponerElementos(args: { archivos: ArchivoLeido[]; descri
   // con su propio límite de 10 minutos en peticiones no-streaming.
   const client = new Anthropic({ apiKey });
   const stream = client.messages.stream({
-    model: "claude-opus-5",
+    model: MODELO,
     max_tokens: 32000,
     system: SISTEMA,
     messages: [{ role: "user", content }],
@@ -179,26 +192,38 @@ export async function proponerElementos(args: { archivos: ArchivoLeido[]; descri
   try {
     response = await stream.finalMessage();
   } catch (e) {
-    throw new Error(mensajeErrorApi(e));
+    // Sin respuesta no hubo cobro (o no lo sabemos): uso en cero.
+    throw new ErrorIA(mensajeErrorApi(e), usoVacio());
   }
+  const u = response.usage;
+  const uso: UsoIA = {
+    modelo: response.model ?? MODELO,
+    inputTokens: u.input_tokens ?? 0, outputTokens: u.output_tokens ?? 0,
+    cacheLectura: u.cache_read_input_tokens ?? 0, cacheEscritura: u.cache_creation_input_tokens ?? 0,
+  };
   const texto = response.content.filter((b) => b.type === "text").map((b) => b.text).join("");
 
-  console.log("[ia] stop_reason:", response.stop_reason, "| caracteres de respuesta:", texto.length);
+  console.log("[ia] stop_reason:", response.stop_reason, "| caracteres de respuesta:", texto.length, "| tokens entrada/salida:", uso.inputTokens, uso.outputTokens);
 
+  // Desde aquí la IA ya respondió y cobró: los errores llevan el uso, para
+  // que el gasto quede registrado aunque el proyecto no se pueda armar.
   const limpio = texto.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
   let crudo: unknown;
   try {
     crudo = JSON.parse(limpio);
   } catch {
     console.log("[ia] texto no parseable como JSON:", texto.slice(0, 2000));
-    throw new Error("La IA no devolvió un JSON válido. Intenta de nuevo o con planos más legibles.");
+    const motivo = response.stop_reason === "max_tokens"
+      ? "La respuesta de la IA fue demasiado larga y quedó cortada. Intenta dividir los planos en partes más pequeñas."
+      : "La IA no devolvió un JSON válido. Intenta de nuevo o con planos más legibles.";
+    throw new ErrorIA(motivo, uso);
   }
 
   const parseo = RespuestaIA.safeParse(crudo);
   if (!parseo.success) {
     const detalle = parseo.error.issues.slice(0, 5).map((i) => `${i.path.join(".")}: ${i.message}`).join(" · ");
     console.log("[ia] no cumple el esquema:", detalle, "| json:", JSON.stringify(crudo).slice(0, 2000));
-    throw new Error(`La respuesta de la IA no tiene el formato esperado. ${detalle}`);
+    throw new ErrorIA(`La respuesta de la IA no tiene el formato esperado. ${detalle}`, uso);
   }
 
   console.log(
@@ -207,5 +232,5 @@ export async function proponerElementos(args: { archivos: ArchivoLeido[]; descri
     "| precios dados por el usuario:", Object.keys(parseo.data.cotizacion?.precios ?? {}).length,
     "| notas:", parseo.data.notas ?? "-"
   );
-  return parseo.data;
+  return { respuesta: parseo.data, uso };
 }
