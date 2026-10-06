@@ -14,7 +14,9 @@ const TARIFAS: Record<string, Tarifa> = {
   "claude-haiku-4-5": { entrada: 1, salida: 5, cacheEscritura: 1.25, cacheLectura: 0.1 },
 };
 
-export type UsoIA = { modelo: string; inputTokens: number; outputTokens: number; cacheLectura: number; cacheEscritura: number };
+// stopReason: por qué terminó la respuesta ("end_turn", "max_tokens"…), para
+// medir cuántas generaciones se cortan por largo.
+export type UsoIA = { modelo: string; inputTokens: number; outputTokens: number; cacheLectura: number; cacheEscritura: number; stopReason?: string };
 
 export function costoUsd(uso: UsoIA): number {
   // Por prefijo, para que una versión con fecha ("claude-haiku-4-5-2025…") use su tarifa.

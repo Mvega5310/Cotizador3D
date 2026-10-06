@@ -17,7 +17,16 @@ export function rutaPdf(token: string): string {
   return path.join(CARPETA_PDF, `${token}.pdf`);
 }
 
+// `token` es Resultado.pdfToken, propio del PDF (no el de un link).
 export function guardarPdf(token: string, datos: Uint8Array) {
   fs.mkdirSync(CARPETA_PDF, { recursive: true });
   fs.writeFileSync(rutaPdf(token), datos);
+}
+
+export function borrarPdf(token: string) {
+  try {
+    fs.rmSync(rutaPdf(token), { force: true });
+  } catch (e) {
+    console.warn("[pdf] no se pudo borrar", token, e instanceof Error ? e.message : e);
+  }
 }

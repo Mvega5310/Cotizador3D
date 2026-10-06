@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
-import { calcularProyecto, claveConsumo, consumoValido, medirElemento } from "@cotizador3d/engine";
+import { calcularProyecto, claveConsumo, consumoValido, medirElemento, seccionDesdeNombre } from "@cotizador3d/engine";
 import type { RespuestaIA } from "@/lib/ia";
 import { guardarArchivos } from "@/lib/archivos";
 import { COTIZACION_INICIAL, leerCotizacion } from "@/lib/cotizacion";
@@ -52,6 +52,24 @@ export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; de
   }));
   const etapas: Etapa[] = [...resp.etapas].sort((a, b) => a.numero - b.numero);
 
+  // Perfiles sin sección: sin ancho y alto la forma `viga` no es válida y se
+  // descartaría justo la estructura. Se lee del nombre ("Tubo 150×50×4 mm");
+  // si no se puede, una sección provisional marcada, que el usuario confirma.
+  const provisionales: string[] = [];
+  const usadasPorViga = new Set(elementos.filter((e) => e.forma === "viga").map((e) => e.pieza));
+  for (const [clave, p] of Object.entries(catalogo)) {
+    if (!usadasPorViga.has(clave)) continue;
+    const d = p.dimensiones as { ancho?: number; alto?: number };
+    if ((d.ancho ?? 0) > 0 && (d.alto ?? 0) > 0) continue;
+    const s = seccionDesdeNombre(p.nombre);
+    if (s) {
+      p.dimensiones = { ...p.dimensiones, ...s };
+    } else {
+      p.dimensiones = { ...p.dimensiones, ancho: 0.05, alto: 0.05, provisional: 1 };
+      provisionales.push(p.nombre);
+    }
+  }
+
   const { errores } = calcularProyecto({ elementos, catalogo, etapas });
   const invalidos = new Set(errores.map((e: { elementoId: string }) => e.elementoId));
   const validos = elementos.filter((e) => !invalidos.has(e.id));
@@ -77,7 +95,11 @@ export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; de
     };
     cotizacion = { ...cotizacion, precios: filtrarClaves(cotizacion.precios, valida), apu: filtrarClaves(cotizacion.apu, valida) };
   }
-  return { entrada: { elementos: validos, catalogo, etapas }, descartados: invalidos.size, notas: resp.notas, cotizacion };
+  const avisoSecciones = provisionales.length
+    ? `Sección por confirmar (se dibujó provisional de 50 × 50 mm porque el plano no la indica): ${provisionales.join(", ")}. Corrígela antes de cotizar: cambia el peso y el dibujo.`
+    : "";
+  const notas = [resp.notas, avisoSecciones].filter(Boolean).join("\n\n") || undefined;
+  return { entrada: { elementos: validos, catalogo, etapas }, descartados: invalidos.size, notas, cotizacion };
 }
 
 // Rehace un objeto { clave: valor } pasando cada clave por `mapear`; las que

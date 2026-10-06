@@ -50,7 +50,7 @@ async function registrar(a: { proyectoId: string; cuentaId: string; uso: UsoIA |
       data: {
         proyectoId: a.proyectoId, cuentaId: a.cuentaId, modelo: uso.modelo,
         inputTokens: uso.inputTokens, outputTokens: uso.outputTokens, cacheLectura: uso.cacheLectura, cacheEscritura: uso.cacheEscritura,
-        costoUsd: costo, duracionMs: Date.now() - a.inicio, exito: a.exito, error: a.error?.slice(0, 1000),
+        costoUsd: costo, stopReason: uso.stopReason, duracionMs: Date.now() - a.inicio, exito: a.exito, error: a.error?.slice(0, 1000),
       },
     })
     // Que falle el registro del costo no debe tumbar la generación.

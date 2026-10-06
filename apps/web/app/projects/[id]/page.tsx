@@ -4,15 +4,15 @@ import { obtenerEstadoProyecto, obtenerProyecto } from "@/lib/proyectos";
 import { confirmarPiezaAction, reintentarGeneracionAction } from "@/lib/actions/proyectos";
 import EsperandoIA from "@/components/EsperandoIA";
 import { leerCotizacion } from "@/lib/cotizacion";
-import { generarPdfAction } from "@/lib/actions/pdf";
 import { cantidadTexto } from "@/lib/format";
 import VisorProyecto from "@/components/VisorProyecto";
 import CotizadorProyecto from "@/components/CotizadorProyecto";
-import BotonPdf from "@/components/BotonPdf";
+import PanelPdf from "@/components/PanelPdf";
 import EnlaceCopiable from "@/components/EnlaceCopiable";
 import EditorElementos from "@/components/EditorElementos";
 import Despiece from "@/components/Despiece";
 import EditorConsumos from "@/components/EditorConsumos";
+import SeccionesPorConfirmar from "@/components/SeccionesPorConfirmar";
 
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean; origenes: string[]; derivada?: boolean };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
@@ -115,6 +115,13 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
         <>
           <VisorProyecto entrada={entrada} />
 
+          <SeccionesPorConfirmar
+            proyectoId={proyecto.id}
+            piezas={Object.values(entrada.catalogo)
+              .filter((p) => (p.dimensiones as { provisional?: unknown }).provisional)
+              .map((p) => ({ id: p.id, nombre: p.nombre }))}
+          />
+
           {calculo.errores.length > 0 && (
             <section className="border border-red-300 bg-red-50 rounded p-4 space-y-2">
               <h2 className="font-medium text-red-800">{calculo.errores.length} elemento(s) sin interpretar</h2>
@@ -212,15 +219,12 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
               <p className="text-xs text-neutral-500">Solo vistas — sin cantidades. Para compartir con tu cliente.</p>
               <EnlaceCopiable ruta={`/p/${version.resultado?.linkCliente}`} />
             </div>
-            <div className="flex items-center gap-3 pt-2 border-t border-neutral-100">
-              <form action={generarPdfAction}>
-                <input type="hidden" name="proyectoId" value={proyecto.id} />
-                <BotonPdf yaExiste={!!version.resultado?.pdfUrl} />
-              </form>
-              {version.resultado?.pdfUrl && (
-                <a href={version.resultado.pdfUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-700 hover:underline">Ver el último PDF generado</a>
-              )}
-            </div>
+            <PanelPdf
+              proyectoId={proyecto.id}
+              estado={version.resultado?.pdfEstado ?? null}
+              error={version.resultado?.pdfError ?? null}
+              url={version.resultado?.pdfUrl ?? null}
+            />
           </section>
         </>
       )}

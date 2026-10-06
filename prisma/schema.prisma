@@ -68,6 +68,9 @@ model Usuario {
   nombre           String
   passwordHash     String
   emailVerificado  Boolean  @default(false)
+  // Va dentro del token de sesión y se compara al leerla (lib/session.ts):
+  // subirla invalida todas las sesiones abiertas (al restablecer la contraseña).
+  sesionVersion    Int      @default(0)
   cuentaId         String
   cuenta           Cuenta   @relation(fields: [cuentaId], references: [id])
   creadoEn         DateTime @default(now())
@@ -130,6 +133,7 @@ model GeneracionIA {
   cacheLectura  Int      @default(0)
   cacheEscritura Int     @default(0)
   costoUsd      Float    @default(0) // calculado con lib/costos.ts al momento de la llamada
+  stopReason    String? // "end_turn", "max_tokens"…: cuántas se cortan por largo
   duracionMs    Int
   exito         Boolean
   error         String?
@@ -233,7 +237,14 @@ model Resultado {
   versionId     String          @unique
   version       VersionProyecto @relation(fields: [versionId], references: [id])
   renders       Json // [{ nombre, url }]
-  pdfUrl        String?
+  pdfUrl        String? // /d/<pdfToken>
+  // El PDF tiene su propio token, sin relación con los links: quien recibe
+  // el PDF no puede llegar desde su dirección a la vista con cantidades.
+  // Se genera en segundo plano (lib/actions/pdf.ts): generando · listo · error.
+  pdfToken      String?   @unique
+  pdfEstado     String?
+  pdfError      String?
+  pdfIniciado   DateTime?
   linkCompleto  String? // token/URL del visor completo (para el usuario)
   linkCliente   String? // token/URL del visor solo-vistas (para compartir)
   marcaAgua     Boolean         @default(true) // true durante la prueba

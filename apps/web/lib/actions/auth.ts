@@ -6,12 +6,13 @@ import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword, createSessionToken, nuevoTokenAuth } from "@/lib/auth";
 import { requireSession, COOKIE_NAME } from "@/lib/session";
 import { enviarCorreo, correoVerificacion, correoRecuperacion } from "@/lib/email";
+import { permitirAccion, DEMASIADOS } from "@/lib/limite";
 
 export type AuthState = { error?: string };
 export type AuthInfo = { error?: string; mensaje?: string };
 
-async function setSessionCookie(userId: string, email: string) {
-  const token = await createSessionToken({ userId, email });
+async function setSessionCookie(u: { id: string; email: string; sesionVersion: number }) {
+  const token = await createSessionToken({ userId: u.id, email: u.email, sv: u.sesionVersion });
   const store = await cookies();
   store.set(COOKIE_NAME, token, {
     httpOnly: true,
@@ -27,8 +28,9 @@ async function setSessionCookie(userId: string, email: string) {
 // mande un correo de recuperación con un enlace a otro dominio.
 async function origen() {
   if (process.env.APP_URL) return process.env.APP_URL.replace(/\/+$/, "");
+  if (process.env.NODE_ENV === "production") throw new Error("Falta APP_URL en producción.");
   const h = await headers();
-  const proto = h.get("x-forwarded-proto") || (process.env.NODE_ENV === "production" ? "https" : "http");
+  const proto = h.get("x-forwarded-proto") || "http"; // solo desarrollo
   return `${proto}://${h.get("host")}`;
 }
 
@@ -42,6 +44,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
   if (!nombre) return { error: "Escribe tu nombre." };
   if (!EMAIL_RE.test(email)) return { error: "Correo inválido." };
   if (password.length < 8) return { error: "La contraseña debe tener al menos 8 caracteres." };
+  if (!(await permitirAccion("registro"))) return { error: DEMASIADOS };
 
   const existing = await prisma.usuario.findUnique({ where: { email } });
   if (existing) return { error: "Ya existe una cuenta con ese correo." };
@@ -62,9 +65,9 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
     data: { nombre, email, passwordHash, cuentaId: cuenta.id },
   });
 
-  // La cuenta queda usable de inmediato (no bloqueamos por correo sin
-  // verificar); el correo de verificación es best-effort — si falla el
-  // envío, el usuario igual puede pedir que se lo reenvíen después.
+  // La cuenta queda usable de inmediato para explorar; generar proyectos sí
+  // exige el correo confirmado (lib/actions/proyectos.ts). El envío es
+  // best-effort: si falla, el usuario puede pedir que se lo reenvíen.
   try {
     const token = nuevoTokenAuth();
     await prisma.tokenAuth.create({
@@ -79,24 +82,35 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
     console.error("[auth] no se pudo enviar el correo de verificación:", e instanceof Error ? e.message : e);
   }
 
-  await setSessionCookie(usuario.id, usuario.email);
+  await setSessionCookie(usuario);
   redirect("/dashboard");
 }
 
 export async function loginAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
+  if (!(await permitirAccion("login", email))) return { error: DEMASIADOS };
 
   const usuario = await prisma.usuario.findUnique({ where: { email } });
   if (!usuario || !(await verifyPassword(password, usuario.passwordHash))) {
     return { error: "Correo o contraseña incorrectos." };
   }
 
-  await setSessionCookie(usuario.id, usuario.email);
+  await setSessionCookie(usuario);
   redirect("/dashboard");
 }
 
 export async function logoutAction() {
+  const store = await cookies();
+  store.delete(COOKIE_NAME);
+  redirect("/login");
+}
+
+// Cierra la sesión aquí y en cualquier otro dispositivo: sube la versión de
+// sesión, con lo que todos los tokens emitidos dejan de valer (lib/session.ts).
+export async function logoutTodosAction() {
+  const session = await requireSession();
+  await prisma.usuario.update({ where: { id: session.userId }, data: { sesionVersion: { increment: 1 } } });
   const store = await cookies();
   store.delete(COOKIE_NAME);
   redirect("/login");
@@ -108,6 +122,7 @@ export async function reenviarVerificacionAction(_prev: AuthInfo, _formData: For
   const session = await requireSession();
   const usuario = await prisma.usuario.findUniqueOrThrow({ where: { id: session.userId } });
   if (usuario.emailVerificado) return { mensaje: "Tu correo ya está verificado." };
+  if (!(await permitirAccion("reenviar", usuario.email))) return { error: DEMASIADOS };
 
   const reciente = await prisma.tokenAuth.findFirst({
     where: { usuarioId: usuario.id, tipo: "verificacion", creadoEn: { gt: new Date(Date.now() - 60 * 1000) } },
@@ -164,6 +179,7 @@ export async function confirmarVerificacionAction(_prev: AuthInfo, formData: For
 export async function solicitarRecuperacionAction(_prev: AuthInfo, formData: FormData): Promise<AuthInfo> {
   const email = String(formData.get("email") || "").trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { error: "Correo inválido." };
+  if (!(await permitirAccion("recuperar", email))) return { error: DEMASIADOS };
 
   const usuario = await prisma.usuario.findUnique({ where: { email } });
   if (usuario) {
@@ -196,11 +212,14 @@ export async function restablecerAction(_prev: AuthState, formData: FormData): P
 
   const passwordHash = await hashPassword(password);
   const usuario = await prisma.$transaction(async (tx) => {
-    const u = await tx.usuario.update({ where: { id: registro.usuarioId }, data: { passwordHash } });
+    // Subir la versión de sesión cierra las sesiones abiertas en otros
+    // dispositivos: si alguien recupera la contraseña porque le robaron la
+    // cuenta, el intruso queda afuera.
+    const u = await tx.usuario.update({ where: { id: registro.usuarioId }, data: { passwordHash, sesionVersion: { increment: 1 } } });
     await tx.tokenAuth.update({ where: { id: registro.id }, data: { usadoEn: new Date() } });
     return u;
   });
 
-  await setSessionCookie(usuario.id, usuario.email);
+  await setSessionCookie(usuario);
   redirect("/dashboard");
 }

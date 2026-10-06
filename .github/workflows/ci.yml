@@ -1,0 +1,30 @@
+# Verificación en cada push y pull request: pruebas del motor y de Casa
+# Castañeda (cantidades contra el original), tipos y lint. Así un cambio que
+# rompa las cantidades o los tipos se ve antes de que Railway lo despliegue.
+name: CI
+on: [push, pull_request]
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Cliente de Prisma
+        run: npx prisma generate --schema=../../prisma/schema.prisma
+        working-directory: apps/web
+      - name: Pruebas (motor y Casa Castañeda)
+        run: npm test
+      - name: Tipos de rutas de Next (LayoutProps, PageProps…)
+        run: npx next typegen
+        working-directory: apps/web
+      - name: Tipos
+        run: npx tsc --noEmit -p .
+        working-directory: apps/web
+      - name: Lint
+        run: npx eslint .
+        working-directory: apps/web

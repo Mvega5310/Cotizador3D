@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { crearProyectoPendiente, confirmarPieza, corregirElementos, guardarArchivosEntrada, obtenerEstadoProyecto, obtenerProyecto } from "@/lib/proyectos";
@@ -12,11 +13,15 @@ import { generarEnSegundoPlano } from "@/lib/generacion";
 import { leerArchivoGuardado } from "@/lib/archivos";
 import { chequearCupo } from "@/lib/planes";
 import { leerCotizacion } from "@/lib/cotizacion";
+import { FORMATOS_ACEPTADOS, tipoDeArchivo } from "@/lib/imagenes";
 
 export type EstadoForm = { error?: string };
 
 const MAX_ARCHIVOS = 6;
-const MAX_BYTES_ARCHIVO = 15 * 1024 * 1024;
+// La API de Claude acepta 32 MB por petición y el base64 suma ~33 %; las
+// fotos además se reducen antes de mandarlas (lib/imagenes.ts). El límite de
+// las Server Actions está en next.config.ts (25 MB).
+const MAX_BYTES_TOTAL = 22 * 1024 * 1024;
 
 // Único camino para crear un proyecto: subir planos y dejar que la IA
 // proponga los elementos (ver lib/ia.ts). Un usuario cualquiera nunca escribe
@@ -32,9 +37,22 @@ export async function crearDesdeIAAction(_prev: EstadoForm, formData: FormData):
   if (!cliente) return { error: "Escribe el nombre del cliente." };
   if (archivosForm.length === 0) return { error: "Sube al menos un plano, boceto o foto." };
   if (archivosForm.length > MAX_ARCHIVOS) return { error: `Máximo ${MAX_ARCHIVOS} archivos por proyecto.` };
-  for (const a of archivosForm) if (a.size > MAX_BYTES_ARCHIVO) return { error: `"${a.name}" pesa más de 15 MB.` };
+  for (const a of archivosForm) {
+    if (!FORMATOS_ACEPTADOS.has(tipoDeArchivo(a.name, a.type))) {
+      return { error: `"${a.name}" no es JPG, PNG, WebP o PDF. En iPhone, comparte la foto como JPG (o toma una captura de pantalla).` };
+    }
+  }
+  if (archivosForm.reduce((s, a) => s + a.size, 0) > MAX_BYTES_TOTAL) {
+    return { error: "Entre todos los archivos pasan de 22 MB. Sube menos páginas o fotos más livianas." };
+  }
 
   const usuario = await prisma.usuario.findUniqueOrThrow({ where: { id: session.userId } });
+  // Las pruebas gratis cuestan crédito real de IA: sin correo confirmado se
+  // podrían crear cuentas en serie con correos desechables. Sin
+  // RESEND_API_KEY (desarrollo) no se exige, porque el correo no saldría.
+  if (!usuario.emailVerificado && process.env.RESEND_API_KEY) {
+    return { error: "Confirma tu correo antes de generar tu primer proyecto. Si no te llegó, pídelo de nuevo desde tu panel." };
+  }
   // Antes de la llamada a la IA (que cuesta dinero real), no después —
   // así un cupo agotado no se gasta en una generación que de todos modos
   // no se va a guardar.
@@ -44,7 +62,7 @@ export async function crearDesdeIAAction(_prev: EstadoForm, formData: FormData):
   // Se leen una sola vez a memoria: el mismo buffer se guarda en disco y se
   // manda a la IA.
   const archivos: ArchivoLeido[] = await Promise.all(
-    archivosForm.map(async (a) => ({ nombre: a.name, mime: a.type, datos: Buffer.from(await a.arrayBuffer()) }))
+    archivosForm.map(async (a) => ({ nombre: a.name, mime: tipoDeArchivo(a.name, a.type), datos: Buffer.from(await a.arrayBuffer()) }))
   );
 
   // El proyecto existe desde ya (en "procesando") y la IA corre después de
@@ -82,7 +100,14 @@ export async function reintentarGeneracionAction(formData: FormData) {
     return;
   }
 
-  await prisma.proyecto.update({ where: { id: proyecto.id }, data: { estado: "procesando", errorIA: null, iniciadoIA: new Date() } });
+  // Condicional y atómico: con dos clics casi simultáneos, solo uno logra
+  // pasar el proyecto de "error" a "procesando"; el otro no lanza una
+  // segunda generación (que se pagaría dos veces).
+  const tomado = await prisma.proyecto.updateMany({
+    where: { id: proyecto.id, estado: "error" },
+    data: { estado: "procesando", errorIA: null, iniciadoIA: new Date() },
+  });
+  if (tomado.count === 0) return;
   after(() => generarEnSegundoPlano({ proyectoId: proyecto.id, cuentaId: proyecto.cuentaId, archivos, descripcion }));
   revalidatePath(`/projects/${proyecto.id}`);
 }
@@ -110,6 +135,24 @@ export async function guardarConsumosAction(proyectoId: string, piezaId: string,
   const mala = limpias.findIndex((r) => !consumoValido(r));
   if (mala >= 0) return { error: `El consumo ${mala + 1} está incompleto: necesita nombre y una cantidad mayor que 0.` };
   await prisma.catalogoPieza.update({ where: { id: piezaId }, data: { consumos: limpias } });
+  revalidatePath(`/projects/${proyectoId}`);
+  return {};
+}
+
+// Sección de un perfil (ancho × alto, en mm) que quedó provisional porque el
+// plano no la indicaba (lib/proyectos.ts::depurarEntradaIA). Es un dato del
+// material, como sus consumos: no crea versión nueva, y el cuadro se
+// recalcula al recargar.
+export async function guardarSeccionAction(_prev: EstadoForm, formData: FormData): Promise<EstadoForm> {
+  const proyectoId = String(formData.get("proyectoId") || "");
+  const piezaId = String(formData.get("piezaId") || "");
+  const ancho = Number(formData.get("ancho")) / 1000, alto = Number(formData.get("alto")) / 1000;
+  if (!(ancho > 0.003 && alto > 0.003 && ancho < 2 && alto < 2)) return { error: "Escribe el ancho y el alto en milímetros (entre 3 y 2000)." };
+  const { entrada } = await obtenerProyecto(proyectoId);
+  const pieza = entrada.catalogo[piezaId];
+  if (!pieza) return { error: "Ese material no es de este proyecto." };
+  const { provisional: _provisional, ...resto } = pieza.dimensiones as Record<string, unknown>;
+  await prisma.catalogoPieza.update({ where: { id: piezaId }, data: { dimensiones: { ...resto, ancho, alto } as Prisma.InputJsonValue } });
   revalidatePath(`/projects/${proyectoId}`);
   return {};
 }

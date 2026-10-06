@@ -23,7 +23,8 @@ export function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export type SessionPayload = { userId: string; email: string };
+// sv: versión de sesión del usuario (Usuario.sesionVersion) al iniciarla.
+export type SessionPayload = { userId: string; email: string; sv: number };
 
 export async function createSessionToken(payload: SessionPayload) {
   return new SignJWT({ ...payload })
@@ -37,7 +38,9 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
   try {
     const { payload } = await jwtVerify(token, secret);
     if (typeof payload.userId !== "string" || typeof payload.email !== "string") return null;
-    return { userId: payload.userId, email: payload.email };
+    // Los tokens emitidos antes de existir `sv` cuentan como versión 0: siguen
+    // válidos hasta el primer restablecimiento de contraseña.
+    return { userId: payload.userId, email: payload.email, sv: typeof payload.sv === "number" ? payload.sv : 0 };
   } catch {
     return null;
   }

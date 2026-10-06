@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
-import { logoutAction } from "@/lib/actions/auth";
+import { logoutAction, logoutTodosAction } from "@/lib/actions/auth";
 import { resumenCupo } from "@/lib/planes";
 import AvisoVerificacion from "@/components/AvisoVerificacion";
 import { esAdmin } from "@/lib/admin";
@@ -23,7 +23,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="flex-1 mx-auto w-full max-w-3xl px-4 sm:px-6 py-10">
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-8">
         <div>
           <h1 className="text-2xl font-semibold">Tus proyectos</h1>
           <p className="text-sm text-neutral-500">{usuario.email}</p>
@@ -32,10 +32,13 @@ export default async function DashboardPage() {
             {cupo.plan === "prueba" && cupo.pruebaHasta && ` · vence el ${cupo.pruebaHasta.toLocaleDateString("es-CO")}`}
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
           {esAdmin(usuario.email) && <Link href="/admin/uso" className="text-sm underline text-neutral-600">Uso de IA</Link>}
           <form action={logoutAction}>
             <button className="text-sm underline text-neutral-600">Salir</button>
+          </form>
+          <form action={logoutTodosAction}>
+            <button className="text-xs underline text-neutral-400" title="Cierra tu sesión aquí y en cualquier otro celular o computador">Salir de todos los dispositivos</button>
           </form>
         </div>
       </div>

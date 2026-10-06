@@ -1,4 +1,7 @@
 "use client";
+// Las <img> de este archivo son capturas del visor en `data:` para imprimir el
+// PDF: next/image no aporta nada ahí (no hay nada que optimizar ni cargar).
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useRef, useState } from "react";
 import { Viewer, construirEscena } from "@cotizador3d/engine";
@@ -21,10 +24,11 @@ const ORDEN_VISTAS = ["iso", "norte", "sur", "lateral", "planta"];
 // documento imprimible y marca `data-listo="1"` para que el generador de PDF
 // (lib/actions/pdf.ts, con Playwright) sepa que ya puede imprimir la página.
 export default function VisorImprimible({
-  entrada, calculo, cliente, tipoObra, modo, marcaAgua,
+  entrada, calculo, cliente, tipoObra, marcaAgua, conApu,
 }: {
-  entrada: EntradaMotor; calculo: Calculo; cliente: string; tipoObra: string;
-  modo: "completo" | "cliente"; marcaAgua: boolean;
+  // calculo null = modo cliente: solo las vistas, sin cantidades ni precios.
+  entrada: EntradaMotor; calculo: Calculo | null; cliente: string; tipoObra: string;
+  marcaAgua: boolean; conApu: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -75,15 +79,15 @@ export default function VisorImprimible({
         </div>
       )}
       {capturas !== null && (
-        <Documento capturas={capturas} calculo={calculo} cliente={cliente} tipoObra={tipoObra} modo={modo} marcaAgua={marcaAgua} />
+        <Documento capturas={capturas} calculo={calculo} cliente={cliente} tipoObra={tipoObra} marcaAgua={marcaAgua} conApu={conApu} />
       )}
     </div>
   );
 }
 
 function Documento({
-  capturas, calculo, cliente, tipoObra, modo, marcaAgua,
-}: { capturas: Captura[]; calculo: Calculo; cliente: string; tipoObra: string; modo: "completo" | "cliente"; marcaAgua: boolean }) {
+  capturas, calculo, cliente, tipoObra, marcaAgua, conApu,
+}: { capturas: Captura[]; calculo: Calculo | null; cliente: string; tipoObra: string; marcaAgua: boolean; conApu: boolean }) {
   const [hero, ...resto] = capturas;
   const fecha = new Date().toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" });
 
@@ -119,7 +123,7 @@ function Documento({
         </section>
       )}
 
-      {modo === "completo" && (
+      {calculo && (
         <section className="space-y-4">
           <h2 className="font-medium text-lg">Cuadro de cantidades</h2>
           {Object.entries(calculo.porEtapa).map(([n, e]) => (
@@ -148,9 +152,9 @@ function Documento({
         </section>
       )}
 
-      {modo === "completo" && <TablaCotizacion cotizacion={calculo.cotizacion} />}
+      {calculo && <TablaCotizacion cotizacion={calculo.cotizacion} conApu={conApu} />}
 
-      {modo === "completo" && <Despiece despiece={calculo.despiece} laminas={calculo.laminas} />}
+      {calculo && <Despiece despiece={calculo.despiece} laminas={calculo.laminas} />}
 
       <footer className="text-xs text-neutral-400 border-t border-neutral-200 pt-4">
         Este modelo y sus cantidades son de referencia para visualizar y cotizar. No reemplazan el diseño

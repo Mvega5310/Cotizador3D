@@ -6,10 +6,13 @@ import type { ResumenCotizacion } from "@/lib/cotizacion";
 // de precio unitario, el anexo de APU. Sin estado: lo usan el link completo
 // (servidor) y el documento del PDF (VisorImprimible, cliente). Las
 // retenciones no van aquí: son del cotizante, no del documento para el cliente.
-export default function TablaCotizacion({ cotizacion: c }: { cotizacion: ResumenCotizacion }) {
+// conApu: mostrar el anexo de APU. En el PDF va apagado salvo que se pida
+// (muchos ejecutores no quieren mostrarle su APU al cliente); en el link
+// completo, que es del cotizante, va encendido.
+export default function TablaCotizacion({ cotizacion: c, conApu: mostrarApu = true }: { cotizacion: ResumenCotizacion; conApu?: boolean }) {
   if (!c.tienePrecio) return null;
   const sinPrecio = c.detalle.filter((d) => !d.conPrecio).length;
-  const conApu = c.detalle.filter((d) => d.conApu);
+  const conApu = mostrarApu ? c.detalle.filter((d) => d.conApu) : [];
   const hayAiu = c.aiu.a > 0 || c.aiu.i > 0 || c.aiu.u > 0;
 
   return (

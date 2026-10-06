@@ -15,7 +15,7 @@ export default async function UsoIAPage() {
   const inicioMesAnterior = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() - 1, 1));
 
   const [delMes, mesAnterior, porCuenta, ultimas] = await Promise.all([
-    prisma.generacionIA.findMany({ where: { creadoEn: { gte: inicioMes } }, select: { costoUsd: true, exito: true, duracionMs: true, outputTokens: true } }),
+    prisma.generacionIA.findMany({ where: { creadoEn: { gte: inicioMes } }, select: { costoUsd: true, exito: true, duracionMs: true, outputTokens: true, stopReason: true } }),
     prisma.generacionIA.aggregate({ where: { creadoEn: { gte: inicioMesAnterior, lt: inicioMes } }, _sum: { costoUsd: true }, _count: true }),
     prisma.generacionIA.groupBy({ by: ["cuentaId"], where: { creadoEn: { gte: inicioMes } }, _sum: { costoUsd: true }, _count: true, orderBy: { _sum: { costoUsd: "desc" } }, take: 50 }),
     prisma.generacionIA.findMany({ orderBy: { creadoEn: "desc" }, take: 30, include: { proyecto: { select: { id: true, cliente: true, tipoObra: true } } } }),
@@ -28,6 +28,9 @@ export default async function UsoIAPage() {
   const duracion = exitosas.length ? exitosas.reduce((s, g) => s + g.duracionMs, 0) / exitosas.length / 1000 : 0;
   const fallidas = delMes.length - exitosas.length;
   const gastoFallidas = delMes.filter((g) => !g.exito).reduce((s, g) => s + g.costoUsd, 0);
+  // Respuestas que llegaron al tope de salida: si pasa seguido, conviene
+  // generar por etapas (ver AUDITORIA.md, H-09).
+  const cortadas = delMes.filter((g) => g.stopReason === "max_tokens").length;
 
   const cuentas = await prisma.cuenta.findMany({
     where: { id: { in: porCuenta.map((c) => c.cuentaId) } },
@@ -50,7 +53,7 @@ export default async function UsoIAPage() {
         <Dato t="Gasto del mes" v={usd(total)} />
         <Dato t="Proyectos generados" v={`${exitosas.length}`} sub={fallidas ? `${fallidas} fallidos (${usd(gastoFallidas)})` : undefined} />
         <Dato t="Promedio por proyecto" v={usd4(promedio)} sub={exitosas.length ? `máximo ${usd4(maximo)}` : undefined} />
-        <Dato t="Duración promedio" v={`${Math.round(duracion)} s`} sub={`mes anterior: ${usd(mesAnterior._sum.costoUsd ?? 0)}`} />
+        <Dato t="Duración promedio" v={`${Math.round(duracion)} s`} sub={`${cortadas} cortada(s) por largo · mes anterior: ${usd(mesAnterior._sum.costoUsd ?? 0)}`} />
       </section>
 
       <section className="space-y-2">

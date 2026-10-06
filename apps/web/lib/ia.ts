@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import type { UsoIA } from "@/lib/costos";
+import { prepararParaIA } from "@/lib/imagenes";
 
 // La IA nunca escribe ni ejecuta código: solo llena esta forma de datos, con
 // el mismo contrato que el motor ya conoce (packages/engine/src/formas.js).
@@ -108,7 +109,10 @@ Reglas:
 Responde ÚNICAMENTE con un objeto JSON válido — sin texto antes ni después, sin explicaciones, sin bloques de código markdown (sin \`\`\`). Forma exacta:
 {
   "etapas": [{ "numero": 1, "nombre": "texto" }],
-  "catalogo": { "clave-corta": { "nombre": "texto", "unidad": "kg" | "m2" | "m3" | "ml" | "und", "dimensiones": { "campo": numero }, "factor": numero, "consumos": [ { "nombre": "texto", "unidad": "...", "base": "...", "factor": numero, "entero": true } ] } },
+  "catalogo": {
+    "tubo150x50": { "nombre": "Tubo rect. 150x50x3 mm", "unidad": "kg", "dimensiones": { "ancho": 0.05, "alto": 0.15 }, "factor": 9.14, "consumos": [ { "nombre": "Anticorrosivo (galón)", "unidad": "und", "base": "superficie", "factor": 0.033, "entero": true } ] },
+    "otra-clave": { "nombre": "texto", "unidad": "kg" | "m2" | "m3" | "ml" | "und", "dimensiones": { "campo": numero }, "factor": numero }
+  },
   "elementos": [{ "id": "texto único", "nombre": "texto", "forma": "viga" | "panel" | "volumen" | "tablero" | "pieza", "pieza": "clave del catálogo", "etapa": numero, "geometria": { ... según la forma, ver arriba } }],
   "notas": "texto opcional",
   "cotizacion": { "precios": { "clave-corta": numero }, "apu": { "clave-corta": { "manoObra": numero } }, "desperdicioPct": numero, "manoObraPct": numero, "manoObraValor": numero, "aiu": { "a": numero, "i": numero, "u": numero }, "iva": { "regimen": "utilidad", "tarifa": 19 } }  (opcional, solo con datos dados por el usuario)
@@ -147,7 +151,10 @@ function tipoMedia(nombre: string, tipo: string): "image" | "pdf" | null {
 // lib/actions/proyectos.ts, que hace las dos cosas con el mismo buffer).
 export type ArchivoLeido = { nombre: string; mime: string; datos: Buffer };
 
-const MODELO = "claude-opus-5";
+// Configurable sin desplegar de nuevo (p. ej. para comparar calidad y costo
+// con los mismos planos: GeneracionIA guarda el modelo de cada llamada, y
+// lib/costos.ts resuelve su tarifa).
+const MODELO = process.env.IA_MODELO?.trim() || "claude-opus-5";
 
 const usoVacio = (): UsoIA => ({ modelo: MODELO, inputTokens: 0, outputTokens: 0, cacheLectura: 0, cacheEscritura: 0 });
 
@@ -164,12 +171,15 @@ export async function proponerElementos(args: { archivos: ArchivoLeido[]; descri
   if (!apiKey) throw new Error("Falta configurar ANTHROPIC_API_KEY en el servidor para usar la lectura de planos con IA.");
 
   const content: Anthropic.Messages.ContentBlockParam[] = [];
-  for (const archivo of args.archivos) {
+  // Fotos reducidas al tamaño que la API aprovecha (lib/imagenes.ts); lo que
+  // se guardó en el proyecto es el original.
+  const archivos = await Promise.all(args.archivos.map(prepararParaIA));
+  for (const archivo of archivos) {
     const tipo = tipoMedia(archivo.nombre, archivo.mime);
     if (!tipo) continue;
     const data = archivo.datos.toString("base64");
     if (tipo === "image") {
-      content.push({ type: "image", source: { type: "base64", media_type: archivo.mime as "image/png" | "image/jpeg" | "image/webp", data } });
+      content.push({ type: "image", source: { type: "base64", media_type: archivo.mime as "image/png" | "image/jpeg" | "image/webp" | "image/gif", data } });
     } else {
       content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data } });
     }
@@ -198,6 +208,7 @@ export async function proponerElementos(args: { archivos: ArchivoLeido[]; descri
   const u = response.usage;
   const uso: UsoIA = {
     modelo: response.model ?? MODELO,
+    stopReason: response.stop_reason ?? undefined,
     inputTokens: u.input_tokens ?? 0, outputTokens: u.output_tokens ?? 0,
     cacheLectura: u.cache_read_input_tokens ?? 0, cacheEscritura: u.cache_creation_input_tokens ?? 0,
   };
