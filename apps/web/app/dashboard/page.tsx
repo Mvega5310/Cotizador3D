@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
-import { logoutAction, logoutTodosAction } from "@/lib/actions/auth";
 import { resumenCupo } from "@/lib/planes";
 import AvisoVerificacion from "@/components/AvisoVerificacion";
-import { esAdmin } from "@/lib/admin";
+import MarcoApp from "@/components/MarcoApp";
+import { IconoCasaPlano, IconoMas } from "@/components/iconos";
 
 const NOMBRE_PLAN: Record<string, string> = { prueba: "Prueba", personal: "Personal", profesional: "Profesional", empresa: "Empresa" };
 
@@ -22,59 +22,60 @@ export default async function DashboardPage() {
   const agotado = cupo.usados >= cupo.cupo;
 
   return (
-    <main className="flex-1 mx-auto w-full max-w-3xl px-4 sm:px-6 py-10">
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-8">
+    <MarcoApp>
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-semibold">Tus proyectos</h1>
-          <p className="text-sm text-neutral-500">{usuario.email}</p>
-          <p className={`text-sm mt-1 ${agotado ? "text-amber-700" : "text-neutral-500"}`}>
-            Plan {NOMBRE_PLAN[cupo.plan] ?? cupo.plan} · {cupo.usados} de {cupo.cupo} proyecto(s) {cupo.plan === "prueba" ? "de la prueba" : "este mes"}
-            {cupo.plan === "prueba" && cupo.pruebaHasta && ` · vence el ${cupo.pruebaHasta.toLocaleDateString("es-CO")}`}
+          <h1 className="text-3xl font-bold tracking-tight text-marca-900">Tus proyectos</h1>
+          <p className={`mt-2 inline-flex flex-wrap items-center gap-x-2 rounded-full px-3 py-1 text-sm ring-1 ${agotado ? "bg-amber-50 text-amber-800 ring-amber-200" : "bg-white/80 text-slate-600 ring-marca-100"}`}>
+            <span className="font-semibold">Plan {NOMBRE_PLAN[cupo.plan] ?? cupo.plan}</span>
+            <span>· {cupo.usados} de {cupo.cupo} proyecto(s) {cupo.plan === "prueba" ? "de la prueba" : "este mes"}</span>
+            {cupo.plan === "prueba" && cupo.pruebaHasta && <span>· vence el {cupo.pruebaHasta.toLocaleDateString("es-CO")}</span>}
           </p>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
-          {esAdmin(usuario.email) && <Link href="/admin/uso" className="text-sm underline text-neutral-600">Uso de IA</Link>}
-          <form action={logoutAction}>
-            <button className="text-sm underline text-neutral-600">Salir</button>
-          </form>
-          <form action={logoutTodosAction}>
-            <button className="text-xs underline text-neutral-400" title="Cierra tu sesión aquí y en cualquier otro celular o computador">Salir de todos los dispositivos</button>
-          </form>
-        </div>
+        {!agotado && (
+          <Link href="/projects/new" className="boton-primario">
+            <IconoMas className="h-[18px] w-[18px]" /> Nuevo proyecto
+          </Link>
+        )}
       </div>
 
       {!usuario.emailVerificado && <AvisoVerificacion />}
 
-      {agotado ? (
-        <p className="inline-block mb-8 border border-amber-300 bg-amber-50 text-amber-800 rounded px-4 py-2.5 text-sm">
+      {agotado && (
+        <p className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Ya usaste tu cupo {cupo.plan === "prueba" ? "de la prueba gratuita" : "de este mes"}. {cupo.plan === "prueba" ? "Mejora tu plan" : "Se renueva el 1."} para generar más proyectos.
         </p>
-      ) : (
-        <Link
-          href="/projects/new"
-          className="inline-block mb-8 bg-neutral-900 text-white rounded px-4 py-2.5 font-medium"
-        >
-          + Nuevo proyecto
-        </Link>
       )}
 
-      <ul className="divide-y divide-neutral-200 border border-neutral-200 rounded">
-        {proyectos.map((p) => (
-          <li key={p.id} className="p-4 hover:bg-neutral-50">
-            <Link href={`/projects/${p.id}`} className="font-medium hover:underline">
-              {p.cliente}
-            </Link>
-            <span className="ml-2 text-sm text-neutral-500">
-              {p.tipoObra}
-            </span>
-            {p.estado === "procesando" && <span className="ml-2 text-xs rounded bg-orange-100 text-orange-800 px-1.5 py-0.5">La IA está leyendo los planos…</span>}
-            {p.estado === "error" && <span className="ml-2 text-xs rounded bg-red-100 text-red-800 px-1.5 py-0.5">No se pudo generar</span>}
-          </li>
-        ))}
-        {proyectos.length === 0 && (
-          <li className="p-6 text-center text-neutral-500">Todavía no tienes proyectos.</li>
-        )}
-      </ul>
-    </main>
+      {proyectos.length === 0 ? (
+        <div className="tarjeta flex flex-col items-center px-6 py-14 text-center">
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-acento/10 text-acento"><IconoCasaPlano className="h-8 w-8" /></span>
+          <p className="mt-4 font-semibold text-marca-900">Todavía no tienes proyectos</p>
+          <p className="mt-1 max-w-sm text-sm text-slate-500">Sube las fotos o el PDF de un plano o un boceto y en unos minutos tienes el modelo 3D y el cuadro de cantidades.</p>
+          {!agotado && <Link href="/projects/new" className="boton-primario mt-6"><IconoMas className="h-[18px] w-[18px]" /> Crear el primero</Link>}
+        </div>
+      ) : (
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {proyectos.map((p) => (
+            <li key={p.id} className="tarjeta group relative flex items-start gap-4 p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-marca-50 text-marca-600 ring-1 ring-marca-100 group-hover:text-acento">
+                <IconoCasaPlano className="h-6 w-6" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <Link href={`/projects/${p.id}`} className="font-semibold text-marca-900 after:absolute after:inset-0 hover:text-acento">
+                  {p.cliente}
+                </Link>
+                <p className="truncate text-sm text-slate-500">{p.tipoObra}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="text-slate-400">{p.creadoEn.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}</span>
+                  {p.estado === "procesando" && <span className="rounded-full bg-amber-50 px-2 py-0.5 font-medium text-amber-800 ring-1 ring-amber-200">La IA está leyendo los planos…</span>}
+                  {p.estado === "error" && <span className="rounded-full bg-red-50 px-2 py-0.5 font-medium text-red-700 ring-1 ring-red-200">No se pudo generar</span>}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </MarcoApp>
   );
 }

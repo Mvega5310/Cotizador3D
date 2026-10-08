@@ -15,6 +15,7 @@ import EditorElementos from "@/components/EditorElementos";
 import Despiece from "@/components/Despiece";
 import EditorConsumos from "@/components/EditorConsumos";
 import SeccionesPorConfirmar from "@/components/SeccionesPorConfirmar";
+import MarcoApp from "@/components/MarcoApp";
 
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean; origenes: string[]; derivada?: boolean };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
@@ -26,26 +27,28 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
   const estado = await obtenerEstadoProyecto(id);
   if (estado.estado === "procesando" || estado.estado === "error") {
     return (
-      <main className="flex-1 mx-auto w-full max-w-4xl px-4 sm:px-6 py-10 space-y-8">
+      <MarcoApp>
+      <div className="space-y-8">
         <div>
-          <Link href="/dashboard" className="text-sm text-neutral-500 hover:underline">← Tus proyectos</Link>
-          <h1 className="text-2xl font-semibold mt-1">{estado.cliente}</h1>
-          <p className="text-sm text-neutral-500">{estado.tipoObra}</p>
+          <Link href="/dashboard" className="text-sm font-medium text-marca-600 hover:text-acento">← Tus proyectos</Link>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-marca-900">{estado.cliente}</h1>
+          <p className="text-sm text-slate-500">{estado.tipoObra}</p>
         </div>
         {estado.estado === "procesando" ? (
           <EsperandoIA iniciado={(estado.iniciadoIA ?? estado.creadoEn).toISOString()} />
         ) : (
-          <section className="border border-red-300 bg-red-50 rounded p-4 space-y-3">
+          <section className="rounded-2xl border border-red-200 bg-red-50/95 p-5 space-y-3">
             <h2 className="font-medium text-red-800">No se pudo generar el proyecto</h2>
             <p className="text-sm text-red-700 whitespace-pre-line">{estado.errorIA ?? "Error desconocido."}</p>
             <p className="text-sm text-neutral-600">Puedes reintentar con los mismos planos y descripción. Este intento fallido no gastó cupo.</p>
             <form action={reintentarGeneracionAction}>
               <input type="hidden" name="proyectoId" value={estado.id} />
-              <button className="bg-neutral-900 text-white rounded px-4 py-2 text-sm font-medium">Reintentar</button>
+              <button className="boton-primario">Reintentar</button>
             </form>
           </section>
         )}
-      </main>
+      </div>
+      </MarcoApp>
     );
   }
 
@@ -71,18 +74,19 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
   }
 
   return (
-    <main className="flex-1 mx-auto w-full max-w-4xl px-4 sm:px-6 py-10 space-y-10">
+    <MarcoApp>
+    <div className="space-y-8">
       <div>
-        <Link href="/dashboard" className="text-sm text-neutral-500 hover:underline">← Tus proyectos</Link>
-        <h1 className="text-2xl font-semibold mt-1">{proyecto.cliente}</h1>
-        <p className="text-sm text-neutral-500">
+        <Link href="/dashboard" className="text-sm font-medium text-marca-600 hover:text-acento">← Tus proyectos</Link>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-marca-900">{proyecto.cliente}</h1>
+        <p className="mt-1 text-sm text-slate-500">
           {proyecto.tipoObra} · versión {version.numero} · {entrada.elementos.length} elementos
         </p>
       </div>
 
       {(proyecto.notasIA || proyecto.descartadosIA > 0) && (
-        <section className="border border-orange-300 bg-orange-50 text-orange-800 rounded p-3 text-sm space-y-1">
-          <h2 className="font-medium">Supuestos de la IA — confírmalos con el cliente o el plano</h2>
+        <section className="rounded-2xl border border-amber-200 bg-amber-50/95 p-5 text-sm text-amber-900 space-y-1.5">
+          <h2 className="font-semibold">Supuestos de la IA — confírmalos con el cliente o el plano</h2>
           {proyecto.notasIA && <p className="whitespace-pre-line">{proyecto.notasIA}</p>}
           {proyecto.descartadosIA > 0 && (
             <p>{proyecto.descartadosIA} elemento(s) propuestos no se pudieron interpretar y se descartaron.</p>
@@ -91,23 +95,23 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
       )}
 
       {proyecto.archivos.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="font-medium">Planos subidos</h2>
+        <section className="tarjeta p-5 space-y-3">
+          <h2 className="text-lg font-semibold text-marca-900">Planos subidos</h2>
           <div className="flex flex-wrap gap-3">
             {proyecto.archivos.filter((a) => a.tipo !== "descripcion").map((a) => (
               <a key={a.id} href={a.url ?? "#"} target="_blank" rel="noreferrer"
-                className="block w-24 h-24 border border-neutral-200 rounded overflow-hidden hover:border-neutral-400">
+                className="block w-24 h-24 rounded-xl overflow-hidden ring-1 ring-marca-100 hover:ring-acento">
                 {a.tipo === "foto" ? (
                   // eslint-disable-next-line @next/next/no-img-element -- archivo privado del usuario servido por /projects/[id]/archivos/, no una imagen pública optimizable
                   <img src={a.url ?? ""} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="w-full h-full flex items-center justify-center text-xs text-neutral-500 bg-neutral-50">PDF</span>
+                  <span className="w-full h-full flex items-center justify-center text-xs font-semibold text-marca-600 bg-marca-50">PDF</span>
                 )}
               </a>
             ))}
           </div>
           {proyecto.archivos.find((a) => a.tipo === "descripcion") && (
-            <p className="text-sm text-neutral-600 italic">
+            <p className="text-sm text-slate-600 italic">
               &ldquo;{proyecto.archivos.find((a) => a.tipo === "descripcion")?.descripcion}&rdquo;
             </p>
           )}
@@ -115,17 +119,19 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
       )}
 
       {entrada.elementos.length === 0 ? (
-        <p className="border border-neutral-200 rounded p-6 text-neutral-600">
+        <p className="tarjeta p-6 text-slate-600">
           Este proyecto se creó con una versión anterior de la plataforma y no tiene elementos. Crea uno nuevo desde el panel.
         </p>
       ) : (
         <>
-          <VisorProyecto entrada={entrada} />
+          <section className="tarjeta p-3 sm:p-4">
+            <VisorProyecto entrada={entrada} />
+          </section>
 
           <SeccionesPorConfirmar proyectoId={proyecto.id} piezas={provisionales} />
 
           {calculo.errores.length > 0 && (
-            <section className="border border-red-300 bg-red-50 rounded p-4 space-y-2">
+            <section className="rounded-2xl border border-red-200 bg-red-50/95 p-5 space-y-2">
               <h2 className="font-medium text-red-800">{calculo.errores.length} elemento(s) sin interpretar</h2>
               <ul className="text-sm text-red-700 list-disc pl-5">
                 {calculo.errores.slice(0, 10).map((e: { elementoId: string; mensaje: string }) => (
@@ -135,19 +141,19 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
             </section>
           )}
 
-          <section className="space-y-4">
+          <section className="tarjeta p-5 space-y-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="font-medium">Cuadro de cantidades</h2>
+              <h2 className="text-lg font-semibold text-marca-900">Cuadro de cantidades</h2>
               {sinConfirmar > 0 && (
                 <p className="text-sm text-amber-700">{sinConfirmar} pieza(s) son referencia sin confirmar. Confírmalas para que salgan como dato firme en el PDF.</p>
               )}
             </div>
 
             {etapas.map(([n, e]) => (
-              <div key={n} className="border border-neutral-200 rounded overflow-x-auto">
-                <div className="bg-neutral-100 px-3 py-2 text-sm font-medium">Etapa {n} · {e.nombre}</div>
+              <div key={n} className="rounded-xl border border-marca-100 overflow-x-auto">
+                <div className="bg-marca-50 px-3 py-2 text-sm font-semibold text-marca-800">Etapa {n} · {e.nombre}</div>
                 <table className="w-full text-sm">
-                  <thead className="text-left text-neutral-500">
+                  <thead className="text-left text-slate-500">
                     <tr>
                       <th className="px-3 py-1.5 font-medium">Pieza</th>
                       <th className="px-3 py-1.5 font-medium text-right">Cantidad</th>
@@ -174,7 +180,7 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
                                 <input type="hidden" name="proyectoId" value={proyecto.id} />
                                 <input type="hidden" name="piezaId" value={l.piezaId} />
                                 <span className="text-amber-700">Referencia</span>
-                                <button className="text-xs border border-neutral-300 rounded px-2 py-0.5 hover:bg-neutral-100">Confirmar</button>
+                                <button className="rounded-md border border-marca-200 bg-white px-2 py-0.5 text-xs font-semibold text-marca-800 hover:border-acento hover:text-acento">Confirmar</button>
                               </form>
                             )}
                           </td>
@@ -184,7 +190,7 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
                         )}
                       </Fragment>
                     ))}
-                    <tr className="border-t border-neutral-300 bg-neutral-50 font-medium">
+                    <tr className="border-t border-marca-100 bg-marca-50/60 font-semibold text-marca-900">
                       <td className="px-3 py-1.5">Total etapa</td>
                       <td className="px-3 py-1.5 text-right" colSpan={3}>
                         {Object.entries(e.totales).filter(([, v]) => v > 0).map(([u, v]) => cantidadTexto(v, u)).join(" · ")}
@@ -197,22 +203,28 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
           </section>
 
           {calculo.avisos.length > 0 && (
-            <ul className="border border-amber-300 bg-amber-50 text-amber-800 rounded p-3 text-sm list-disc pl-6 space-y-0.5">
+            <ul className="rounded-2xl border border-amber-200 bg-amber-50/95 text-amber-900 p-4 text-sm list-disc pl-8 space-y-0.5">
               {calculo.avisos.map((a: string) => <li key={a}>{a}</li>)}
             </ul>
           )}
 
-          <EditorConsumos
-            proyectoId={proyecto.id}
-            piezas={Object.values(entrada.catalogo).map((p) => ({ id: p.id, nombre: p.nombre, consumos: p.consumos ?? [] }))}
-          />
+          <div className="tarjeta p-5">
+            <EditorConsumos
+              proyectoId={proyecto.id}
+              piezas={Object.values(entrada.catalogo).map((p) => ({ id: p.id, nombre: p.nombre, consumos: p.consumos ?? [] }))}
+            />
+          </div>
 
-          <Despiece despiece={calculo.despiece} laminas={calculo.laminas} conEstado />
+          {calculo.despiece.length > 0 && (
+            <div className="tarjeta p-5">
+              <Despiece despiece={calculo.despiece} laminas={calculo.laminas} conEstado />
+            </div>
+          )}
 
           <CotizadorProyecto proyectoId={proyecto.id} calculo={{ lineas: calculo.lineas, porEtapa: calculo.porEtapa }} inicial={leerCotizacion(proyecto.cotizacion)} />
 
-          <section className="border border-neutral-200 rounded p-4 space-y-4">
-            <h2 className="font-medium">PDF y enlaces para presentar</h2>
+          <section className="tarjeta p-5 space-y-4">
+            <h2 className="text-lg font-semibold text-marca-900">PDF y enlaces para presentar</h2>
             <div className="space-y-1">
               <p className="text-xs text-neutral-500">Completo — visor y cuadro de cantidades. Para ti.</p>
               <EnlaceCopiable ruta={`/p/${version.resultado?.linkCompleto}`} />
@@ -237,6 +249,7 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
           </section>
         </>
       )}
-    </main>
+    </div>
+    </MarcoApp>
   );
 }

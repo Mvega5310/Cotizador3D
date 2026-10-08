@@ -39,7 +39,7 @@ export default function Despiece({ despiece, laminas, conEstado = false }: { des
   return (
     <section className="space-y-3">
       <div>
-        <h2 className="font-medium">Despiece (lista de cortes)</h2>
+        <h2 className="text-lg font-semibold text-marca-900">Despiece (lista de cortes)</h2>
         <p className="text-xs text-neutral-500">Medidas de corte en milímetros: largo × ancho × espesor. Cantos: bordes que llevan tapacanto.</p>
       </div>
 

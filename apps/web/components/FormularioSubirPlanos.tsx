@@ -2,14 +2,21 @@
 
 import { useActionState, useState } from "react";
 import { crearDesdeIAAction, type EstadoForm } from "@/lib/actions/proyectos";
+import Escenario from "@/components/Escenario";
+import { IconoCasaPlano, IconoClip, IconoEnviar, IconoFlechaAbajo } from "@/components/iconos";
 
 const inicial: EstadoForm = {};
-const CAMPO = "w-full border border-neutral-300 rounded px-3 py-2";
 
 // Revisión en el navegador, para avisar al elegir los archivos y no después
 // de subirlos. El servidor vuelve a revisar todo (lib/actions/proyectos.ts).
 const MAX_TOTAL = 22 * 1024 * 1024;
 const ACEPTADOS = /\.(jpe?g|png|webp|gif|pdf)$/i;
+
+// Sugerencias del campo "Tipo de proyecto": se puede escribir cualquier otro.
+const TIPOS = [
+  "Cocina integral", "Closet o vestier", "Mueble de baño", "Cubierta metálica", "Cubierta en teja",
+  "Pérgola", "Portón o reja", "Estructura metálica", "Entrepiso", "Escalera", "Mezanine", "Fachada",
+];
 
 function revisarArchivos(lista: FileList | null): string | null {
   const archivos = [...(lista ?? [])];
@@ -23,44 +30,83 @@ function revisarArchivos(lista: FileList | null): string | null {
 export default function FormularioSubirPlanos() {
   const [estado, accion, pendiente] = useActionState(crearDesdeIAAction, inicial);
   const [avisoArchivos, setAvisoArchivos] = useState<string | null>(null);
+  const [elegidos, setElegidos] = useState<string[]>([]);
 
   return (
-    <main className="flex-1 mx-auto w-full max-w-2xl px-4 sm:px-6 py-10 space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold mb-1">Nuevo proyecto</h1>
-        <p className="text-sm text-neutral-500">
-          Sube fotos o PDF de tus planos o bocetos, y cuéntanos lo que necesites aclarar. Generamos el modelo 3D
-          y el cuadro de cantidades — revisas y confirmas las medidas antes de presentarlo o cotizarlo.
-        </p>
-      </div>
+    <Escenario volver={{ href: "/dashboard", texto: "← Tus proyectos" }}>
+      <div className="tarjeta-vidrio mx-auto w-full max-w-[820px] p-6 sm:p-9">
+        <div className="flex gap-4 sm:gap-6 mb-7">
+          <div className="hidden sm:grid h-[88px] w-[88px] shrink-0 place-items-center rounded-2xl bg-acento/10 text-acento">
+            <IconoCasaPlano className="h-12 w-12" />
+          </div>
+          <div>
+            <h1 className="text-[1.75rem] leading-tight font-bold tracking-tight text-marca-900">Nuevo proyecto</h1>
+            <p className="mt-2 text-[0.95rem] leading-relaxed text-slate-500">
+              Sube fotos o PDF de tus planos o bocetos, y cuéntanos lo que necesites aclarar. Generamos el modelo 3D
+              y el cuadro de cantidades — revisas y confirmas las medidas antes de presentarlo o cotizarlo.
+            </p>
+          </div>
+        </div>
 
-      <form action={accion} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label htmlFor="cliente-ia" className="text-sm font-medium">Cliente</label>
-            <input id="cliente-ia" name="cliente" type="text" required className={CAMPO} />
+        <form action={accion} className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="min-w-0">
+              <label htmlFor="cliente-ia" className="etiqueta">Cliente</label>
+              <input id="cliente-ia" name="cliente" type="text" required autoComplete="off" className="campo" />
+            </div>
+            <div className="min-w-0">
+              <label htmlFor="tipoObra-ia" className="etiqueta">Tipo de proyecto</label>
+              <div className="relative">
+                <input id="tipoObra-ia" name="tipoObra" type="text" list="tipos-de-proyecto" autoComplete="off"
+                  placeholder="cocina integral, cubierta, portón…" className="campo pr-10" />
+                <IconoFlechaAbajo className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <datalist id="tipos-de-proyecto">
+                  {TIPOS.map((t) => <option key={t} value={t} />)}
+                </datalist>
+              </div>
+            </div>
           </div>
-          <div className="space-y-1">
-            <label htmlFor="tipoObra-ia" className="text-sm font-medium">Tipo de proyecto</label>
-            <input id="tipoObra-ia" name="tipoObra" type="text" placeholder="cocina integral, cubierta, portón…" className={CAMPO} />
+
+          <div>
+            <span className="etiqueta">Planos, bocetos o fotos</span>
+            {/* El input real queda oculto a la vista (no al lector de pantalla ni al teclado). */}
+            <input id="archivos" name="archivos" type="file" multiple required
+              accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf" className="peer sr-only"
+              onChange={(e) => {
+                setAvisoArchivos(revisarArchivos(e.target.files));
+                setElegidos([...(e.target.files ?? [])].map((a) => a.name));
+              }} />
+            <label htmlFor="archivos"
+              className="campo flex cursor-pointer items-center gap-3 peer-focus-visible:border-acento peer-focus-visible:ring-4 peer-focus-visible:ring-acento/15">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-acento/10 text-acento">
+                <IconoClip className="h-4 w-4" />
+              </span>
+              <span className="truncate text-slate-500">
+                {elegidos.length === 0 ? (
+                  <><span className="font-medium text-marca-800">Elegir archivos</span> · No se ha seleccionado ningún archivo</>
+                ) : (
+                  <span className="text-marca-900">{elegidos.length === 1 ? elegidos[0] : `${elegidos.length} archivos: ${elegidos.join(", ")}`}</span>
+                )}
+              </span>
+            </label>
+            <p className="mt-1.5 text-xs text-slate-500">Fotos JPG, PNG o WebP, o PDF. Hasta 6 archivos y 22 MB en total.</p>
+            {avisoArchivos && <p className="mt-1 text-sm text-red-600">{avisoArchivos}</p>}
           </div>
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="archivos" className="text-sm font-medium">Planos, bocetos o fotos</label>
-          <input id="archivos" name="archivos" type="file" multiple required accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf"
-            onChange={(e) => setAvisoArchivos(revisarArchivos(e.target.files))} className={CAMPO} />
-          <p className="text-xs text-neutral-500">Fotos JPG, PNG o WebP, o PDF. Hasta 6 archivos y 22 MB en total.</p>
-          {avisoArchivos && <p className="text-sm text-red-600">{avisoArchivos}</p>}
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="descripcion" className="text-sm font-medium">Descripción (lo que quieras aclarar)</label>
-          <textarea id="descripcion" name="descripcion" rows={3} placeholder="Medidas confirmadas, materiales, qué parte cotizar…" className={CAMPO} />
-        </div>
-        {estado.error && <p className="text-sm text-red-600">{estado.error}</p>}
-        <button type="submit" disabled={pendiente || !!avisoArchivos} className="bg-orange-600 text-white rounded px-5 py-2.5 font-medium disabled:opacity-60">
-          {pendiente ? "Subiendo los planos…" : "Generar proyecto"}
-        </button>
-      </form>
-    </main>
+
+          <div>
+            <label htmlFor="descripcion" className="etiqueta">Descripción (lo que quieras aclarar)</label>
+            <textarea id="descripcion" name="descripcion" rows={4} placeholder="Medidas confirmadas, materiales, qué parte cotizar…"
+              className="campo resize-y" />
+          </div>
+
+          {estado.error && <p className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">{estado.error}</p>}
+
+          <button type="submit" disabled={pendiente || !!avisoArchivos} className="boton-primario">
+            <IconoEnviar className="h-[18px] w-[18px]" />
+            {pendiente ? "Subiendo los planos…" : "Generar proyecto"}
+          </button>
+        </form>
+      </div>
+    </Escenario>
   );
 }

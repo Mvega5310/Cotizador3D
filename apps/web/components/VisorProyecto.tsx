@@ -46,23 +46,23 @@ export default function VisorProyecto({ entrada }: { entrada: EntradaMotor }) {
       <div className="flex gap-2 flex-wrap items-center">
         {VISTAS.map(([clave, texto]) => (
           <button key={clave} type="button" onClick={() => viewerRef.current?.setView(clave)}
-            className="text-xs border border-neutral-300 rounded px-2.5 py-1 hover:bg-neutral-100">
+            className="rounded-full border border-marca-100 bg-white px-3 py-1 text-xs font-semibold text-marca-800 hover:border-acento hover:text-acento">
             {texto}
           </button>
         ))}
         {entrada.etapas.length > 1 && (
           <>
-            <span className="mx-2 border-l border-neutral-300 self-stretch" />
+            <span className="mx-2 border-l border-marca-100 self-stretch" />
             {entrada.etapas.map((e) => (
-              <label key={e.numero} className="text-xs flex items-center gap-1.5">
-                <input type="checkbox" checked={visibles[e.numero] ?? true} onChange={(ev) => alternarEtapa(e.numero, ev.target.checked)} />
+              <label key={e.numero} className="text-xs text-slate-600 flex items-center gap-1.5">
+                <input type="checkbox" className="accent-[#1478ff]" checked={visibles[e.numero] ?? true} onChange={(ev) => alternarEtapa(e.numero, ev.target.checked)} />
                 {e.nombre}
               </label>
             ))}
           </>
         )}
       </div>
-      <div ref={stageRef} className="w-full aspect-[4/3] sm:aspect-video bg-[#121821] rounded overflow-hidden">
+      <div ref={stageRef} className="w-full aspect-[4/3] sm:aspect-video rounded-xl overflow-hidden ring-1 ring-marca-900/10" style={{ background: "radial-gradient(ellipse at 70% 20%, #24476f 0%, #16283e 55%, #0f1d2e 100%)" }}>
         <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
     </div>

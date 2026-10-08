@@ -21,9 +21,9 @@ export default function EsperandoIA({ iniciado }: { iniciado: string }) {
   const transcurrido = `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, "0")}`;
 
   return (
-    <section className="border border-neutral-200 rounded p-6 space-y-3 text-center">
-      <div className="mx-auto h-8 w-8 rounded-full border-4 border-neutral-200 border-t-orange-600 animate-spin" aria-hidden />
-      <h2 className="font-medium">La IA está leyendo tus planos</h2>
+    <section className="tarjeta p-8 space-y-3 text-center">
+      <div className="mx-auto h-10 w-10 rounded-full border-4 border-marca-100 border-t-acento animate-spin" aria-hidden />
+      <h2 className="text-lg font-semibold text-marca-900">La IA está leyendo tus planos</h2>
       <p className="text-sm text-neutral-600">
         Suele tardar entre 1 y 4 minutos. Esta página se actualiza sola cuando termine.
       </p>

@@ -76,10 +76,10 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
   const etapas = Object.entries(calculo.porEtapa);
 
   return (
-    <div className="border border-neutral-200 rounded p-4 space-y-6">
+    <div className="tarjeta p-5 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="font-medium">Cotización (APU)</h2>
+          <h2 className="text-lg font-semibold text-marca-900">Cotización (APU)</h2>
           <p className={`text-xs ${guardado === "error" ? "text-red-600" : "text-neutral-400"}`}>
             {guardado === "error" ? "No se pudo guardar; revisa tu conexión." : guardado === "listo" ? "Guardada en el proyecto" : "Guardando…"}
           </p>
@@ -160,7 +160,7 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-sm">
         <div className="space-y-3 min-w-0">
-          <h3 className="font-medium">AIU e impuestos</h3>
+          <h3 className="font-semibold text-marca-900">AIU e impuestos</h3>
           <div className="grid grid-cols-3 gap-2 items-end">
             {([["a", "Administración %"], ["i", "Imprevistos %"], ["u", "Utilidad %"]] as const).map(([campo, texto]) => (
               <label key={campo} className="space-y-1 min-w-0">

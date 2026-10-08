@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
+import MarcoApp from "@/components/MarcoApp";
 
 // Uso y costo de la IA en toda la plataforma (GeneracionIA). Mes calendario
 // en UTC, igual que el corte del tope de gasto de Anthropic.
@@ -39,10 +40,11 @@ export default async function UsoIAPage() {
   const cuentaDe = new Map(cuentas.map((c) => [c.id, c]));
 
   return (
-    <main className="flex-1 mx-auto w-full max-w-5xl px-4 sm:px-6 py-10 space-y-8">
+    <MarcoApp>
+    <div className="space-y-8">
       <div>
-        <Link href="/dashboard" className="text-sm text-neutral-500 hover:underline">← Panel</Link>
-        <h1 className="text-2xl font-semibold mt-1">Uso de IA</h1>
+        <Link href="/dashboard" className="text-sm font-medium text-marca-600 hover:text-acento">← Panel</Link>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-marca-900">Uso de IA</h1>
         <p className="text-sm text-neutral-500">
           Mes en curso (desde el {inicioMes.toLocaleDateString("es-CO", { timeZone: "UTC" })}, UTC). Costos estimados con la tarifa pública de Anthropic
           (lib/costos.ts); la factura real está en la consola de Anthropic.
@@ -58,7 +60,7 @@ export default async function UsoIAPage() {
 
       <section className="space-y-2">
         <h2 className="font-medium">Por cuenta (mes en curso)</h2>
-        <div className="border border-neutral-200 rounded overflow-x-auto">
+        <div className="tarjeta overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-neutral-500 bg-neutral-50">
               <tr><th className="px-3 py-1.5 font-medium">Cuenta</th><th className="px-3 py-1.5 font-medium">Plan</th><th className="px-3 py-1.5 font-medium text-right">Generaciones</th><th className="px-3 py-1.5 font-medium text-right">Gasto</th></tr>
@@ -83,7 +85,7 @@ export default async function UsoIAPage() {
 
       <section className="space-y-2">
         <h2 className="font-medium">Últimas generaciones</h2>
-        <div className="border border-neutral-200 rounded overflow-x-auto">
+        <div className="tarjeta overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-neutral-500 bg-neutral-50">
               <tr>
@@ -108,13 +110,14 @@ export default async function UsoIAPage() {
           </table>
         </div>
       </section>
-    </main>
+    </div>
+    </MarcoApp>
   );
 }
 
 function Dato({ t, v, sub }: { t: string; v: string; sub?: string }) {
   return (
-    <div className="border border-neutral-200 rounded p-3">
+    <div className="tarjeta p-4">
       <p className="text-xs text-neutral-500">{t}</p>
       <p className="text-xl font-semibold">{v}</p>
       {sub && <p className="text-xs text-neutral-400">{sub}</p>}

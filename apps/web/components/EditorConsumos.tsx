@@ -24,7 +24,7 @@ export default function EditorConsumos({ proyectoId, piezas }: { proyectoId: str
   return (
     <section className="space-y-2">
       <div>
-        <h2 className="font-medium">Consumos por material</h2>
+        <h2 className="text-lg font-semibold text-marca-900">Consumos por material</h2>
         <p className="text-xs text-neutral-500">
           Lo que no se dibuja pero se gasta en proporción: pintura, soldadura, tornillería, acero de refuerzo… {conReglas > 0 ? "Revisa los rendimientos que propuso la IA." : "Agrega los que necesites."}
         </p>

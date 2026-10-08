@@ -1,26 +1,147 @@
 @import "tailwindcss";
 
+/* Sistema visual: plataforma SaaS de arquitectura, sobria y técnica.
+   Paleta de la marca (ver también components/FondoArquitectonico.tsx). */
+@theme {
+  --color-marca-950: #0f1d2e;
+  --color-marca-900: #16283e; /* fondo oscuro */
+  --color-marca-800: #173a63; /* primario */
+  --color-marca-600: #4678a8; /* secundario */
+  --color-marca-200: #c9dbee;
+  --color-marca-100: #e3edf8;
+  --color-marca-50: #f3f7fc;  /* fondo claro */
+  --color-acento: #1478ff;
+  --color-acento-oscuro: #0d5fd6;
+  --color-calido: #ffc47a;
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* La app está diseñada en claro: no se invierte con el modo oscuro del sistema. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-marca-50);
+  color: #16283e;
+  font-family: var(--font-sans);
+}
+
+@layer components {
+  /* Tarjeta de vidrio sobre el fondo arquitectónico. */
+  .tarjeta-vidrio {
+    background: rgb(255 255 255 / 0.9);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid rgb(255 255 255 / 0.7);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px -20px rgb(15 29 46 / 0.35), 0 2px 6px rgb(15 29 46 / 0.06);
+  }
+  /* Tarjeta para contenido denso (proyecto, panel). */
+  .tarjeta {
+    background: #fff;
+    border: 1px solid var(--color-marca-100);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgb(15 29 46 / 0.04), 0 8px 24px -16px rgb(15 29 46 / 0.18);
+  }
+  .etiqueta {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-marca-900);
+    margin-bottom: 0.375rem;
+  }
+  .campo {
+    width: 100%;
+    min-width: 0;
+    background: rgb(255 255 255 / 0.85);
+    border: 1px solid #cfdbe8;
+    border-radius: 10px;
+    padding: 0.625rem 0.875rem;
+    color: var(--color-marca-900);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .campo::placeholder {
+    color: #8a9bb0;
+  }
+  .campo:focus {
+    outline: none;
+    border-color: var(--color-acento);
+    box-shadow: 0 0 0 3px rgb(20 120 255 / 0.15);
+  }
+  .boton-primario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--color-acento);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 0.7rem 1.25rem;
+    box-shadow: 0 8px 20px -8px rgb(20 120 255 / 0.6);
+    transition: background-color 0.15s, transform 0.15s;
+  }
+  .boton-primario:hover:not(:disabled) {
+    background: var(--color-acento-oscuro);
+  }
+  .boton-primario:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .boton-primario:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .boton-secundario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: rgb(255 255 255 / 0.85);
+    color: var(--color-marca-800);
+    font-weight: 600;
+    border: 1px solid #cfdbe8;
+    border-radius: 10px;
+    padding: 0.7rem 1.25rem;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+  .boton-secundario:hover {
+    background: #fff;
+    border-color: var(--color-marca-600);
+  }
+  .enlace {
+    color: var(--color-acento);
+    font-weight: 500;
+  }
+  .enlace:hover {
+    text-decoration: underline;
+  }
+}
+
+/* ---------- Fondo arquitectónico: movimiento lento ---------- */
+@keyframes flotar {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--giro, 0deg)); }
+  50% { transform: translate3d(var(--dx, 0px), var(--dy, -14px), 0) rotate(calc(var(--giro, 0deg) + var(--dg, 1deg))); }
+}
+@keyframes derivar {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(28px, 6px, 0); }
+}
+@keyframes titilar {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.7; }
+}
+@keyframes rayo {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.75; }
+}
+.anim-flotar { animation: flotar var(--dur, 30s) ease-in-out infinite; }
+.anim-derivar { animation: derivar 40s ease-in-out infinite; }
+.anim-titilar { animation: titilar var(--dur, 6s) ease-in-out infinite; }
+.anim-rayo { animation: rayo 18s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-flotar, .anim-derivar, .anim-titilar, .anim-rayo { animation: none; }
 }
