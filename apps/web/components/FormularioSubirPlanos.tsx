@@ -40,7 +40,12 @@ export default function FormularioSubirPlanos() {
             <IconoCasaPlano className="h-12 w-12" />
           </div>
           <div>
-            <h1 className="text-[1.75rem] leading-tight font-bold tracking-tight text-marca-900">Nuevo proyecto</h1>
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-acento/10 text-acento sm:hidden">
+                <IconoCasaPlano className="h-6 w-6" />
+              </span>
+              <h1 className="text-[1.6rem] sm:text-[1.75rem] leading-tight font-bold tracking-tight text-marca-900">Nuevo proyecto</h1>
+            </div>
             <p className="mt-2 text-[0.95rem] leading-relaxed text-slate-500">
               Sube fotos o PDF de tus planos o bocetos, y cuéntanos lo que necesites aclarar. Generamos el modelo 3D
               y el cuadro de cantidades — revisas y confirmas las medidas antes de presentarlo o cotizarlo.
@@ -77,13 +82,13 @@ export default function FormularioSubirPlanos() {
                 setElegidos([...(e.target.files ?? [])].map((a) => a.name));
               }} />
             <label htmlFor="archivos"
-              className="campo flex cursor-pointer items-center gap-3 peer-focus-visible:border-acento peer-focus-visible:ring-4 peer-focus-visible:ring-acento/15">
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-acento/10 text-acento">
-                <IconoClip className="h-4 w-4" />
+              className="campo !border-dashed !border-marca-600/40 !bg-marca-50/70 !p-1.5 flex cursor-pointer items-center gap-3 hover:!border-acento peer-focus-visible:!border-acento peer-focus-visible:ring-4 peer-focus-visible:ring-acento/15">
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-acento/10 px-3 py-2 text-sm font-semibold text-acento">
+                <IconoClip className="h-4 w-4" /> Elegir archivos
               </span>
               <span className="truncate text-slate-500">
                 {elegidos.length === 0 ? (
-                  <><span className="font-medium text-marca-800">Elegir archivos</span> · No se ha seleccionado ningún archivo</>
+                  <>Ningún archivo seleccionado</>
                 ) : (
                   <span className="text-marca-900">{elegidos.length === 1 ? elegidos[0] : `${elegidos.length} archivos: ${elegidos.join(", ")}`}</span>
                 )}
@@ -101,7 +106,7 @@ export default function FormularioSubirPlanos() {
 
           {estado.error && <p className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">{estado.error}</p>}
 
-          <button type="submit" disabled={pendiente || !!avisoArchivos} className="boton-primario">
+          <button type="submit" disabled={pendiente || !!avisoArchivos} className="boton-primario w-full sm:w-auto !py-3 sm:!py-[0.7rem]">
             <IconoEnviar className="h-[18px] w-[18px]" />
             {pendiente ? "Subiendo los planos…" : "Generar proyecto"}
           </button>

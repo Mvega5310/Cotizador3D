@@ -40,12 +40,55 @@ export default function Despiece({ despiece, laminas, conEstado = false }: { des
     <section className="space-y-3">
       <div>
         <h2 className="text-lg font-semibold text-marca-900">Despiece (lista de cortes)</h2>
-        <p className="text-xs text-neutral-500">Medidas de corte en milímetros: largo × ancho × espesor. Cantos: bordes que llevan tapacanto.</p>
+        <p className="text-xs text-slate-500">Medidas de corte en milímetros: largo × ancho × espesor. Cantos: bordes que llevan tapacanto.</p>
       </div>
 
-      <div className="border border-neutral-200 rounded overflow-x-auto">
-        <table className="w-full text-xs sm:text-sm">
-          <thead className="text-left text-neutral-500 bg-neutral-50">
+      {/* Celular: una tarjeta por corte (prototipo móvil). La tabla, desde sm
+          (y en el PDF, que se imprime a 1.400 px). */}
+      <div className="space-y-3 sm:hidden">
+        {[...porMaterial.entries()].map(([piezaId, filas]) => {
+          const lam = laminas.find((l) => l.piezaId === piezaId);
+          return (
+            <div key={piezaId} className="space-y-2.5">
+              <div className="rounded-xl bg-marca-100/70 px-3.5 py-2.5">
+                <p className="text-sm font-semibold text-marca-800">{filas[0].material}</p>
+                {lam && (
+                  <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
+                    {m2Texto(lam.m2)} en {lam.piezas} pieza(s)
+                    {lam.minimo !== null && lam.lamina && (
+                      <> · mínimo {lam.minimo} lámina(s) de {Math.round(lam.lamina[0] * 1000).toLocaleString("es-CO")} × {Math.round(lam.lamina[1] * 1000).toLocaleString("es-CO")} mm, sin contar el desperdicio de corte</>
+                    )}
+                  </p>
+                )}
+                {lam && lam.noCaben > 0 && (
+                  <p className="mt-0.5 text-xs text-red-700">{lam.noCaben} pieza(s) son más grandes que la lámina: revisa sus medidas o si van unidas.</p>
+                )}
+              </div>
+              {filas.map((f) => (
+                <div key={`${f.largo}|${f.ancho}|${f.espesor}|${f.cantos.join(",")}`} className="rounded-xl border border-marca-100 bg-white p-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 text-sm font-medium text-marca-900" title={f.nombres.join(", ")}>{resumenNombres(f.nombres)}</p>
+                    <span className="shrink-0 rounded-full bg-acento/10 px-2.5 py-0.5 text-xs font-semibold text-acento">×{f.cantidad}</span>
+                  </div>
+                  <p className="mt-1.5 font-mono text-lg font-semibold tracking-tight text-marca-900">
+                    {f.largo.toLocaleString("es-CO")} × {f.ancho.toLocaleString("es-CO")} × {f.espesor}
+                  </p>
+                  <div className="mt-1 flex items-center justify-between gap-3 text-xs">
+                    <span className="text-slate-500">Cantos: {textoCantos(f.cantos)}</span>
+                    {conEstado && (
+                      <span className={`font-semibold ${f.confirmado ? "text-emerald-700" : "text-amber-700"}`}>{f.confirmado ? "Confirmado" : "Referencia"}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="hidden sm:block border border-marca-100 rounded-xl overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-left text-slate-500 bg-marca-50/60">
             <tr>
               <th className="px-3 py-1.5 font-medium">Pieza</th>
               <th className="px-3 py-1.5 font-medium text-right">Cant.</th>
@@ -59,8 +102,8 @@ export default function Despiece({ despiece, laminas, conEstado = false }: { des
               const lam = laminas.find((l) => l.piezaId === piezaId);
               return (
                 <Fragment key={piezaId}>
-                  <tr className="border-t border-neutral-300 bg-neutral-100" style={{ breakInside: "avoid" }}>
-                    <td className="px-3 py-1.5 font-medium" colSpan={conEstado ? 5 : 4}>
+                  <tr className="border-t border-marca-100 bg-marca-100/60" style={{ breakInside: "avoid" }}>
+                    <td className="px-3 py-1.5 font-semibold text-marca-800" colSpan={conEstado ? 5 : 4}>
                       {filas[0].material}
                       {lam && (
                         <span className="font-normal text-neutral-600">

@@ -1,20 +1,18 @@
-import { Fragment } from "react";
 import Link from "next/link";
 import { obtenerEstadoProyecto, obtenerProyecto } from "@/lib/proyectos";
-import { confirmarPiezaAction, reintentarGeneracionAction } from "@/lib/actions/proyectos";
+import { reintentarGeneracionAction } from "@/lib/actions/proyectos";
 import EsperandoIA from "@/components/EsperandoIA";
 import { leerCotizacion } from "@/lib/cotizacion";
-import { cantidadTexto } from "@/lib/format";
 import VisorProyecto from "@/components/VisorProyecto";
 import CotizadorProyecto from "@/components/CotizadorProyecto";
 import PanelPdf from "@/components/PanelPdf";
 import BotonRegenerarEnlaces from "@/components/BotonRegenerarEnlaces";
 import { pdfVencido } from "@/lib/pdf";
 import EnlaceCopiable from "@/components/EnlaceCopiable";
-import EditorElementos from "@/components/EditorElementos";
 import Despiece from "@/components/Despiece";
 import EditorConsumos from "@/components/EditorConsumos";
 import SeccionesPorConfirmar from "@/components/SeccionesPorConfirmar";
+import CuadroCantidades from "@/components/CuadroCantidades";
 import MarcoApp from "@/components/MarcoApp";
 
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean; origenes: string[]; derivada?: boolean };
@@ -149,57 +147,7 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
               )}
             </div>
 
-            {etapas.map(([n, e]) => (
-              <div key={n} className="rounded-xl border border-marca-100 overflow-x-auto">
-                <div className="bg-marca-50 px-3 py-2 text-sm font-semibold text-marca-800">Etapa {n} · {e.nombre}</div>
-                <table className="w-full text-sm">
-                  <thead className="text-left text-slate-500">
-                    <tr>
-                      <th className="px-3 py-1.5 font-medium">Pieza</th>
-                      <th className="px-3 py-1.5 font-medium text-right">Cantidad</th>
-                      <th className="px-3 py-1.5 font-medium text-right hidden sm:table-cell">Elementos</th>
-                      <th className="px-3 py-1.5 font-medium">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {e.lineas.map((l) => (
-                      <Fragment key={`${l.piezaId}|${l.unidad}`}>
-                        <tr className="border-t border-neutral-200">
-                          <td className="px-3 py-1.5">{l.nombre}</td>
-                          <td className="px-3 py-1.5 text-right whitespace-nowrap">{cantidadTexto(l.cantidad, l.unidad)}</td>
-                          <td className="px-3 py-1.5 text-right hidden sm:table-cell">{l.n}</td>
-                          <td className="px-3 py-1.5">
-                            {l.derivada ? (
-                              <span className={l.confirmado ? "text-green-700" : "text-amber-700"}>
-                                {l.confirmado ? "Confirmado" : "Sigue a sus piezas"}
-                              </span>
-                            ) : l.confirmado ? (
-                              <span className="text-green-700">Confirmado</span>
-                            ) : (
-                              <form action={confirmarPiezaAction} className="flex items-center gap-2">
-                                <input type="hidden" name="proyectoId" value={proyecto.id} />
-                                <input type="hidden" name="piezaId" value={l.piezaId} />
-                                <span className="text-amber-700">Referencia</span>
-                                <button className="rounded-md border border-marca-200 bg-white px-2 py-0.5 text-xs font-semibold text-marca-800 hover:border-acento hover:text-acento">Confirmar</button>
-                              </form>
-                            )}
-                          </td>
-                        </tr>
-                        {!l.derivada && (
-                          <EditorElementos proyectoId={proyecto.id} elementos={elementosPorLinea.get(`${l.etapa}|${l.piezaId}|${l.unidad}`) ?? []} />
-                        )}
-                      </Fragment>
-                    ))}
-                    <tr className="border-t border-marca-100 bg-marca-50/60 font-semibold text-marca-900">
-                      <td className="px-3 py-1.5">Total etapa</td>
-                      <td className="px-3 py-1.5 text-right" colSpan={3}>
-                        {Object.entries(e.totales).filter(([, v]) => v > 0).map(([u, v]) => cantidadTexto(v, u)).join(" · ")}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            ))}
+            <CuadroCantidades etapas={etapas} editable={{ proyectoId: proyecto.id, elementosPorLinea: Object.fromEntries(elementosPorLinea) }} />
           </section>
 
           {calculo.avisos.length > 0 && (

@@ -1,14 +1,14 @@
 import { obtenerProyectoPorToken } from "@/lib/proyectos";
-import { cantidadTexto } from "@/lib/format";
 import VisorProyecto from "@/components/VisorProyecto";
 import Despiece from "@/components/Despiece";
+import CuadroCantidades from "@/components/CuadroCantidades";
 import TablaCotizacion from "@/components/TablaCotizacion";
 import FondoArquitectonico from "@/components/FondoArquitectonico";
 import { Logo } from "@/components/iconos";
 import { leerCotizacion, resumirCotizacion } from "@/lib/cotizacion";
 import { MARCA } from "@/lib/marca";
 
-type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number };
+type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number; confirmado: boolean };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
 
 // Link público (guía v3, etapa 05: "un PDF... y un link para presentar").
@@ -49,22 +49,7 @@ export default async function PaginaCompartida({ params }: { params: Promise<{ t
         {modo === "completo" && (
           <section className="tarjeta p-5 space-y-4">
             <h2 className="text-lg font-semibold text-marca-900">Cuadro de cantidades</h2>
-            {etapas.map(([n, e]) => (
-              <div key={n} className="rounded-xl border border-marca-100 overflow-x-auto">
-                <div className="bg-marca-50 px-3 py-2 text-sm font-semibold text-marca-800">Etapa {n} · {e.nombre}</div>
-                <table className="w-full text-sm">
-                  <tbody>
-                    {e.lineas.map((l) => (
-                      <tr key={`${l.piezaId}|${l.unidad}`} className="border-t border-marca-100">
-                        <td className="px-3 py-1.5">{l.nombre}</td>
-                        <td className="px-3 py-1.5 text-right whitespace-nowrap">{cantidadTexto(l.cantidad, l.unidad)}</td>
-                        <td className="px-3 py-1.5 text-right text-slate-400 hidden sm:table-cell">{l.n} elemento(s)</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ))}
+            <CuadroCantidades etapas={etapas} />
           </section>
         )}
 

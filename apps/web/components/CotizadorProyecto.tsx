@@ -14,15 +14,6 @@ const CAMPO = "w-full min-w-0 border border-neutral-300 rounded px-2 py-1 text-r
 // Columnas de un ítem desde sm: nombre, cantidad, material, valor unitario, subtotal.
 const COLS = "sm:grid-cols-[minmax(0,1fr)_6rem_8rem_7.5rem_7.5rem]";
 
-// Un dato de un ítem: en el celular con su rótulo arriba; desde sm, solo el valor.
-function Celda({ rotulo, fuerte, children }: { rotulo: string; fuerte?: boolean; children: React.ReactNode }) {
-  return (
-    <div className={`min-w-0 sm:text-right sm:pt-1 ${fuerte ? "font-medium" : ""}`}>
-      <span className="sm:hidden block text-xs text-neutral-500 font-normal">{rotulo}</span>
-      <span className="whitespace-nowrap">{children}</span>
-    </div>
-  );
-}
 
 // Campo numérico que deja escribir decimales a medias ("0,") sin perder lo
 // tecleado: guarda el texto y reporta el número.
@@ -120,7 +111,7 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
           dos versiones: los campos tienen estado propio (Num) y no deben
           duplicarse. */}
       <div className="text-sm">
-        <div className={`hidden sm:grid ${COLS} gap-x-3 pb-1 text-neutral-500 font-medium`}>
+        <div className={`hidden sm:grid ${COLS} gap-x-3 pb-1 text-slate-500 font-medium`}>
           <span>Ítem</span><span className="text-right">Cantidad</span><span className="text-right">Material $/u</span>
           <span className="text-right">Valor unitario</span><span className="text-right">Subtotal</span>
         </div>
@@ -128,30 +119,36 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
           const k = d.piezaId;
           const abierto = abiertos.has(k);
           return (
-            <div key={`${d.etapa}|${k}|${d.unidad}`} className={`grid grid-cols-2 ${COLS} gap-x-3 gap-y-1.5 py-2.5 border-t border-neutral-200 sm:items-start`}>
-              <div className="col-span-2 sm:col-span-1 min-w-0">
-                <span className="font-medium sm:font-normal">{d.nombre}</span>
-                {cot.deDescripcion.includes(k) && <span className="block text-xs text-blue-700">Precio leído de tu descripción</span>}
-                <button type="button" onClick={() => alternar(k)} className="block text-xs text-blue-700 hover:underline py-0.5">
+            <div key={`${d.etapa}|${k}|${d.unidad}`} className={`grid grid-cols-[minmax(0,1fr)_auto] ${COLS} gap-x-3 gap-y-1.5 py-3 border-t border-marca-100 sm:items-start`}>
+              <div className="order-1 sm:order-none min-w-0">
+                <span className="font-semibold text-marca-900 sm:font-normal">{d.nombre}</span>
+                {cot.deDescripcion.includes(k) && <span className="block text-xs text-acento">Precio leído de tu descripción</span>}
+                <button type="button" onClick={() => alternar(k)} aria-expanded={abierto} className="hidden sm:block text-xs font-semibold text-acento hover:underline py-0.5">
                   {abierto ? "Ocultar APU" : d.conApu || cot.apu[k]?.desperdicioPct !== undefined ? "APU ✓" : "APU"} {abierto ? "▲" : "▼"}
                 </button>
               </div>
-              <Celda rotulo="Cantidad">{cantidadTexto(d.cantidad, d.unidad)}</Celda>
-              <label className="min-w-0">
-                <span className="sm:hidden block text-xs text-neutral-500">Material $/{d.unidad}</span>
+              <p className="order-2 sm:order-5 text-right font-mono font-bold whitespace-nowrap text-marca-900 sm:pt-1 sm:font-semibold">{d.subtotal > 0 ? cop(d.subtotal) : "—"}</p>
+              <div className="order-3 col-span-2 flex items-center justify-between gap-3 text-xs sm:hidden">
+                <span className="text-slate-500">{cantidadTexto(d.cantidad, d.unidad)} × {d.valorUnitario > 0 ? cop(d.valorUnitario) : "Por definir"}</span>
+                <button type="button" onClick={() => alternar(k)} aria-expanded={abierto} className="shrink-0 font-semibold text-acento">
+                  {abierto ? "Ocultar análisis ⌃" : d.conApu ? "Ver análisis ✓ ⌄" : "Ver análisis ⌄"}
+                </button>
+              </div>
+              <p className="hidden sm:block sm:order-2 text-right whitespace-nowrap sm:pt-1">{cantidadTexto(d.cantidad, d.unidad)}</p>
+              <label className="order-4 sm:order-3 col-span-2 sm:col-span-1 min-w-0">
+                <span className="sm:hidden block text-xs text-slate-500">Material $/{d.unidad}</span>
                 <Num valor={cot.precios[k]} onCambio={(n) => cambiarPrecio(k, n)} label={`Precio de ${d.nombre}`} />
               </label>
-              <Celda rotulo="Valor unitario">{d.valorUnitario > 0 ? cop(d.valorUnitario) : "—"}</Celda>
-              <Celda rotulo="Subtotal" fuerte>{d.subtotal > 0 ? cop(d.subtotal) : "—"}</Celda>
+              <p className="hidden sm:block sm:order-4 text-right whitespace-nowrap sm:pt-1">{d.valorUnitario > 0 ? cop(d.valorUnitario) : "—"}</p>
               {abierto && (
-                <div className="col-span-full grid grid-cols-2 sm:grid-cols-4 gap-2 bg-neutral-50 border border-neutral-200 rounded p-2 text-xs">
-                  <label className="min-w-0 space-y-0.5"><span className="block text-neutral-500">Desperdicio % (ahora {d.desperdicioPct})</span>
+                <div className="order-5 sm:order-6 col-span-full grid grid-cols-2 sm:grid-cols-4 gap-2 bg-marca-50/70 ring-1 ring-marca-100 rounded-xl p-3 text-xs">
+                  <label className="min-w-0 space-y-0.5"><span className="block text-slate-500">Desperdicio % (ahora {d.desperdicioPct})</span>
                     <Num valor={cot.apu[k]?.desperdicioPct} placeholder="general" onCambio={(n) => cambiarApu(k, "desperdicioPct", n)} /></label>
-                  <label className="min-w-0 space-y-0.5"><span className="block text-neutral-500">Mano de obra $/{d.unidad}</span>
+                  <label className="min-w-0 space-y-0.5"><span className="block text-slate-500">Mano de obra $/{d.unidad}</span>
                     <Num valor={cot.apu[k]?.manoObra} onCambio={(n) => cambiarApu(k, "manoObra", n)} /></label>
-                  <label className="min-w-0 space-y-0.5"><span className="block text-neutral-500">Equipo y herram. $/{d.unidad}</span>
+                  <label className="min-w-0 space-y-0.5"><span className="block text-slate-500">Equipo y herram. $/{d.unidad}</span>
                     <Num valor={cot.apu[k]?.equipo} onCambio={(n) => cambiarApu(k, "equipo", n)} /></label>
-                  <label className="min-w-0 space-y-0.5"><span className="block text-neutral-500">Transporte $/{d.unidad}</span>
+                  <label className="min-w-0 space-y-0.5"><span className="block text-slate-500">Transporte $/{d.unidad}</span>
                     <Num valor={cot.apu[k]?.transporte} onCambio={(n) => cambiarApu(k, "transporte", n)} /></label>
                 </div>
               )}
@@ -200,7 +197,7 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
           </p>
         </div>
 
-        <dl className="space-y-1 self-end min-w-0">
+        <dl className="space-y-1.5 self-end min-w-0 rounded-xl bg-marca-900 p-4 text-sm text-white/85">
           <Fila t="Materiales" v={r.materiales} />
           <Fila t="Mano de obra" v={r.manoObra} />
           {r.equipo > 0 && <Fila t="Equipo y herramienta" v={r.equipo} />}
@@ -211,9 +208,9 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
           {cot.aiu.u > 0 && <Fila t={`Utilidad (${cot.aiu.u} %)`} v={r.utilidad} />}
           {(cot.aiu.a > 0 || cot.aiu.i > 0 || cot.aiu.u > 0) && <Fila t="Subtotal" v={r.subtotal} fuerte />}
           {r.iva.regimen !== "ninguno" && <Fila t={`IVA ${r.iva.tarifa} % sobre ${r.iva.regimen === "utilidad" ? "la utilidad" : "el total"}`} v={r.iva.valor} />}
-          <div className="flex justify-between items-baseline pt-1 border-t border-neutral-300">
-            <dt className="font-medium">Total</dt>
-            <dd className="text-2xl font-semibold">{r.tienePrecio ? cop(r.total) : "Ingresa tus precios"}</dd>
+          <div className="flex justify-between items-baseline gap-3 pt-2.5 border-t border-white/15 text-white">
+            <dt className="font-semibold">Total</dt>
+            <dd className={r.tienePrecio ? "font-mono text-2xl font-bold" : "text-base font-semibold"}>{r.tienePrecio ? cop(r.total) : "Ingresa tus precios"}</dd>
           </div>
           {r.retenciones.total > 0 && (
             <>
@@ -223,7 +220,7 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
               <Fila t="Neto a recibir" v={r.neto} fuerte />
             </>
           )}
-          {r.tienePrecio && <p className="text-xs text-neutral-400 text-right">El PDF toma estos valores al generarlo (todas las etapas).</p>}
+          {r.tienePrecio && <p className="pt-1 text-xs text-white/50 text-right">El PDF toma estos valores al generarlo (todas las etapas).</p>}
         </dl>
       </div>
     </div>
@@ -232,9 +229,9 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
 
 function Fila({ t, v, fuerte, gris }: { t: string; v: number; fuerte?: boolean; gris?: boolean }) {
   return (
-    <div className={`flex justify-between gap-3 ${fuerte ? "font-medium" : ""} ${gris ? "text-neutral-500" : "text-neutral-700"}`}>
+    <div className={`flex justify-between gap-3 ${fuerte ? "font-semibold text-white" : ""} ${gris ? "text-white/55" : ""}`}>
       <dt>{t}</dt>
-      <dd className="whitespace-nowrap">{cop(v)}</dd>
+      <dd className="whitespace-nowrap font-mono">{cop(v)}</dd>
     </div>
   );
 }
