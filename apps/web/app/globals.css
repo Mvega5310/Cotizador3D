@@ -145,3 +145,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .anim-flotar, .anim-derivar, .anim-titilar, .anim-rayo { animation: none; }
 }
+/* Pausada (no "none"), para que conserve el giro del primer cuadro. */
+.fondo-quieto .anim-flotar, .fondo-quieto .anim-derivar { animation-play-state: paused; }
+
+/* En el celular, el desenfoque detrás de la tarjeta se recalcula en cada
+   cuadro del fondo animado y casi no se nota (la tarjeta es 90 % blanca). */
+@media (max-width: 639px) {
+  .tarjeta-vidrio {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgb(255 255 255 / 0.96);
+  }
+}

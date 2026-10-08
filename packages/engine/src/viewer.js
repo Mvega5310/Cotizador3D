@@ -27,10 +27,19 @@ export class Viewer {
     this.config = config;
     this.views = config.views || {};
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+    // config.captura: el canvas se lee con toDataURL (PDF). Conservar el
+    // búfer cuesta en cada cuadro, así que solo se pide para eso.
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: !!config.captura });
     this.renderer.localClippingEnabled = true;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // En el celular (pantallas de 3x) no se nota la diferencia entre 1.5 y 2,
+    // y son casi la mitad de píxeles por dibujar.
+    const tactil = window.matchMedia?.('(pointer: coarse)').matches;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, tactil ? 1.5 : 2));
     this.renderer.shadowMap.enabled = true;
+    // El sol no se mueve: la sombra solo se recalcula cuando cambia la escena
+    // (capas, corte, transparencia), no al girar la cámara.
+    this.renderer.shadowMap.autoUpdate = false;
+    this.renderer.shadowMap.needsUpdate = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
@@ -45,6 +54,10 @@ export class Viewer {
 
     this.camera = new THREE.PerspectiveCamera(32, 1, 0.05, 400);
     this.controls = new OrbitControls(this.camera, canvas);
+    // Se dibuja a demanda: solo cuando algo cambió (ver loop()).
+    this._dirty = true;
+    this.enPantalla = true;
+    this.controls.addEventListener('start', () => this.invalidate());
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
     this.controls.maxPolarAngle = Math.PI * 0.499;
@@ -58,7 +71,7 @@ export class Viewer {
     sun.position.copy(v(sunTarget[0] - 22, sunTarget[1] - 24, sunTarget[2] + 22));
     sun.target.position.copy(v(...sunTarget));
     sun.castShadow = true;
-    sun.shadow.mapSize.set(4096, 4096);
+    sun.shadow.mapSize.set(tactil ? 2048 : 4096, tactil ? 2048 : 4096);
     const sc = sun.shadow.camera;
     sc.left = -24; sc.right = 24; sc.top = 24; sc.bottom = -24; sc.near = 1; sc.far = 90;
     sun.shadow.bias = -0.0004;
@@ -91,6 +104,14 @@ export class Viewer {
       this._resizeObserver.observe(stageEl);
     }
     if (this.state.view) this.setView(this.state.view, true);
+    // Fuera de la pantalla (se bajó en la página) no se dibuja.
+    if (window.IntersectionObserver) {
+      this._visibleObserver = new IntersectionObserver(([e]) => {
+        this.enPantalla = e.isIntersecting;
+        if (this.enPantalla) this.invalidate();
+      });
+      this._visibleObserver.observe(stageEl);
+    }
     this.loop = this.loop.bind(this);
     this._disposed = false;
     this.paused = false; // en true, loop() deja de renderizar cada frame (útil para capturas puntuales)
@@ -106,6 +127,7 @@ export class Viewer {
     this._disposed = true;
     window.removeEventListener('resize', this._onResize);
     this._resizeObserver?.disconnect();
+    this._visibleObserver?.disconnect();
     this.controls.dispose();
     this.renderer.dispose();
   }
@@ -115,6 +137,7 @@ export class Viewer {
     const o = this.layers[name];
     if (!o) return;
     o.visible = on;
+    this.invalidate(true);
   }
   getLayer(name) { return this.layers[name]?.visible ?? false; }
 
@@ -138,6 +161,7 @@ export class Viewer {
       for (const m of mats_) { m.transparent = ghost; m.opacity = opacity; m.depthWrite = depthWrite; m.needsUpdate = true; }
       o.castShadow = castShadow;
     });
+    this.invalidate(true);
   }
 
   setExplode(e, offsets = {}) {
@@ -146,6 +170,7 @@ export class Viewer {
       const g = this.layers[name];
       if (g) g.position.y = e * factor;
     }
+    this.invalidate(true);
   }
 
   setCut(axis, pos, flip = false) {
@@ -172,6 +197,7 @@ export class Viewer {
         }
       });
     }
+    this.invalidate(true);
   }
 
   // Atenúa todas las capas de `groupNames` menos `key`, para resaltar un sistema.
@@ -187,6 +213,7 @@ export class Viewer {
         o.material.depthWrite = !dim;
       });
     }
+    this.invalidate(true);
   }
 
   setBackground(mode) {
@@ -199,6 +226,7 @@ export class Viewer {
       this.scene.fog.color.set(0x16283e);
       this.scene.environmentIntensity = 0.55;
     }
+    this.invalidate();
   }
 
   // ---------- Cámara ----------
@@ -217,6 +245,7 @@ export class Viewer {
       this.camera.updateProjectionMatrix();
       this.controls.update();
       this.tween = null;
+      this.invalidate();
       return;
     }
     this.tween = {
@@ -232,6 +261,7 @@ export class Viewer {
     this.camera.fov = fov;
     this.camera.updateProjectionMatrix();
     this.controls.update();
+    this.invalidate();
   }
 
   resize() {
@@ -243,6 +273,7 @@ export class Viewer {
     else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
     this.w = w; this.h = h;
+    this.invalidate();
   }
 
   // ---------- Etiquetas DOM ----------
@@ -260,8 +291,15 @@ export class Viewer {
     this.roomsOn = false;
   }
 
-  setRooms(on) { this.roomsOn = on; }
-  setDims(on) { if (this.layers.dims) this.layers.dims.visible = on; }
+  setRooms(on) { this.roomsOn = on; this.invalidate(); }
+  setDims(on) { if (this.layers.dims) this.layers.dims.visible = on; this.invalidate(); }
+
+  // Pide dibujar el próximo cuadro; con `sombras`, recalcula también la
+  // sombra (cambió lo que hay en la escena, no solo la cámara).
+  invalidate(sombras = false) {
+    this._dirty = true;
+    if (sombras) this.renderer.shadowMap.needsUpdate = true;
+  }
 
   updateLabels() {
     if (!this.roomEls) return;
@@ -280,6 +318,7 @@ export class Viewer {
 
   renderNow() {
     this.controls.update();
+    this.renderer.shadowMap.needsUpdate = true;
     this.renderer.render(this.scene, this.camera);
     this.updateLabels();
   }
@@ -295,10 +334,16 @@ export class Viewer {
       this.camera.fov = this.tween.f0 + (this.tween.fov - this.tween.f0) * e;
       this.camera.updateProjectionMatrix();
       if (k >= 1) this.tween = null;
+      this._dirty = true;
     }
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
-    this.updateLabels();
+    // update() devuelve true mientras la cámara se mueve (también durante la
+    // inercia del arrastre); quieta y sin cambios, no se dibuja nada.
+    if (this.controls.update()) this._dirty = true;
+    if (this._dirty && this.enPantalla) {
+      this._dirty = false;
+      this.renderer.render(this.scene, this.camera);
+      this.updateLabels();
+    }
     requestAnimationFrame(this.loop);
   }
 }

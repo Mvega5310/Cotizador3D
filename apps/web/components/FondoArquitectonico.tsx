@@ -6,6 +6,7 @@
 //   capa 4 → el contenido (la tarjeta, con backdrop-filter) va por encima
 // Solo se animan transform y opacity (el navegador lo hace en la GPU, sin
 // repintar), muy lento (20–40 s), y nada se mueve con "reducir movimiento".
+// En "suave" queda quieto: casi no se ve y compite con el visor 3D.
 //
 // variante "hero": páginas de entrada y de nuevo proyecto (el fondo completo).
 // variante "suave": panel y proyecto, donde manda la legibilidad de tablas.
@@ -13,7 +14,7 @@
 export default function FondoArquitectonico({ variante = "hero" }: { variante?: "hero" | "suave" }) {
   const hero = variante === "hero";
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none">
+    <div aria-hidden className={`pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none ${hero ? "" : "fondo-quieto"}`}>
       {/* Fondo estático */}
       <div
         className="absolute inset-0"

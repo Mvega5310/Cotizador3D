@@ -20,7 +20,7 @@ type Calculo = { porEtapa: Record<string, EtapaCalculo>; despiece: FilaDespiece[
 const ORDEN_VISTAS = ["iso", "norte", "sur", "lateral", "planta"];
 
 // Renderiza el proyecto sin interfaz, recorre las vistas de cámara y captura
-// cada una como imagen (el canvas ya tiene preserveDrawingBuffer, ver
+// cada una como imagen (con `captura: true` el canvas conserva el búfer, ver
 // packages/engine/src/viewer.js). Con todas las capturas listas, arma el
 // documento imprimible y marca `data-listo="1"` para que el generador de PDF
 // (lib/actions/pdf.ts, con Playwright) sepa que ya puede imprimir la página.
@@ -45,7 +45,7 @@ export default function VisorImprimible({
       if (!esc.bbox) { if (!cancelado) setCapturas([]); return; }
       const b = esc.bbox;
       const viewer = new Viewer(canvasRef.current!, stageRef.current!, {
-        layers: esc.layers, views: esc.views, defaultView: "iso",
+        layers: esc.layers, views: esc.views, defaultView: "iso", captura: true,
         sunTarget: [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, 0],
       });
       viewer.paused = true;

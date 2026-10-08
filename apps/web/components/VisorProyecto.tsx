@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Viewer, construirEscena } from "@cotizador3d/engine";
 import type { EntradaMotor } from "@/lib/proyectos";
 
@@ -8,7 +8,12 @@ const VISTAS = [
   ["iso", "Isométrica"], ["norte", "Frente"], ["sur", "Posterior"], ["lateral", "Lateral"], ["planta", "Planta"],
 ] as const;
 
-export default function VisorProyecto({ entrada }: { entrada: EntradaMotor }) {
+export default function VisorProyecto({ entrada: recibida }: { entrada: EntradaMotor }) {
+  // Cada router.refresh() (PDF en curso, IA leyendo, confirmar una línea)
+  // trae un objeto nuevo aunque el modelo no haya cambiado. Comparando por
+  // contenido, el visor solo se vuelve a armar si cambió de verdad.
+  const firma = JSON.stringify(recibida);
+  const entrada = useMemo(() => JSON.parse(firma) as EntradaMotor, [firma]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<InstanceType<typeof Viewer> | null>(null);
