@@ -15,7 +15,7 @@ export default function PanelPdf({ proyectoId, estado, error, url, seccionesProv
   seccionesProvisionales?: number;
 }) {
   const router = useRouter();
-  const [tipo, setTipo] = useState<"presupuesto" | "presentacion">("presupuesto");
+  const [tipo, setTipo] = useState<"presupuesto" | "anexo" | "presentacion">("presupuesto");
   const generando = estado === "generando";
 
   useEffect(() => {
@@ -42,6 +42,10 @@ export default function PanelPdf({ proyectoId, estado, error, url, seccionesProv
             Presupuesto <span className="text-neutral-400">(vistas, cantidades y precios)</span>
           </label>
           <label className="flex items-center gap-1.5">
+            <input type="radio" name="tipo" value="anexo" checked={tipo === "anexo"} onChange={() => setTipo("anexo")} />
+            Anexo técnico <span className="text-neutral-400">(vistas y desglose de material, sin precios: para adjuntar a tu propia cotización)</span>
+          </label>
+          <label className="flex items-center gap-1.5">
             <input type="radio" name="tipo" value="presentacion" checked={tipo === "presentacion"} onChange={() => setTipo("presentacion")} />
             Presentación <span className="text-neutral-400">(solo vistas)</span>
           </label>
@@ -54,6 +58,10 @@ export default function PanelPdf({ proyectoId, estado, error, url, seccionesProv
         <Boton generando={generando} yaExiste={!!url} />
       </form>
 
+      <p className="text-sm">
+        <a href={`/projects/${proyectoId}/excel`} className="text-blue-700 hover:underline">Descargar el desglose en Excel</a>
+        <span className="text-neutral-400"> · cantidades y despiece, sin precios, para pegar en tu propio formato de cotización</span>
+      </p>
       {generando && <p className="text-sm text-neutral-600">Generando el PDF… suele tardar menos de un minuto. Esta sección se actualiza sola.</p>}
       {estado === "error" && error && <p className="text-sm text-red-600">{error}</p>}
       {url && !generando && (

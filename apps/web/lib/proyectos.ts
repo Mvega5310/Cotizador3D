@@ -6,6 +6,7 @@ import { requireSession } from "@/lib/session";
 import { calcularProyecto, catalogoPublico, claveConsumo, consumoValido, medirElemento, seccionDesdeNombre } from "@cotizador3d/engine";
 import type { RespuestaIA } from "@/lib/ia";
 import { guardarArchivos } from "@/lib/archivos";
+import { borrarPdf } from "@/lib/pdf";
 import { COTIZACION_INICIAL, leerCotizacion } from "@/lib/cotizacion";
 
 const nuevoToken = () => randomBytes(16).toString("hex");
@@ -390,4 +391,22 @@ export async function confirmarPieza(projectId: string, piezaId: string) {
     },
     { timeout: 120000, maxWait: 30000 }
   );
+}
+
+// Invalida los dos enlaces de un proyecto y crea otros (AUDITORIA.md, S-13):
+// para un enlace compartido por error o que quedó escrito donde no debía.
+// Todas las versiones comparten el mismo par de tokens, así que se cambian
+// juntas. El PDF ya generado también es una forma de acceso (/d/<token>): se
+// borra, y hay que generar uno nuevo.
+export async function regenerarEnlaces(projectId: string) {
+  const { proyecto } = await obtenerProyecto(projectId); // exige sesión y cuenta
+  const conPdf = await prisma.resultado.findMany({
+    where: { version: { proyectoId: proyecto.id }, pdfToken: { not: null } },
+    select: { pdfToken: true },
+  });
+  await prisma.resultado.updateMany({
+    where: { version: { proyectoId: proyecto.id } },
+    data: { linkCompleto: nuevoToken(), linkCliente: nuevoToken(), pdfToken: null, pdfUrl: null, pdfEstado: null, pdfError: null },
+  });
+  for (const r of conPdf) if (r.pdfToken) borrarPdf(r.pdfToken);
 }

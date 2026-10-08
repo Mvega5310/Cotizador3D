@@ -8,6 +8,7 @@ import { cantidadTexto } from "@/lib/format";
 import VisorProyecto from "@/components/VisorProyecto";
 import CotizadorProyecto from "@/components/CotizadorProyecto";
 import PanelPdf from "@/components/PanelPdf";
+import BotonRegenerarEnlaces from "@/components/BotonRegenerarEnlaces";
 import { pdfVencido } from "@/lib/pdf";
 import EnlaceCopiable from "@/components/EnlaceCopiable";
 import EditorElementos from "@/components/EditorElementos";
@@ -219,6 +220,10 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
             <div className="space-y-1">
               <p className="text-xs text-neutral-500">Solo vistas — sin cantidades. Para compartir con tu cliente.</p>
               <EnlaceCopiable ruta={`/p/${version.resultado?.linkCliente}`} />
+            </div>
+            <div className="text-xs text-neutral-500 space-y-1">
+              <p>¿Compartiste un enlace por error? Puedes cortar el acceso: los enlaces y el PDF actuales dejan de servir.</p>
+              <BotonRegenerarEnlaces proyectoId={proyecto.id} />
             </div>
             {/* Un "generando" vencido (reinicio a mitad de camino) se muestra
                 como error para que el botón se pueda volver a usar. */}

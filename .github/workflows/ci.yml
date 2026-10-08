@@ -13,6 +13,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # Un enlace real de producción (con su token) no debe quedar escrito en
+      # el repo: el repo es público (AUDITORIA.md, H-14).
+      - name: Sin enlaces de producción en el código
+        run: |
+          ! git grep -nE 'proyects\.store/(p|d)/[0-9a-f]{32}|/(p|d)/[0-9a-f]{32}' -- . ':!docs/AUDITORIA.md' ':!**/*.pdf'
       - run: npm ci --no-audit --no-fund
       - name: Cliente de Prisma
         run: npx prisma generate --schema=../../prisma/schema.prisma

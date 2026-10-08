@@ -15,7 +15,7 @@ import { MARCA } from "@/lib/marca";
 type Captura = { clave: string; etiqueta: string; url: string };
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
-type Calculo = { porEtapa: Record<string, EtapaCalculo>; despiece: FilaDespiece[]; laminas: LaminaMaterial[]; cotizacion: ResumenCotizacion };
+type Calculo = { porEtapa: Record<string, EtapaCalculo>; despiece: FilaDespiece[]; laminas: LaminaMaterial[]; cotizacion: ResumenCotizacion | null };
 
 const ORDEN_VISTAS = ["iso", "norte", "sur", "lateral", "planta"];
 
@@ -153,7 +153,7 @@ function Documento({
         </section>
       )}
 
-      {calculo && <TablaCotizacion cotizacion={calculo.cotizacion} conApu={conApu} />}
+      {calculo?.cotizacion && <TablaCotizacion cotizacion={calculo.cotizacion} conApu={conApu} />}
 
       {calculo && <Despiece despiece={calculo.despiece} laminas={calculo.laminas} />}
 

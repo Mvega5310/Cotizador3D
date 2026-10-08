@@ -26,9 +26,12 @@ const CANAL = process.env.PDF_CHROME_CHANNEL ?? (process.env.NODE_ENV === "produ
 export async function generarPdfAction(formData: FormData) {
   const proyectoId = String(formData.get("proyectoId") || "");
   if (!proyectoId) return;
-  // presupuesto: cantidades y precios (link completo); presentacion: solo
-  // vistas (link de cliente). El anexo de APU va solo si se pide.
-  const tipo = formData.get("tipo") === "presentacion" ? "presentacion" : "presupuesto";
+  // presupuesto: cantidades y precios (link completo); anexo: vistas y
+  // desglose de material sin precios, para adjuntar a la cotización propia
+  // del ejecutor (link completo, ?precios=0); presentacion: solo vistas (link
+  // de cliente). El anexo de APU va solo si se pide, y solo en presupuesto.
+  const pedido = String(formData.get("tipo"));
+  const tipo = pedido === "presentacion" || pedido === "anexo" ? pedido : "presupuesto";
   const conApu = tipo === "presupuesto" && formData.get("apu") === "on";
 
   // obtenerProyecto exige sesión y que el proyecto sea de la cuenta del
@@ -49,7 +52,7 @@ export async function generarPdfAction(formData: FormData) {
   });
   if (tomado.count === 0) return;
 
-  const ruta = `/p/${token}/imprimir${conApu ? "?apu=1" : ""}`;
+  const ruta = `/p/${token}/imprimir${conApu ? "?apu=1" : tipo === "anexo" ? "?precios=0" : ""}`;
   after(() => enCola(() => renderizar(resultado.id, ruta, resultado.pdfToken)));
   revalidatePath(`/projects/${proyectoId}`);
 }

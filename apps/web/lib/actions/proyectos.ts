@@ -6,7 +6,7 @@ import { after } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
-import { crearProyectoPendiente, confirmarPieza, corregirElementos, guardarArchivosEntrada, obtenerEstadoProyecto, obtenerProyecto } from "@/lib/proyectos";
+import { crearProyectoPendiente, confirmarPieza, corregirElementos, guardarArchivosEntrada, obtenerEstadoProyecto, obtenerProyecto, regenerarEnlaces } from "@/lib/proyectos";
 import { consumoValido } from "@cotizador3d/engine";
 import type { ArchivoLeido } from "@/lib/ia";
 import { generarEnSegundoPlano } from "@/lib/generacion";
@@ -155,6 +155,15 @@ export async function guardarSeccionAction(_prev: EstadoForm, formData: FormData
   await prisma.catalogoPieza.update({ where: { id: piezaId }, data: { dimensiones: { ...resto, ancho, alto } as Prisma.InputJsonValue } });
   revalidatePath(`/projects/${proyectoId}`);
   return {};
+}
+
+// Invalida los enlaces del proyecto (y su PDF) y crea otros: ver
+// lib/proyectos.ts::regenerarEnlaces. La confirmación la pide el botón.
+export async function regenerarEnlacesAction(formData: FormData) {
+  const proyectoId = String(formData.get("proyectoId") || "");
+  if (!proyectoId) return;
+  await regenerarEnlaces(proyectoId);
+  revalidatePath(`/projects/${proyectoId}`);
 }
 
 export async function confirmarPiezaAction(formData: FormData) {

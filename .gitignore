@@ -16,3 +16,7 @@ prisma/dev.db-journal
 
 # PDFs generados (apps/web/lib/pdf.ts) — derivados, no se versionan
 apps/web/.data/
+
+# Scripts y archivos temporales: nunca al repo (AUDITORIA.md, H-14)
+_tmp*
+**/_tmp_*

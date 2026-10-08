@@ -15,6 +15,7 @@
     "@cotizador3d/engine": "*",
     "@prisma/client": "6.19.3",
     "bcryptjs": "^3.0.3",
+    "exceljs": "4.4.0",
     "jose": "^6.2.12",
     "next": "16.3.6",
     "playwright-core": "1.63.0",
