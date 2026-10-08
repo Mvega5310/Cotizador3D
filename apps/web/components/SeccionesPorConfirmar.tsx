@@ -5,14 +5,15 @@ import { guardarSeccionAction, type EstadoForm } from "@/lib/actions/proyectos";
 
 // Perfiles cuya sección no venía en el plano y se dibujaron con una
 // provisional de 50 × 50 mm (lib/proyectos.ts::depurarEntradaIA). Hasta que se
-// confirme, el peso y el dibujo de esos perfiles son de referencia.
+// confirme, el dibujo y la superficie a pintar de esos perfiles son de
+// referencia (el peso no: sale del factor kg/m × metros).
 export default function SeccionesPorConfirmar({ proyectoId, piezas }: { proyectoId: string; piezas: { id: string; nombre: string }[] }) {
   if (piezas.length === 0) return null;
   return (
     <section className="border border-amber-300 bg-amber-50 rounded p-3 space-y-2 text-sm">
       <h2 className="font-medium text-amber-900">Secciones por confirmar</h2>
       <p className="text-amber-800">
-        El plano no indica la sección de estos perfiles: se dibujaron con 50 × 50 mm. Escribe la real (ancho × alto, en mm) para que el peso y el 3D salgan bien.
+        El plano no indica la sección de estos perfiles: se dibujaron con 50 × 50 mm. Escribe la real (ancho × alto, en mm) para que el dibujo 3D y la superficie a pintar salgan bien. El peso no cambia: sale del factor kg/m del material.
       </p>
       {piezas.map((p) => <Fila key={p.id} proyectoId={proyectoId} pieza={p} />)}
     </section>

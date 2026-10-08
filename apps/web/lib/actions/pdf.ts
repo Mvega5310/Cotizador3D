@@ -6,7 +6,7 @@ import { after } from "next/server";
 import { chromium } from "playwright-core";
 import { prisma } from "@/lib/db";
 import { obtenerProyecto } from "@/lib/proyectos";
-import { borrarPdf, guardarPdf } from "@/lib/pdf";
+import { borrarPdf, guardarPdf, PDF_MAX_MS } from "@/lib/pdf";
 import { enCola } from "@/lib/cola";
 
 // Genera el PDF abriendo /p/<token>/imprimir en un Chrome sin interfaz y
@@ -22,9 +22,6 @@ import { enCola } from "@/lib/cola";
 // PDF_CHROME_CHANNEL: en local "chrome" (el Chrome instalado en el equipo);
 // en el servidor se deja vacío y se usa el Chromium que trae la imagen.
 const CANAL = process.env.PDF_CHROME_CHANNEL ?? (process.env.NODE_ENV === "production" ? undefined : "chrome");
-
-// Un PDF que lleva más que esto "generando" se cortó (p. ej. un despliegue).
-const PDF_MAX_MS = 5 * 60 * 1000;
 
 export async function generarPdfAction(formData: FormData) {
   const proyectoId = String(formData.get("proyectoId") || "");
@@ -63,6 +60,9 @@ async function renderizar(resultadoId: string, ruta: string, tokenAnterior: stri
   // público: más rápido, y no depende del proxy/HTTPS de la plataforma.
   const base = `http://127.0.0.1:${process.env.PORT || 3000}`;
   try {
+    // La hora de inicio se reescribe al empezar de verdad: un PDF que esperó
+    // su turno en la cola no debe parecer vencido (PDF_MAX_MS).
+    await prisma.resultado.update({ where: { id: resultadoId }, data: { pdfIniciado: new Date() } });
     const navegador = await chromium.launch({
       channel: CANAL,
       args: ["--ignore-gpu-blocklist", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"],

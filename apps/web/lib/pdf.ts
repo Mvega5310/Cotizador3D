@@ -8,6 +8,17 @@ import { DATA_DIR } from "@/lib/datos";
 const TOKEN_VALIDO = /^[0-9a-f]{32}$/;
 const CARPETA_PDF = path.join(DATA_DIR, "pdf");
 
+// Un PDF que lleva más que esto "generando" (contado desde que empezó de
+// verdad, no desde que entró a la cola) se cortó, p. ej. por un despliegue:
+// la página lo muestra como error y el botón se puede volver a usar. Va aquí
+// y no en lib/actions/pdf.ts porque un archivo "use server" solo exporta
+// funciones async.
+export const PDF_MAX_MS = 10 * 60 * 1000;
+
+export function pdfVencido(r: { pdfEstado: string | null; pdfIniciado: Date | null } | null | undefined): boolean {
+  return r?.pdfEstado === "generando" && !!r.pdfIniciado && Date.now() - r.pdfIniciado.getTime() > PDF_MAX_MS;
+}
+
 export function tokenValido(token: string): boolean {
   return TOKEN_VALIDO.test(token);
 }

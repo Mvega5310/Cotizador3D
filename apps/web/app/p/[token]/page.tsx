@@ -4,6 +4,7 @@ import VisorProyecto from "@/components/VisorProyecto";
 import Despiece from "@/components/Despiece";
 import TablaCotizacion from "@/components/TablaCotizacion";
 import { leerCotizacion, resumirCotizacion } from "@/lib/cotizacion";
+import { MARCA } from "@/lib/marca";
 
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number };
 type EtapaCalculo = { nombre: string; lineas: Linea[]; totales: Record<string, number> };
@@ -20,12 +21,12 @@ export default async function PaginaCompartida({ params }: { params: Promise<{ t
       {marcaAgua && (
         <div className="pointer-events-none fixed inset-0 flex items-center justify-center z-50 overflow-hidden">
           <span className="text-8xl font-bold text-neutral-400/10 -rotate-45 whitespace-nowrap select-none">
-            COTIZADOR 3D · PRUEBA
+            {MARCA.toUpperCase()} · PRUEBA
           </span>
         </div>
       )}
       <div>
-        <p className="text-xs font-mono uppercase tracking-widest text-orange-600">Cotizador 3D</p>
+        <p className="text-xs font-mono uppercase tracking-widest text-orange-600">{MARCA}</p>
         <h1 className="text-2xl font-semibold mt-1">{proyecto.cliente}</h1>
         <p className="text-sm text-neutral-500">{proyecto.tipoObra}</p>
       </div>

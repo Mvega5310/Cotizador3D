@@ -13,8 +13,18 @@ test('sección desde el nombre: tubos, madera, redondos y perfiles', () => {
   casi(s('Viga 3″×6″'), 0.0762, 0.1524);
   casi(s('Listón 2" x 4"'), 0.0508, 0.1016);
   casi(s('Correa 10 x 5 cm'), 0.05, 0.1);
-  casi(s('Tubo redondo Ø3″ x 3 mm'), 0.0762, 0.0762); // "3″ x 3 mm" también es rectangular: gana el que sea razonable
   casi(s('Tubo redondo Ø 76 mm'), 0.076, 0.076);
+  casi(s('Tabla 1" x 250 mm'), 0.0254, 0.25); // cada número con su unidad
+});
+
+// AUDITORIA.md, H-13: en "diámetro × espesor" el espesor no es una segunda
+// dimensión. Antes, el primer caso salía 50,8 × 63,5 mm sin aviso.
+test('sección desde el nombre: tubo redondo con espesor', () => {
+  casi(s('Tubo redondo Ø 2″ x 2.5 mm'), 0.0508, 0.0508);
+  casi(s('Tubo redondo Ø2" x 2 mm'), 0.0508, 0.0508);
+  casi(s('Tubo redondo Ø76 mm x 3 mm'), 0.076, 0.076);
+  casi(s('Tubo redondo Ø 60.3 x 2.5 mm'), 0.0603, 0.0603);
+  casi(s('Tubo redondo Ø3″ x 3 mm'), 0.0762, 0.0762);
   casi(s('IPE 300'), 0.15, 0.3);
   casi(s('Perfil HEA 200'), 0.2, 0.2);
 });

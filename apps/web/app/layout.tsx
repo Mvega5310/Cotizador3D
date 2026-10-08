@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { MARCA, MARCA_LEMA } from "@/lib/marca";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cotizador 3D para ejecutores",
+  title: `${MARCA} ${MARCA_LEMA}`,
   description: "Modelo 3D, renders y cotización a partir de tus planos.",
 };
 

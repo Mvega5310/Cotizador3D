@@ -7,41 +7,69 @@ const intentos = new Map<string, { n: number; desde: number }>();
 
 // IP del cliente: X-Real-IP la pone el proxy de Railway. De X-Forwarded-For
 // se toma la última, la que agregó el proxy: la primera la puede escribir
-// quien hace la petición.
-export async function ipCliente(): Promise<string> {
+// quien hace la petición. Sin ninguno de los dos, null (ver permitirAccion).
+export async function ipCliente(): Promise<string | null> {
   const h = await headers();
-  return h.get("x-real-ip")?.trim() || h.get("x-forwarded-for")?.split(",").pop()?.trim() || "desconocida";
+  return h.get("x-real-ip")?.trim() || h.get("x-forwarded-for")?.split(",").pop()?.trim() || null;
+}
+
+function vigente(clave: string, ventanaMs: number) {
+  const r = intentos.get(clave);
+  return r && Date.now() - r.desde <= ventanaMs ? r : null;
+}
+
+function contar(clave: string, ventanaMs: number) {
+  const ahora = Date.now();
+  if (intentos.size > 10_000) for (const [k, r] of intentos) if (ahora - r.desde > ventanaMs) intentos.delete(k);
+  const r = vigente(clave, ventanaMs);
+  if (r) r.n += 1;
+  else intentos.set(clave, { n: 1, desde: ahora });
 }
 
 // true si la acción se permite; cuenta el intento.
 export function permitir(clave: string, max: number, ventanaMs: number): boolean {
-  const ahora = Date.now();
-  if (intentos.size > 10_000) for (const [k, r] of intentos) if (ahora - r.desde > ventanaMs) intentos.delete(k);
-  const r = intentos.get(clave);
-  if (!r || ahora - r.desde > ventanaMs) {
-    intentos.set(clave, { n: 1, desde: ahora });
-    return true;
-  }
-  r.n += 1;
-  return r.n <= max;
+  contar(clave, ventanaMs);
+  return (vigente(clave, ventanaMs)?.n ?? 0) <= max;
 }
 
 const MIN = 60_000;
 export const DEMASIADOS = "Demasiados intentos. Espera unos minutos y vuelve a intentar.";
 
-// Límites por acción: por IP y, donde aplica, por correo (para que no se
-// pueda probar contraseñas de una cuenta desde muchas IP, ni llenarle el
-// buzón a alguien con correos de recuperación).
-export async function permitirAccion(accion: "login" | "registro" | "recuperar" | "reenviar", email?: string): Promise<boolean> {
+type Accion = "login" | "registro" | "recuperar" | "reenviar";
+const REGLAS: Record<Accion, { ip: readonly [number, number]; email: readonly [number, number] | null }> = {
+  login: { ip: [20, 15 * MIN], email: [10, 15 * MIN] },
+  registro: { ip: [5, 60 * MIN], email: null },
+  recuperar: { ip: [10, 60 * MIN], email: [3, 60 * MIN] },
+  reenviar: { ip: [10, 60 * MIN], email: [5, 60 * MIN] },
+};
+
+// Claves que aplican a una acción: por IP (si se conoce: sin IP no se aplica,
+// en vez de meter a todos en un solo cupo compartido) y, donde aplica, por
+// correo (para que no se prueben contraseñas de una cuenta desde muchas IP,
+// ni se le llene el buzón a alguien con correos de recuperación).
+async function claves(accion: Accion, email?: string) {
   const ip = await ipCliente();
-  const reglas = {
-    login: { ip: [20, 15 * MIN], email: [10, 15 * MIN] },
-    registro: { ip: [5, 60 * MIN], email: null },
-    recuperar: { ip: [10, 60 * MIN], email: [3, 60 * MIN] },
-    reenviar: { ip: [10, 60 * MIN], email: [5, 60 * MIN] },
-  } as const;
-  const r = reglas[accion];
-  const porIp = permitir(`${accion}:ip:${ip}`, r.ip[0], r.ip[1]);
-  const porEmail = !r.email || !email || permitir(`${accion}:email:${email}`, r.email[0], r.email[1]);
-  return porIp && porEmail;
+  const r = REGLAS[accion];
+  const lista: { clave: string; max: number; ventana: number }[] = [];
+  if (ip) lista.push({ clave: `${accion}:ip:${ip}`, max: r.ip[0], ventana: r.ip[1] });
+  if (r.email && email) lista.push({ clave: `${accion}:email:${email}`, max: r.email[0], ventana: r.email[1] });
+  return lista;
+}
+
+// Cuenta el intento y dice si se permite (registro, recuperar, reenviar:
+// cada intento cuesta, salga como salga).
+export async function permitirAccion(accion: Exclude<Accion, "login">, email?: string): Promise<boolean> {
+  let ok = true;
+  for (const c of await claves(accion, email)) ok = permitir(c.clave, c.max, c.ventana) && ok;
+  return ok;
+}
+
+// Login: solo cuentan los intentos fallidos. Si contaran todos, cualquiera
+// que escribiera 10 veces el correo de otra persona la dejaría sin entrar.
+export async function loginBloqueado(email: string): Promise<boolean> {
+  return (await claves("login", email)).some((c) => (vigente(c.clave, c.ventana)?.n ?? 0) >= c.max);
+}
+
+export async function registrarFalloLogin(email: string) {
+  for (const c of await claves("login", email)) contar(c.clave, c.ventana);
 }

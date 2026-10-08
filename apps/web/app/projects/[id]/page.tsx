@@ -8,6 +8,7 @@ import { cantidadTexto } from "@/lib/format";
 import VisorProyecto from "@/components/VisorProyecto";
 import CotizadorProyecto from "@/components/CotizadorProyecto";
 import PanelPdf from "@/components/PanelPdf";
+import { pdfVencido } from "@/lib/pdf";
 import EnlaceCopiable from "@/components/EnlaceCopiable";
 import EditorElementos from "@/components/EditorElementos";
 import Despiece from "@/components/Despiece";
@@ -48,6 +49,11 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
   }
 
   const { proyecto, version, entrada, calculo } = await obtenerProyecto(id);
+  // Perfiles con sección provisional (el plano no la traía): se piden en el
+  // recuadro y se avisan junto al PDF y los links (AUDITORIA.md, H-07 d).
+  const provisionales = Object.values(entrada.catalogo)
+    .filter((p) => (p.dimensiones as { provisional?: unknown }).provisional)
+    .map((p) => ({ id: p.id, nombre: p.nombre }));
   const etapas = Object.entries(calculo.porEtapa as Record<string, EtapaCalculo>);
   const sinConfirmar = calculo.lineas.filter((l: Linea) => !l.confirmado && !l.derivada).length;
 
@@ -115,12 +121,7 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
         <>
           <VisorProyecto entrada={entrada} />
 
-          <SeccionesPorConfirmar
-            proyectoId={proyecto.id}
-            piezas={Object.values(entrada.catalogo)
-              .filter((p) => (p.dimensiones as { provisional?: unknown }).provisional)
-              .map((p) => ({ id: p.id, nombre: p.nombre }))}
-          />
+          <SeccionesPorConfirmar proyectoId={proyecto.id} piezas={provisionales} />
 
           {calculo.errores.length > 0 && (
             <section className="border border-red-300 bg-red-50 rounded p-4 space-y-2">
@@ -219,11 +220,14 @@ export default async function ProyectoPage({ params }: { params: Promise<{ id: s
               <p className="text-xs text-neutral-500">Solo vistas — sin cantidades. Para compartir con tu cliente.</p>
               <EnlaceCopiable ruta={`/p/${version.resultado?.linkCliente}`} />
             </div>
+            {/* Un "generando" vencido (reinicio a mitad de camino) se muestra
+                como error para que el botón se pueda volver a usar. */}
             <PanelPdf
               proyectoId={proyecto.id}
-              estado={version.resultado?.pdfEstado ?? null}
-              error={version.resultado?.pdfError ?? null}
+              estado={pdfVencido(version.resultado) ? "error" : version.resultado?.pdfEstado ?? null}
+              error={pdfVencido(version.resultado) ? "La generación se interrumpió. Vuelve a intentarlo." : version.resultado?.pdfError ?? null}
               url={version.resultado?.pdfUrl ?? null}
+              seccionesProvisionales={provisionales.length}
             />
           </section>
         </>

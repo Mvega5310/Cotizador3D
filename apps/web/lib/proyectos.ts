@@ -96,7 +96,7 @@ export function depurarEntradaIA(resp: RespuestaIA): { entrada: EntradaMotor; de
     cotizacion = { ...cotizacion, precios: filtrarClaves(cotizacion.precios, valida), apu: filtrarClaves(cotizacion.apu, valida) };
   }
   const avisoSecciones = provisionales.length
-    ? `Sección por confirmar (se dibujó provisional de 50 × 50 mm porque el plano no la indica): ${provisionales.join(", ")}. Corrígela antes de cotizar: cambia el peso y el dibujo.`
+    ? `Sección por confirmar (se dibujó provisional de 50 × 50 mm porque el plano no la indica): ${provisionales.join(", ")}. Corrígela antes de presentar: cambia el dibujo y la superficie a pintar (el peso sale del factor kg/m).`
     : "";
   const notas = [resp.notas, avisoSecciones].filter(Boolean).join("\n\n") || undefined;
   return { entrada: { elementos: validos, catalogo, etapas }, descartados: invalidos.size, notas, cotizacion };
@@ -325,7 +325,27 @@ export async function obtenerProyectoPorToken(token: string) {
   if (!version) notFound();
 
   const { entrada, calculo } = await armarEntrada(version);
-  return { proyecto: resultado.version.proyecto, version, entrada, calculo, modo, marcaAgua: version.resultado?.marcaAgua ?? true };
+  // En modo cliente, la entrada va a un componente de navegador (el visor):
+  // del catálogo solo sale lo que hace falta para dibujar. El factor kg/m, los
+  // consumos y el tamaño de lámina son datos del ejecutor con los que calcula
+  // sus cantidades, y "ver código fuente" los mostraría (AUDITORIA.md, H-11).
+  // `calculo` se calculó con la entrada completa; en modo cliente no se dibuja.
+  const publica: EntradaMotor = modo === "cliente" ? { ...entrada, catalogo: catalogoParaDibujar(entrada.catalogo) } : entrada;
+  return { proyecto: resultado.version.proyecto, version, entrada: publica, calculo, modo, marcaAgua: version.resultado?.marcaAgua ?? true };
+}
+
+const DIMENSIONES_DE_DIBUJO = ["ancho", "alto", "espesor", "color", "opacidad"];
+
+function catalogoParaDibujar(catalogo: Record<string, Pieza>): Record<string, Pieza> {
+  return Object.fromEntries(
+    Object.entries(catalogo).map(([k, p]) => [
+      k,
+      {
+        id: p.id, nombre: p.nombre, unidad: p.unidad, tipo: p.tipo,
+        dimensiones: Object.fromEntries(Object.entries(p.dimensiones).filter(([d]) => DIMENSIONES_DE_DIBUJO.includes(d))),
+      },
+    ])
+  );
 }
 
 // Corregir la geometría de uno o más elementos: igual que confirmarPieza, no

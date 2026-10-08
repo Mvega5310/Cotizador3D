@@ -4,7 +4,7 @@
 //
 //   "Tubo rect. 150×50×4 mm"  -> 0,05 × 0,15   (alto = peralte, el lado mayor)
 //   "Viga 3″×6″"               -> 0,0762 × 0,1524
-//   "Tubo redondo Ø3″"         -> 0,0762 × 0,0762
+//   "Tubo redondo Ø 2″ x 2,5 mm" -> 0,0508 × 0,0508 (diámetro; el espesor no cuenta)
 //   "IPE 300", "HEA 200"       -> peralte por la designación; ancho aproximado
 //
 // Devuelve null si no se puede leer con seguridad ("2x4" sin unidad es
@@ -43,22 +43,26 @@ export function seccionDesdeNombre(nombre) {
     return razonable(ancho, alto) ? { ancho, alto } : null;
   }
 
-  const r = texto.match(RECT);
-  if (r) {
-    const unidad = r[2] || r[4] || '';
-    const a = num(r[1]), b = num(r[3]);
-    if (!unidad && Math.max(a, b) < 20) return null; // "2x4" sin unidad: ambiguo
-    const f = factor(unidad);
-    const ancho = Math.min(a, b) * f, alto = Math.max(a, b) * f;
-    return razonable(ancho, alto) ? { ancho, alto } : null;
-  }
-
+  // El diámetro va antes que el patrón rectangular: un tubo redondo se nombra
+  // "diámetro × espesor" ("Ø 2″ x 2,5 mm"), y leído como rectángulo el
+  // espesor pasaría por segunda dimensión, sin aviso.
   const d = texto.match(DIAM);
   if (d) {
     const v = num(d[1]);
     if (!d[2] && v < 20) return null;
     const lado = v * factor(d[2]);
     return razonable(lado, lado) ? { ancho: lado, alto: lado } : null;
+  }
+
+  const r = texto.match(RECT);
+  if (r) {
+    const a = num(r[1]), b = num(r[3]);
+    if (!r[2] && !r[4] && Math.max(a, b) < 20) return null; // "2x4" sin unidad: ambiguo
+    // Cada número con su unidad ("4″ x 50 mm"); si solo uno la trae ("3 x 6″"),
+    // vale para los dos.
+    const ancho1 = a * factor(r[2] || r[4]), ancho2 = b * factor(r[4] || r[2]);
+    const ancho = Math.min(ancho1, ancho2), alto = Math.max(ancho1, ancho2);
+    return razonable(ancho, alto) ? { ancho, alto } : null;
   }
   return null;
 }

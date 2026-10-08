@@ -10,6 +10,7 @@ import { cantidadTexto } from "@/lib/format";
 import Despiece, { type FilaDespiece, type LaminaMaterial } from "@/components/Despiece";
 import TablaCotizacion from "@/components/TablaCotizacion";
 import type { ResumenCotizacion } from "@/lib/cotizacion";
+import { MARCA } from "@/lib/marca";
 
 type Captura = { clave: string; etiqueta: string; url: string };
 type Linea = { etapa: number; piezaId: string; nombre: string; unidad: string; cantidad: number; n: number };
@@ -95,12 +96,12 @@ function Documento({
     <div className="bg-white text-neutral-900 max-w-[1200px] mx-auto p-10 space-y-8 relative">
       {marcaAgua && (
         <div className="pointer-events-none fixed inset-0 flex items-center justify-center z-50 overflow-hidden">
-          <span className="text-8xl font-bold text-neutral-300/40 -rotate-45 whitespace-nowrap select-none">COTIZADOR 3D · PRUEBA</span>
+          <span className="text-8xl font-bold text-neutral-300/40 -rotate-45 whitespace-nowrap select-none">{MARCA.toUpperCase()} · PRUEBA</span>
         </div>
       )}
 
       <header className="border-b border-neutral-300 pb-4">
-        <p className="text-xs font-mono uppercase tracking-widest text-orange-600">Cotizador 3D</p>
+        <p className="text-xs font-mono uppercase tracking-widest text-orange-600">{MARCA}</p>
         <h1 className="text-3xl font-bold mt-1">{cliente}</h1>
         <p className="text-sm text-neutral-500">{tipoObra} · {fecha}</p>
       </header>

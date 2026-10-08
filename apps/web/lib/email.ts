@@ -3,10 +3,12 @@
 // propio en Resend, el remitente por defecto (onboarding@resend.dev) solo
 // entrega al correo dueño de la cuenta de Resend — para producción real hay
 // que verificar un dominio y cambiar RESEND_FROM.
+import { MARCA } from "@/lib/marca";
+
 export async function enviarCorreo({ to, subject, html }: { to: string; subject: string; html: string }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("Falta configurar RESEND_API_KEY en el servidor para enviar correos.");
-  const from = process.env.RESEND_FROM || "Cotizador 3D <onboarding@resend.dev>";
+  const from = process.env.RESEND_FROM || `${MARCA} <onboarding@resend.dev>`;
 
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -21,7 +23,7 @@ export async function enviarCorreo({ to, subject, html }: { to: string; subject:
 
 function plantilla(titulo: string, cuerpo: string, boton: { texto: string; url: string }) {
   return `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#171717">
-  <p style="font:600 12px/1 monospace;letter-spacing:.1em;text-transform:uppercase;color:#ea580c;margin:0 0 8px">Cotizador 3D</p>
+  <p style="font:600 12px/1 monospace;letter-spacing:.1em;text-transform:uppercase;color:#ea580c;margin:0 0 8px">${MARCA}</p>
   <h1 style="font-size:20px;margin:0 0 16px">${titulo}</h1>
   <p style="font-size:14px;line-height:1.6;color:#404040">${cuerpo}</p>
   <p style="margin:24px 0">

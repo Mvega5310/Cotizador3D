@@ -6,7 +6,8 @@ import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword, createSessionToken, nuevoTokenAuth } from "@/lib/auth";
 import { requireSession, COOKIE_NAME } from "@/lib/session";
 import { enviarCorreo, correoVerificacion, correoRecuperacion } from "@/lib/email";
-import { permitirAccion, DEMASIADOS } from "@/lib/limite";
+import { permitirAccion, loginBloqueado, registrarFalloLogin, DEMASIADOS } from "@/lib/limite";
+import { MARCA } from "@/lib/marca";
 
 export type AuthState = { error?: string };
 export type AuthInfo = { error?: string; mensaje?: string };
@@ -75,7 +76,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
     });
     await enviarCorreo({
       to: usuario.email,
-      subject: "Confirma tu correo — Cotizador 3D",
+      subject: `Confirma tu correo — ${MARCA}`,
       html: correoVerificacion(`${await origen()}/verificar/${token}`),
     });
   } catch (e) {
@@ -89,10 +90,11 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
 export async function loginAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
-  if (!(await permitirAccion("login", email))) return { error: DEMASIADOS };
+  if (await loginBloqueado(email)) return { error: DEMASIADOS };
 
   const usuario = await prisma.usuario.findUnique({ where: { email } });
   if (!usuario || !(await verifyPassword(password, usuario.passwordHash))) {
+    await registrarFalloLogin(email); // solo los fallos cuentan para el límite
     return { error: "Correo o contraseña incorrectos." };
   }
 
@@ -137,7 +139,7 @@ export async function reenviarVerificacionAction(_prev: AuthInfo, _formData: For
     });
     await enviarCorreo({
       to: usuario.email,
-      subject: "Confirma tu correo — Cotizador 3D",
+      subject: `Confirma tu correo — ${MARCA}`,
       html: correoVerificacion(`${await origen()}/verificar/${token}`),
     });
   } catch (e) {
@@ -190,7 +192,7 @@ export async function solicitarRecuperacionAction(_prev: AuthInfo, formData: For
       });
       await enviarCorreo({
         to: usuario.email,
-        subject: "Recupera tu contraseña — Cotizador 3D",
+        subject: `Recupera tu contraseña — ${MARCA}`,
         html: correoRecuperacion(`${await origen()}/restablecer/${token}`),
       });
     } catch (e) {

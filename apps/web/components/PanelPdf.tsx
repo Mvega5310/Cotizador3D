@@ -8,8 +8,11 @@ import EnlaceCopiable from "@/components/EnlaceCopiable";
 
 // Generar el PDF corre en segundo plano en el servidor (lib/actions/pdf.ts);
 // mientras dice "generando", la página se vuelve a pedir cada pocos segundos.
-export default function PanelPdf({ proyectoId, estado, error, url }: {
+export default function PanelPdf({ proyectoId, estado, error, url, seccionesProvisionales = 0 }: {
   proyectoId: string; estado: string | null; error: string | null; url: string | null;
+  // Perfiles cuya sección no venía en el plano: se dibujan provisionales y el
+  // cliente lo vería sin saberlo (AUDITORIA.md, H-07 d).
+  seccionesProvisionales?: number;
 }) {
   const router = useRouter();
   const [tipo, setTipo] = useState<"presupuesto" | "presentacion">("presupuesto");
@@ -23,6 +26,13 @@ export default function PanelPdf({ proyectoId, estado, error, url }: {
 
   return (
     <div className="space-y-3 pt-3 border-t border-neutral-100">
+      {seccionesProvisionales > 0 && (
+        <p className="text-sm border border-amber-300 bg-amber-50 text-amber-800 rounded p-2">
+          {seccionesProvisionales === 1 ? "Un perfil tiene" : `${seccionesProvisionales} perfiles tienen`} la sección provisional
+          (el plano no la indicaba): en el PDF y en los links se ve dibujada con 50 × 50 mm. Confírmala arriba, en
+          &ldquo;Secciones por confirmar&rdquo;, antes de enviarlo.
+        </p>
+      )}
       <form action={generarPdfAction} className="space-y-2 text-sm">
         <input type="hidden" name="proyectoId" value={proyectoId} />
         <fieldset className="flex flex-wrap gap-x-5 gap-y-1">
