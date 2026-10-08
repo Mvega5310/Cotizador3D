@@ -84,10 +84,12 @@ export default function CotizadorProyecto({ proyectoId, calculo, inicial }: { pr
             {guardado === "error" ? "No se pudo guardar; revisa tu conexión." : guardado === "listo" ? "Guardada en el proyecto" : "Guardando…"}
           </p>
         </div>
+        {/* min-w-0 y max-w-full: la opción más larga ("Etapa 2 · Estructura
+            metálica: columnas y arcos…") no debe ensanchar la página en el celular. */}
         {etapas.length > 1 && (
-          <label className="text-sm flex items-center gap-2">
-            Alcance
-            <select value={etapa} onChange={(e) => setEtapa(e.target.value)} className="border border-neutral-300 rounded px-2 py-1">
+          <label className="text-sm flex items-center gap-2 min-w-0 w-full sm:w-auto sm:max-w-sm">
+            <span className="shrink-0 text-slate-500">Alcance</span>
+            <select value={etapa} onChange={(e) => setEtapa(e.target.value)} className="campo !py-1.5 min-w-0 flex-1 text-ellipsis">
               <option value="todo">Todas las etapas</option>
               {etapas.map(([n, e]) => (
                 <option key={n} value={n}>Etapa {n} · {e.nombre}</option>

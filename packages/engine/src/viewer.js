@@ -37,8 +37,8 @@ export class Viewer {
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x121821);
-    this.scene.fog = new THREE.Fog(0x121821, 70, 190);
+    this.scene.background = new THREE.Color(0x16283e);
+    this.scene.fog = new THREE.Fog(0x16283e, 70, 190);
     const pm = new THREE.PMREMGenerator(this.renderer);
     this.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
     this.scene.environmentIntensity = 0.55;
@@ -195,8 +195,8 @@ export class Viewer {
       this.scene.fog.color.set(0xf4f2ed);
       this.scene.environmentIntensity = 0.7;
     } else {
-      this.scene.background = new THREE.Color(0x121821);
-      this.scene.fog.color.set(0x121821);
+      this.scene.background = new THREE.Color(0x16283e);
+      this.scene.fog.color.set(0x16283e);
       this.scene.environmentIntensity = 0.55;
     }
   }
