@@ -19,7 +19,8 @@
 
 | ID | Hallazgo o sugerencia | Área | Prioridad | Estado |
 |---|---|---|---|---|
-| H-11 | El catálogo reducido del link de cliente borra las vigas del 3D (y del PDF de presentación) | Privacidad / Robustez | P1 | resuelto (a1ac8bb) · comprobado en producción |
+| H-14 | Dos enlaces reales de producción quedaron escritos en el historial de git (repo público) | Seguridad / Privacidad | P1 | resuelto (c363353) · enlaces invalidados en producción; historial sin reescribir (decisión pendiente) |
+| H-11 | El catálogo reducido del link de cliente borra las vigas del 3D (y del PDF de presentación) | Privacidad / Robustez | P1 | resuelto (a1ac8bb) · verificado, comprobado en producción por el autor |
 | H-12 | Comprobar que `X-Real-IP` no se puede falsificar (de eso depende el límite de intentos); dos bordes del limitador | Seguridad | P1 | resuelto (aa8f3d8, 6aea204) · comprobado en producción |
 | S-01 | Términos del servicio, política de datos (Ley 1581) y advertencia en el registro | Legal | P1 | abierto |
 | H-10 | Un PDF que se queda en "generando" bloquea el botón para siempre | Robustez | P2 | resuelto (aa8f3d8) |
@@ -29,7 +30,10 @@
 | S-03 | Unidad en pulgadas para madera | Motor | P2 | abierto |
 | S-04 | Métricas del piloto más allá del costo | Producto | P2 | en curso (solo `stopReason`) |
 | S-06 | Respaldos de Postgres y del volumen `/data` | Operación | P2 | abierto |
-| S-07 | Exportar el modelo (GLB) y la planta (DXF) | Producto | P3 | abierto |
+| S-12 | Anexo técnico: PDF con vistas y desglose de material **sin precios**, y Excel, para quien usa su propio formato de cotización | Producto | P2 | resuelto (c363353) · comprobado en producción |
+| S-13 | Poder invalidar y regenerar los enlaces de un proyecto | Seguridad / Producto | P2 | resuelto (c363353) · comprobado en producción |
+| S-07 | Exportar el modelo (GLB) y la planta (DXF); el Excel pasó a S-12 | Producto | P3 | abierto |
+| S-14 | Rellenar la plantilla de cotización del propio usuario (Excel o Word) | Producto | P3 | **abierto (nuevo, ronda 4)** · decidir tras el piloto |
 | S-09 | Nombre de la marca en un solo lugar | Mantenimiento | P3 | resuelto (aa8f3d8) · verificado |
 | H-01 | Subidas de más de 1 MB y límites mayores que los de la API de Claude | Subida de planos | P1 | resuelto (3ba9db5) · verificado |
 | H-02 | Pruebas gratis abusables (sin verificar correo, sin límite de intentos) | Costos / seguridad | P1 | resuelto (3ba9db5) · verificado, ver H-12 |
@@ -42,7 +46,7 @@
 | S-05 | Integración continua (pruebas, tipos y lint en cada push) | Mantenimiento | P2 | resuelto (3ba9db5) · en verde: `c934e13`, `aa8f3d8`, `c7447fb` (incluye `6aea204`), `a1ac8bb`, `55f5a5a` |
 | S-08 | Doble clic en "Generar" o "Reintentar" | Robustez | P3 | resuelto (3ba9db5) · verificado |
 | S-10 | Advertencias de lint | Mantenimiento | P3 | resuelto (3ba9db5) · verificado |
-| S-11 | Limitador de intentos: la purga de memoria usa la ventana equivocada | Seguridad | P3 | resuelto (a1ac8bb) |
+| S-11 | Limitador de intentos: la purga de memoria usa la ventana equivocada | Seguridad | P3 | resuelto (a1ac8bb) · verificado |
 
 ---
 
@@ -121,6 +125,55 @@ export function excedido(clave: string, max: number, ventanaMs: number): boolean
 export function registrarFallo(clave: string, ventanaMs: number) { /* igual que permitir(), sin devolver nada */ }
 // loginAction: if (excedido(...)) return error; ...verificar...; si falla -> registrarFallo(...)
 ```
+
+### H-14 · Dos enlaces reales de producción quedaron escritos en el historial de git
+**Qué pasa:** el commit `a1ac8bb` incluyó por error `apps/pipeline/_tmp_cap.mjs`, un script temporal para sacar capturas que traía escritos dos enlaces de producción: uno de **vista completa** (`/p/bab60bd0…`, que muestra cantidades, presupuesto y despiece, y con `/imprimir?apu=1` también el APU) y uno de **cliente** (`/p/acca0155…`). El commit `55f5a5a` borró el archivo, pero git conserva el historial: quien clone el repo o abra el commit `a1ac8bb` los lee. El repositorio es público: lo clono sin credenciales (confírmalo en *Settings* de GitHub). Los tokens son aleatorios de 128 bits y no se pueden adivinar; la exposición viene solo de haberlos publicado. El script además deja a la vista una ruta local de Windows con el nombre de usuario del equipo y el de la cuenta institucional (menor).
+
+**Qué tan grave es depende de qué proyecto son.** Si es una demo (por ejemplo, Casa Castañeda de prueba), basta con borrarlo o cambiarle los enlaces. Si tiene datos de un cliente real, esos enlaces dan acceso a sus cantidades y precios hasta que se invaliden.
+
+**Reescribir el historial no basta.** Con un repo público, las copias que alguien haya hecho en el rato que estuvo no se recuperan. Lo seguro es invalidar los enlaces; limpiar el historial es un complemento. Y la app no tiene hoy cómo regenerar un enlace: se copian tal cual a cada versión nueva del proyecto (`linkCompleto ?? nuevoToken()` en `proyectos.ts`). De ahí S-13.
+
+- [x] Decidir si ese proyecto es una demo o tiene datos reales
+- [x] Invalidar los dos enlaces: borrar el proyecto, o cambiarlos en la base (SQL abajo; los enlaces viejos dejan de servir al instante)
+- [ ] Opcional, después de invalidar: quitar el archivo del historial y avisar a quien tenga un clon
+- [x] Prevención: `.gitignore`, scripts temporales fuera del repo, y la comprobación de CI de abajo
+
+```sql
+-- Postgres de Railway. Los nombres de tabla son los de Prisma: revísalos si usas @@map.
+-- Paso 1: ver a qué proyecto pertenece cada enlace. Debe salir UN solo proyectoId; si salen dos,
+-- son dos proyectos y el paso 2 se hace una vez por cada uno (no mezclar).
+SELECT v."proyectoId", count(*) AS versiones
+FROM "Resultado" r JOIN "VersionProyecto" v ON v.id = r."versionId"
+WHERE r."linkCompleto" = '<token completo>' OR r."linkCliente" = '<token de cliente>'
+GROUP BY v."proyectoId";
+
+-- Paso 2: cambiar los dos enlaces en todas las versiones de ese proyecto (comparten el mismo par).
+UPDATE "Resultado" r
+SET "linkCompleto" = t.completo, "linkCliente" = t.cliente
+FROM (SELECT replace(gen_random_uuid()::text, '-', '') AS completo,
+             replace(gen_random_uuid()::text, '-', '') AS cliente) t
+WHERE r."versionId" IN (SELECT id FROM "VersionProyecto" WHERE "proyectoId" = '<proyectoId del paso 1>');
+```
+
+```bash
+# Opcional: quitar el archivo del historial (hacer una copia del repo antes; el push forzado reescribe main)
+git filter-repo --path apps/pipeline/_tmp_cap.mjs --invert-paths
+git push --force origin main
+```
+
+```gitignore
+# .gitignore
+_tmp*
+**/_tmp_*
+```
+
+```yaml
+# .github/workflows/ci.yml — un paso más: falla si alguien vuelve a escribir un enlace real en el repo
+      - name: Sin enlaces de producción en el código
+        run: "! git grep -nE 'proyects\.store/(p|d)/[0-9a-f]{32}' -- . ':!docs/AUDITORIA.md'"
+```
+
+**Prevención, con honestidad:** el "secret scanning" de GitHub no atrapa esto (es un enlace con un token aleatorio, no una clave con formato conocido). Lo que sí funciona es no guardar scripts temporales dentro del repo (la carpeta temporal del agente de código sirve para eso), añadir los archivos por ruta (`git add <archivo>`, no `git add -A`) y mirar `git status` antes de cada commit.
 
 ### S-01 · Términos del servicio y política de datos
 **Qué falta:** el repo no tiene páginas de términos ni de privacidad, y el registro no pide autorización de tratamiento de datos. Los usuarios suben planos de sus clientes, que para ellos es información sensible. La advertencia de "referencia, no cálculo estructural" ya está en el link público; falta en los términos y en el registro. Lo único que se necesita de ti: los datos legales del responsable del tratamiento.
@@ -210,6 +263,8 @@ casi(s('Tubo redondo Ø 60.3 x 2.5 mm'), 0.0603, 0.0603);
 ```
 
 ### H-11 · El catálogo reducido del link de cliente borra las vigas del 3D
+
+**Ronda 4: verificado.** `catalogoPublico` está en el motor (`publico.js`, exportado en `index.js`) con factor neutro (1) solo donde había factor; `proyectos.ts` lo usa y la función vieja se borró. Las dos pruebas pasan (motor 16 de 16): la de Casa Castañeda (233 de 233 elementos, 0 errores) y la de tableros y consumos, que no pedí. El autor lo comprobó además en producción con capturas del link completo y del de cliente; eso no lo repetí.
 **Qué pasa:** la corrección de `aa8f3d8` logra lo que buscaba en privacidad: en modo cliente ya no salen `factor`, `consumos` ni las medidas de lámina. Pero rompe el dibujo. El visor del navegador no solo dibuja: `construirEscena` llama a `calcularProyecto` con el catálogo que recibe, y el motor descarta (no dibuja) todo elemento que no puede medir. Una viga cotizada en `kg` necesita `pieza.factor` para tener `kg` (`medirElemento`, `interprete.js` línea 39); sin él falla con `unidad_no_disponible`. Como el acero se cotiza en `kg`, desaparece justo la estructura.
 
 **Reproducido** con Casa Castañeda y el catálogo reducido tal como lo arma `catalogoParaDibujar`:
@@ -298,6 +353,109 @@ Ejecuté este código y esta prueba contra el repo: pasa con la corrección, y c
 - *Salida estructurada:* la razón documentada en `lib/ia.ts` para no usar `output_config.format` tiene sentido. *Tool use* con `tool_choice` forzado solo valdría tras una prueba A/B con los mismos planos.
 - *Ejemplo del prompt:* ahora trae un tubo de acero concreto (`tubo150x50`). Los modelos copian los ejemplos; vigilar en las primeras generaciones de otros rubros (madera, mobiliario) que no lo repitan como clave o como material.
 
+### S-12 · Anexo técnico y Excel para quien usa su propio formato de cotización
+**La pregunta:** un usuario ya tiene su esquema de cotización (su Excel, su Word, su membrete) y de la plataforma solo necesita las imágenes 3D y el desglose de material. ¿Adjunta su esquema, o se imprime sin cotización y él la envía aparte junto con el archivo y el link?
+
+**Recomendación: imprimir sin cotización, y que él la envíe aparte.** Por tres razones. Primero, la cotización es del ejecutor: precios, AIU y condiciones son suyos, y nuestro PDF funciona mejor como un anexo técnico que él adjunta a la suya. Segundo, leer y rellenar una plantilla ajena es lo más frágil de todo: cada ejecutor tiene un formato distinto (celdas combinadas, columnas propias, logos), y un error ahí sale en un documento que va a su cliente. Tercero, es lo que sale más barato de construir y ya está casi hecho.
+
+**Qué existe hoy y qué falta.** `TablaCotizacion` ya devuelve `null` cuando no hay precios cargados (`if (!c.tienePrecio) return null`), así que si el ejecutor no escribe precios, el PDF "Presupuesto" ya sale con vistas, cuadro de cantidades y despiece, sin tabla de precios. Pero depende de que no haya cargado ninguno, el botón dice "cantidades y precios", y el HTML de la página de impresión sí lleva la cotización dentro. Falta un tipo de PDF explícito, **"Anexo técnico"**, que nunca imprima ni envíe precios, y un **Excel** con el desglose para que lo pegue en su formato.
+
+Así queda el conjunto, con el link y los archivos que ya existen:
+
+| Lo que recibe su cliente | Qué es | Dónde está |
+|---|---|---|
+| Link de cliente | Vistas 3D, sin cantidades | Ya existe |
+| Anexo técnico (PDF) | Vistas 3D y desglose de material, sin precios | **Nuevo** (este punto) |
+| Su cotización | Con su formato y sus precios | La envía él, aparte |
+| Excel del desglose | Para que él lo pegue en su formato | **Nuevo** (este punto) |
+
+- [x] Tipo de PDF "Anexo técnico": vistas, cuadro de cantidades y despiece, sin tabla de precios ni APU
+- [x] No mandar la cotización dentro del HTML cuando es anexo (la lección de H-06 y H-11: lo que no se dibuja, que no viaje)
+- [x] Descargar el desglose en Excel (una hoja por etapa, más el despiece)
+- [ ] Rellenar su plantilla: ver S-14, y solo si el piloto lo pide
+
+```tsx
+// components/PanelPdf.tsx — un tercer tipo
+const [tipo, setTipo] = useState<"presupuesto" | "anexo" | "presentacion">("presupuesto");
+// ...junto a los otros dos radios:
+<label className="flex items-center gap-1.5">
+  <input type="radio" name="tipo" value="anexo" checked={tipo === "anexo"} onChange={() => setTipo("anexo")} />
+  Anexo técnico <span className="text-neutral-400">(vistas y desglose de material, sin precios: para adjuntar a tu propia cotización)</span>
+</label>
+```
+
+```ts
+// lib/actions/pdf.ts — generarPdfAction
+const pedido = String(formData.get("tipo"));
+const tipo = pedido === "presentacion" || pedido === "anexo" ? pedido : "presupuesto";
+const conApu = tipo === "presupuesto" && formData.get("apu") === "on";
+const token = tipo === "presentacion" ? resultado?.linkCliente : resultado?.linkCompleto; // el anexo sale del link completo, dentro del servidor
+const ruta = `/p/${token}/imprimir${conApu ? "?apu=1" : tipo === "anexo" ? "?precios=0" : ""}`;
+```
+
+```tsx
+// app/p/[token]/imprimir/page.tsx
+searchParams: Promise<{ apu?: string; precios?: string }>
+const { apu, precios } = await searchParams;
+const conPrecios = precios !== "0";
+const datos = modo === "completo"
+  ? {
+      porEtapa: calculo.porEtapa, despiece: calculo.despiece, laminas: calculo.laminas,
+      cotizacion: conPrecios ? resumirCotizacion(calculo, leerCotizacion(proyecto.cotizacion)) : null, // sin precios, ni en el HTML
+    }
+  : null;
+// <VisorImprimible ... conApu={conPrecios && apu === "1"} />
+
+// components/VisorImprimible.tsx
+type Calculo = { /* ... */ cotizacion: ResumenCotizacion | null };
+{calculo?.cotizacion && <TablaCotizacion cotizacion={calculo.cotizacion} conApu={conApu} />}
+```
+
+```ts
+// app/projects/[id]/excel/route.ts — requiere `npm i exceljs -w web`. Boceto sin compilar: revisar tipos al integrarlo.
+import ExcelJS from "exceljs";
+import { obtenerProyecto } from "@/lib/proyectos";
+
+type Etapa = { nombre: string; lineas: { nombre: string; unidad: string; cantidad: number; n: number }[] };
+
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { proyecto, calculo } = await obtenerProyecto(id); // exige sesión y que el proyecto sea de la cuenta
+  const libro = new ExcelJS.Workbook();
+  for (const [n, e] of Object.entries(calculo.porEtapa as Record<string, Etapa>)) {
+    const hoja = libro.addWorksheet(`Etapa ${n}`);
+    hoja.columns = [{ header: "Pieza", width: 52 }, { header: "Unidad", width: 10 }, { header: "Cantidad", width: 12 }, { header: "Elementos", width: 11 }];
+    for (const l of e.lineas) hoja.addRow([l.nombre, l.unidad, Number(l.cantidad.toFixed(3)), l.n]);
+  }
+  // Si hay tableros: otra hoja con calculo.despiece (largo, ancho, espesor, cantidad), igual que Despiece.tsx.
+  const datos = await libro.xlsx.writeBuffer();
+  return new Response(datos, { headers: {
+    "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "Content-Disposition": `attachment; filename="desglose-${proyecto.id}.xlsx"`,
+  } });
+}
+```
+
+### S-13 · Poder invalidar y regenerar los enlaces de un proyecto
+**Qué falta:** un enlace compartido por error (o que quedó escrito donde no debía, como en H-14) no se puede invalidar desde la app. Los dos tokens se crean con el proyecto y se copian a cada versión nueva, así que ni borrar una versión ni corregir el proyecto los cambia. Hoy solo se cambian a mano en la base.
+
+- [x] Botón "Invalidar enlaces y crear nuevos" en el proyecto, con confirmación ("quien tenga el enlace viejo dejará de poder verlo")
+- [x] Que avise que el PDF ya generado tiene su propio enlace (`/d/…`) y se invalida regenerándolo
+
+```ts
+// lib/actions/proyectos.ts — requiere exportar nuevoToken desde lib/proyectos.ts
+export async function regenerarEnlacesAction(formData: FormData) {
+  const proyectoId = String(formData.get("proyectoId") || "");
+  await obtenerProyecto(proyectoId); // exige sesión y cuenta
+  // Todas las versiones comparten el mismo par de tokens: se cambian juntas.
+  await prisma.resultado.updateMany({
+    where: { version: { proyectoId } },
+    data: { linkCompleto: nuevoToken(), linkCliente: nuevoToken() },
+  });
+  revalidatePath(`/projects/${proyectoId}`);
+}
+```
+
 ### S-02 · Leer planos en DXF
 Hoy se aceptan imágenes y PDF. Los arquitectos e ingenieros trabajan en AutoCAD: el DXF (que AutoCAD exporta con un clic) trae las coordenadas exactas, más precisas que leer una foto.
 
@@ -371,9 +529,19 @@ Los planos y PDF viven en el volumen `/data` y los datos en Postgres de Railway.
 ### S-07 · Exportar el modelo y la planta
 - [ ] Descargar el modelo en GLB (`GLTFExporter` de Three.js). Se abre en SketchUp, Blender y visores web.
 - [ ] Descargar la planta en DXF (elementos proyectados en planta). Se abre en AutoCAD.
-- [ ] Exportar el cuadro de cantidades a Excel
+- ~~Exportar el cuadro de cantidades a Excel~~ → pasó a S-12 (P2), que es lo que más piden los que usan su propio formato
+
+### S-14 · Rellenar la plantilla de cotización del propio usuario
+Es lo que sería "el cliente adjunta su esquema de cotización". Es posible, pero no es lo primero: cada plantilla es distinta y un error sale en un documento con el nombre del ejecutor. Conviene esperar a que el piloto muestre cuántos lo piden de verdad y en qué formato (casi seguro Excel).
+
+- [ ] Solo `.xlsx` al principio. El usuario sube su plantilla una vez; Claude propone qué columna es descripción, unidad, cantidad y valor unitario, y **el usuario confirma ese mapeo antes de usarlo** (nunca se rellena a ciegas). Se guarda con su cuenta y se reutiliza.
+- [ ] Rellenar con `exceljs` conservando su formato, sin crear una plantilla nueva; las filas vacías de su cuadro se llenan con el cuadro de cantidades.
+- [ ] Los precios se llenan solo si el usuario los cargó; si no, esas celdas quedan vacías, nunca con un valor inventado.
+- [ ] Word y PDF fuera de alcance: rellenar un PDF o una tabla de Word de forma fiable no compensa. Para esos, el camino es S-12 (Excel o anexo, y pegar).
 
 ### S-11 · Limitador de intentos: la purga usa la ventana equivocada
+
+**Ronda 4: verificado.** Cada entrada guarda su `ventana` y la purga usa la suya (`limite.ts`).
 `lib/limite.ts::contar` limpia el mapa cuando pasa de 10.000 entradas, y borra las que tengan más edad que la ventana **de la llamada actual**. Un fallo de login (ventana de 15 minutos) puede borrar contadores de registro (ventana de 60) con más de 15 minutos, antes de tiempo. Solo ocurre con el mapa lleno, es decir, justo bajo un ataque masivo; con el límite por IP funcionando (H-12) es poco probable. Corrección corta: guardar la ventana dentro de cada entrada.
 
 - [x] Guardar `ventana` en cada entrada y purgar con la suya
@@ -520,6 +688,49 @@ const intentos = new Map<string, { n: number; desde: number; ventana: number }>(
 **Lección que queda escrita en el código:** `publico.js` explica que el visor no solo dibuja (descarta lo que no puede medir), que fue lo que hizo fallar la primera versión de H-11. Mi verificación de la ronda 2 solo buscó que `factor` no saliera en el HTML; no comparé el dibujo. Desde ahora, un cambio en lo que recibe el visor se prueba con el motor (como `publico.test.js`) y mirando el 3D.
 
 **Siguen abiertos:** S-01 (datos legales), S-06 (respaldos en Railway), H-07 c, S-02, S-03, S-04, S-07, y los seguimientos de H-08 y H-09 (necesitan crédito de API).
+
+### Ronda 4 · 8 de octubre de 2026 · commit `f98c2e5` (código en `a1ac8bb`)
+**Alcance:** diff desde `c7447fb` (6 archivos de código y el documento): `lib/limite.ts`, `lib/proyectos.ts`, `packages/engine/src/publico.js` con su prueba y `index.js`, el script temporal `apps/pipeline/_tmp_cap.mjs` (añadido en `a1ac8bb` y borrado en `55f5a5a`), y la respuesta del autor. **No revisé:** producción (la comprobación de H-11 es del autor), `next build` ni el CI de GitHub (esta auditoría no tiene acceso).
+
+**Verificaciones:**
+
+| Verificación | Resultado |
+|---|---|
+| Pruebas del motor | 16 de 16 pasan (14 anteriores y 2 de `publico.test.js`) |
+| Pruebas de Casa Castañeda | 4 de 4 pasan (20 en total) |
+| Lint (`eslint .`) | 0 errores, 0 advertencias |
+| Tipos (`tsc --noEmit`) | No verificable aquí (Prisma no se descarga). Mirar los runs del CI de `a1ac8bb`, `55f5a5a` y `f98c2e5`. |
+| H-11: el visor de cliente dibuja lo mismo | Sí: 233 de 233 elementos, 0 errores, en la prueba contra Casa Castañeda |
+| Claves o `.env` en el diff | Ninguna clave. **Sí hay dos enlaces reales de producción en `_tmp_cap.mjs`** → H-14 |
+| Ruta temporal `/ip` | No existe |
+
+**Cambios desde la ronda anterior:**
+- **Verificados como resueltos:** H-11 (el arreglo es el propuesto, más una prueba de tableros que no se pidió) y S-11.
+- **Nuevo, P1:** H-14, por el script temporal que dejó dos enlaces de producción en el historial de un repo público. Se corrige invalidando los enlaces, no solo borrando el archivo.
+- **Nuevos, por la pregunta sobre usuarios con su propio formato de cotización:** S-12 (anexo técnico sin precios y Excel, P2), S-13 (poder regenerar enlaces, P2) y S-14 (rellenar su plantilla, P3, después del piloto). El Excel de S-07 pasó a S-12.
+- **Siguen abiertos:** S-01, S-06, H-07 c, S-02, S-03, S-04, S-07 (GLB y DXF), y los seguimientos de H-08 y H-09.
+
+**Lectura general:** el arreglo de H-11 quedó bien, con su prueba, y es el tipo de corrección que se espera de aquí en adelante. La fuga de H-14 no vino del código sino del proceso: un archivo temporal entró en un commit. Es fácil de evitar con `.gitignore` y revisando `git status`.
+
+**Orden sugerido:**
+1. **H-14**, hoy: decidir si ese proyecto es real, invalidar los dos enlaces y poner el `.gitignore`.
+2. **S-12**, el anexo técnico. Es lo que más cambia lo que un ejecutor con formato propio puede entregar, y el PDF sin precios es un cambio de tres archivos.
+3. **S-01**, que sigue esperando tus datos legales.
+4. **S-06**: activar los respaldos en Railway y probar una restauración.
+5. Confirmar en GitHub Actions que los commits nuevos salen en verde.
+6. **S-13**, junto con el punto 1 si te toca invalidar enlaces a mano más de una vez.
+7. **H-07 c** y **S-04** cuando el piloto dé datos; luego S-02, S-03, S-07 y S-14.
+
+### Respuesta a la ronda 4 · 8 de octubre de 2026 · commit `c363353` (del autor)
+**Verificaciones:** pruebas 20 de 20 · `tsc --noEmit` sin errores · lint 0 y 0 · CI en verde en `c363353` (run 37818249321), incluido el paso nuevo "Sin enlaces de producción en el código". También salieron en verde `a1ac8bb`, `55f5a5a` y `f98c2e5`.
+
+| ID | Implementación |
+|---|---|
+| H-14 | **El proyecto era una demo**: "Cliente prueba", la cubierta curva de la primera prueba en producción, creada con una cuenta de prueba (`@example.com`) y sin precios ni datos de un cliente real. **Enlaces invalidados en producción** con el botón de S-13: los dos enlaces expuestos responden 404 y el proyecto tiene enlaces nuevos. Repo confirmado público por la API de GitHub. Los tokens solo aparecían en `a1ac8bb` y `55f5a5a`. Prevención: `.gitignore` con `_tmp*`, paso de CI que falla si aparece un enlace de producción con token, y desde ahora los commits agregan archivos por ruta y revisan `git status`. **Sin hacer:** reescribir el historial. Con los enlaces ya invalidados no expone nada, y un push forzado a `main` es una decisión del dueño del repo. |
+| S-13 | Como se propuso, y además borra el PDF del proyecto (también es una forma de acceso) y lo dice en la confirmación. Las dos acciones van en una sola operación sobre todas las versiones. |
+| S-12 | Tercer tipo de PDF "Anexo técnico" (`?precios=0`): vistas, cuadro de cantidades y despiece; la cotización no se calcula ni viaja en el HTML. Excel en `/projects/[id]/excel` (detrás de la sesión): una hoja por etapa con cantidad, unidad, elementos y estado, y hojas de despiece y láminas si hay tableros; sin precios. **Comprobado en producción** con el proyecto demo: el HTML del anexo trae `cotizacion: null`, el PDF se generó en segundo plano (357 KB, `/d/…`, `noindex`), y el Excel trae 4 hojas sin "$" ni "precio". Esa misma prueba cubre H-05 y H-06, que no se habían podido probar en producción por falta de crédito. |
+
+**Siguen abiertos:** S-01 (datos legales), S-06 (respaldos en Railway), S-14 (después del piloto), H-07 c, S-02, S-03, S-04, S-07, y los seguimientos de H-08 y H-09 (necesitan crédito de API).
 
 <!--
 Plantilla para la próxima ronda:
