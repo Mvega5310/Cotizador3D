@@ -5,12 +5,15 @@ import { headers } from "next/headers";
 // Postgres o Redis.
 const intentos = new Map<string, { n: number; desde: number }>();
 
-// IP del cliente: X-Real-IP la pone el proxy de Railway. De X-Forwarded-For
-// se toma la última, la que agregó el proxy: la primera la puede escribir
-// quien hace la petición. Sin ninguno de los dos, null (ver permitirAccion).
+// IP del cliente: X-Real-IP, que el proxy de Railway sobrescribe siempre.
+// Comprobado en producción (AUDITORIA.md, H-12): un X-Real-IP falso se
+// reemplaza por la IP real. X-Forwarded-For no sirve de respaldo: Railway deja
+// en el último valor la IP de su propio proxy (152.233.23.x), que metería a
+// todos los usuarios en un mismo cupo. Sin X-Real-IP, null: no se aplica el
+// límite por IP (se mantienen los límites por correo).
 export async function ipCliente(): Promise<string | null> {
   const h = await headers();
-  return h.get("x-real-ip")?.trim() || h.get("x-forwarded-for")?.split(",").pop()?.trim() || null;
+  return h.get("x-real-ip")?.trim() || null;
 }
 
 function vigente(clave: string, ventanaMs: number) {
