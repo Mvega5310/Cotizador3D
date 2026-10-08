@@ -19,18 +19,18 @@
 
 | ID | Hallazgo o sugerencia | Área | Prioridad | Estado |
 |---|---|---|---|---|
+| H-11 | El catálogo reducido del link de cliente borra las vigas del 3D (y del PDF de presentación) | Privacidad / Robustez | P1 | resuelto (a1ac8bb) · comprobado en producción |
 | H-12 | Comprobar que `X-Real-IP` no se puede falsificar (de eso depende el límite de intentos); dos bordes del limitador | Seguridad | P1 | resuelto (aa8f3d8, 6aea204) · comprobado en producción |
 | S-01 | Términos del servicio, política de datos (Ley 1581) y advertencia en el registro | Legal | P1 | abierto |
 | H-10 | Un PDF que se queda en "generando" bloquea el botón para siempre | Robustez | P2 | resuelto (aa8f3d8) |
 | H-13 | Un tubo redondo "Ø 2″ × 2,5 mm" se lee como sección rectangular, sin aviso | Motor | P2 | resuelto (aa8f3d8) |
-| H-11 | El link de cliente sigue mandando al navegador factores kg/m y consumos del catálogo | Privacidad del usuario | P2 | resuelto (aa8f3d8) |
 | H-07 | Las vigas se descartan cuando falta la sección | Calidad de la IA | P2 | en curso (a, b verificados; d, e en aa8f3d8; falta c) |
 | S-02 | Leer planos en DXF | Entrada de planos | P2 | abierto |
 | S-03 | Unidad en pulgadas para madera | Motor | P2 | abierto |
 | S-04 | Métricas del piloto más allá del costo | Producto | P2 | en curso (solo `stopReason`) |
 | S-06 | Respaldos de Postgres y del volumen `/data` | Operación | P2 | abierto |
 | S-07 | Exportar el modelo (GLB) y la planta (DXF) | Producto | P3 | abierto |
-| S-09 | Nombre de la marca en un solo lugar | Mantenimiento | P3 | resuelto (aa8f3d8) |
+| S-09 | Nombre de la marca en un solo lugar | Mantenimiento | P3 | resuelto (aa8f3d8) · verificado |
 | H-01 | Subidas de más de 1 MB y límites mayores que los de la API de Claude | Subida de planos | P1 | resuelto (3ba9db5) · verificado |
 | H-02 | Pruebas gratis abusables (sin verificar correo, sin límite de intentos) | Costos / seguridad | P1 | resuelto (3ba9db5) · verificado, ver H-12 |
 | H-03 | Restablecer la contraseña no cierra las sesiones abiertas | Seguridad | P1 | resuelto (3ba9db5) · verificado |
@@ -39,9 +39,10 @@
 | H-06 | El enlace del PDF abre la vista con cantidades y precios; el PDF muestra el APU | Privacidad del usuario | P1 | resuelto (3ba9db5) · verificado, ver H-11 |
 | H-08 | El modelo de IA está fijo en el código | Calidad / costos de la IA | P2 | resuelto (3ba9db5) · verificado |
 | H-09 | Respuestas largas que se cortan por `max_tokens` | Calidad de la IA | P2 | resuelto (3ba9db5) · medición verificada |
-| S-05 | Integración continua (pruebas, tipos y lint en cada push) | Mantenimiento | P2 | resuelto (3ba9db5) · primer run en verde (`c934e13`) |
+| S-05 | Integración continua (pruebas, tipos y lint en cada push) | Mantenimiento | P2 | resuelto (3ba9db5) · en verde: `c934e13`, `aa8f3d8`, `c7447fb` (incluye `6aea204`), `a1ac8bb`, `55f5a5a` |
 | S-08 | Doble clic en "Generar" o "Reintentar" | Robustez | P3 | resuelto (3ba9db5) · verificado |
 | S-10 | Advertencias de lint | Mantenimiento | P3 | resuelto (3ba9db5) · verificado |
+| S-11 | Limitador de intentos: la purga de memoria usa la ventana equivocada | Seguridad | P3 | resuelto (a1ac8bb) |
 
 ---
 
@@ -71,6 +72,8 @@ Para no tocarlo al arreglar lo demás:
 ## Prioridad 1 · Antes de abrir a usuarios reales
 
 ### H-12 · Comprobar que `X-Real-IP` no se puede falsificar
+
+**Ronda 3: verificado.** `ipCliente()` ya usa solo `X-Real-IP` y devuelve `null` si falta; sin IP no se aplica el límite por IP y quedan los de correo. El login cuenta solo los fallos (`loginBloqueado` y `registrarFalloLogin`), y `permitirAccion` ya no admite `"login"`. La ruta temporal `/ip` no existe en el repo. El resultado de producción (la tabla de abajo) lo reporta el autor: no lo repetí desde fuera, pero es coherente con el código. Dos restos menores están en S-11.
 **Qué pasa:** `lib/limite.ts::ipCliente()` toma primero `X-Real-IP` y, si no existe, el último valor de `X-Forwarded-For`. Esa prioridad es correcta **solo si el proxy de Railway sobrescribe `X-Real-IP`**. El autor documenta que lo hace; yo no pude comprobarlo desde fuera. Si Railway lo deja pasar tal cual viene, quien registre cuentas en serie cambia ese encabezado en cada petición y el límite por IP (la base de H-02) no frena nada.
 
 **Dos bordes más del limitador:**
@@ -144,6 +147,8 @@ export function registrarFallo(clave: string, ventanaMs: number) { /* igual que 
 ## Prioridad 2 · Durante el piloto
 
 ### H-10 · Un PDF que se queda en "generando" bloquea el botón para siempre
+
+**Ronda 3: verificado.** `PDF_MAX_MS` (10 min) y `pdfVencido()` viven en `lib/pdf.ts`; la página muestra un "generando" vencido como error, y `PanelPdf` deja de consultar y vuelve a habilitar el botón; `generarPdfAction` usa la misma constante, y `renderizar()` reescribe `pdfIniciado` al empezar de verdad.
 **Qué pasa:** si Railway reinicia el servicio mientras se genera un PDF (por ejemplo, al desplegar), `Resultado.pdfEstado` queda en `"generando"` para siempre. El servidor sí permite relanzarlo después de 5 minutos (`PDF_MAX_MS`), pero la página no lo sabe: `projects/[id]/page.tsx` le pasa a `PanelPdf` el estado crudo, y `PanelPdf` deshabilita el botón mientras `estado === "generando"` y refresca la página cada 4 s sin parar. El usuario ve "Generando…" eternamente y no puede reintentar. Con la generación de IA esto ya está resuelto (`GENERACION_MAX_MS` en `obtenerEstadoProyecto`); aquí falta lo mismo.
 
 **Detalle relacionado:** `pdfIniciado` se escribe al encolar, no al empezar. Con varios PDF en cola, el quinto puede pasar los 5 minutos esperando y alguien lo relanza por duplicado.
@@ -169,6 +174,8 @@ await prisma.resultado.update({ where: { id: resultadoId }, data: { pdfIniciado:
 ```
 
 ### H-13 · Un tubo redondo "Ø 2″ × 2,5 mm" se lee como sección rectangular, sin aviso
+
+**Ronda 3: verificado.** El diámetro se evalúa antes que el patrón rectangular y las 5 pruebas nuevas pasan (14 de 14 en el motor). Además, cada número del patrón rectangular usa su propia unidad (`Tabla 1" x 250 mm`), una mejora que no pedí.
 **Qué pasa:** `seccionDesdeNombre` (`packages/engine/src/secciones.js`) prueba primero el patrón rectangular. En un tubo redondo, que se nombra "diámetro × espesor", ese patrón se come el espesor y lo toma como una segunda dimensión. Comprobado ejecutando la función:
 
 | Nombre | Resultado | Correcto |
@@ -202,27 +209,67 @@ casi(s('Tubo redondo Ø76 mm x 3 mm'), 0.076, 0.076);
 casi(s('Tubo redondo Ø 60.3 x 2.5 mm'), 0.0603, 0.0603);
 ```
 
-### H-11 · El link de cliente sigue mandando al navegador factores kg/m y consumos
-**Qué pasa:** la corrección de H-06 sacó del HTML la cotización y el despiece en modo cliente, y está bien comprobada. Pero `obtenerProyectoPorToken` devuelve la `entrada` completa, y tanto `/p/[token]` como `/p/[token]/imprimir` se la pasan al visor, que es un componente de navegador. Esa `entrada.catalogo` trae, por cada pieza, el `factor` (kg por metro) y los `consumos` (por ejemplo, galones de anticorrosivo por m²). No son precios, pero sí son los datos del ejecutor con los que se calculan las cantidades: quien abra "Ver código fuente" en el link del cliente los lee. Es justo lo que el link de cliente promete no mostrar.
+### H-11 · El catálogo reducido del link de cliente borra las vigas del 3D
+**Qué pasa:** la corrección de `aa8f3d8` logra lo que buscaba en privacidad: en modo cliente ya no salen `factor`, `consumos` ni las medidas de lámina. Pero rompe el dibujo. El visor del navegador no solo dibuja: `construirEscena` llama a `calcularProyecto` con el catálogo que recibe, y el motor descarta (no dibuja) todo elemento que no puede medir. Una viga cotizada en `kg` necesita `pieza.factor` para tener `kg` (`medirElemento`, `interprete.js` línea 39); sin él falla con `unidad_no_disponible`. Como el acero se cotiza en `kg`, desaparece justo la estructura.
 
-Comprobé que el visor no usa `factor` ni `consumos` para dibujar (solo `dimensiones` y color), así que quitarlos no cambia el 3D.
+**Reproducido** con Casa Castañeda y el catálogo reducido tal como lo arma `catalogoParaDibujar`:
 
-- [x] En modo cliente, mandar el catálogo reducido a `id`, `nombre`, `unidad`, `dimensiones` y `tipo`
-- [ ] Probar el link de cliente después del cambio: el 3D debe verse igual
+| | Elementos que se dibujan | Errores |
+|---|---|---|
+| Catálogo completo (modo ejecutor) | 233 | 0 |
+| Catálogo de `aa8f3d8` (modo cliente) | **139** | **94** |
+| Con factor neutro (propuesta) | 233 | 0 |
 
-```ts
-// lib/proyectos.ts — al final de obtenerProyectoPorToken
-const publica = modo === "cliente"
-  ? {
-      ...entrada,
-      catalogo: Object.fromEntries(
-        Object.entries(entrada.catalogo).map(([k, p]) => [k, { id: p.id, nombre: p.nombre, unidad: p.unidad, dimensiones: p.dimensiones, tipo: p.tipo, consumos: [] }]),
-      ),
-    }
-  : entrada;
-return { proyecto: resultado.version.proyecto, version, entrada: publica, calculo, modo, marcaAgua: ... };
-// `calculo` ya se calculó arriba con la entrada completa; en modo cliente no se dibuja.
+Los 94 que faltan son todas las vigas: cerchas, cumbreras, correas, limahoyas, cerchuelas, soleras y las dos pérgolas. Quedan solo las 139 piezas por unidad (tejas y similares). Esto afecta al **link de cliente** y al **PDF de presentación** (que se genera desde ese mismo link). Lo comprobé con el motor, no en producción: abre un link de cliente de un proyecto con perfiles y compáralo con el link completo.
+
+**Por qué no lo atrapó nada:** la función vive en `lib/proyectos.ts`, que importa Prisma y no se puede probar sin base de datos, y el CI solo compila y corre las pruebas existentes. Tipos y lint no ven que un dato falte.
+
+- [x] Dejar `factor: 1` en las piezas que lo tenían, en vez de quitarlo. No revela nada: es un valor neutro, y el kg que sale con él no se muestra en ninguna parte del modo cliente.
+- [x] Mover la función al motor (`packages/engine/src/publico.js`) con una prueba contra Casa Castañeda, para que el CI proteja esto en adelante
+- [x] ~~Si ya está desplegado: regenerar los PDF de presentación hechos desde `aa8f3d8`, que salieron sin acero~~ No hubo ninguno: los registros del servidor no tienen ninguna línea `[pdf]` desde el despliegue de la migración 5 (6 de octubre), así que no se generó ningún PDF con el defecto.
+- [x] Probar un link de cliente real después del cambio: el 3D debe verse igual que el del modo completo
+
+```js
+// packages/engine/src/publico.js
+const DIBUJO = ['ancho', 'alto', 'espesor', 'color', 'opacidad'];
+
+export function catalogoPublico(catalogo) {
+  return Object.fromEntries(Object.entries(catalogo).map(([k, p]) => [k, {
+    id: p.id, nombre: p.nombre, unidad: p.unidad, tipo: p.tipo,
+    // Factor neutro, no el real: sin él "kg" deja de ser una unidad medible y
+    // el motor descarta el elemento (la viga ya no se dibuja).
+    ...(Number.isFinite(p.factor) ? { factor: 1 } : {}),
+    dimensiones: Object.fromEntries(Object.entries(p.dimensiones ?? {}).filter(([d]) => DIBUJO.includes(d))),
+  }]));
+}
+// packages/engine/src/index.js: export { catalogoPublico } from './publico.js';
+// lib/proyectos.ts: en vez de catalogoParaDibujar, `import { catalogoPublico } from "@cotizador3d/engine"`
 ```
+
+```js
+// packages/engine/test/publico.test.js
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'fs';
+import { calcularProyecto } from '../src/interprete.js';
+import { catalogoPublico } from '../src/publico.js';
+
+const p = JSON.parse(fs.readFileSync(new URL('../../../projects/casa-castaneda/elementos.json', import.meta.url), 'utf8'));
+
+test('catálogo público: se dibujan los mismos elementos y no salen los datos del ejecutor', () => {
+  const completo = calcularProyecto(p);
+  const publico = calcularProyecto({ ...p, catalogo: catalogoPublico(p.catalogo) });
+  assert.equal(publico.errores.length, 0);
+  assert.deepEqual(publico.validos.map((e) => e.id), completo.validos.map((e) => e.id));
+  for (const c of Object.values(catalogoPublico(p.catalogo))) {
+    assert.ok(c.factor === undefined || c.factor === 1, 'el factor real no debe salir');
+    assert.equal(c.consumos, undefined);
+    assert.equal(c.dimensiones.lamina_largo, undefined);
+  }
+});
+```
+
+Ejecuté este código y esta prueba contra el repo: pasa con la corrección, y con el defecto original falla con `94 !== 0`.
 
 ### H-07 · Las vigas se descartan cuando falta la sección
 **Estado ronda 2:** a y b verificados. `secciones.js` está en el motor con 13 de 13 pruebas pasando; `depurarEntradaIA` completa la sección, o la deja provisional de 50 × 50 mm y lo avisa en las notas; el recuadro "Secciones por confirmar" existe y `guardarSeccionAction` valida que la pieza sea del proyecto. El ejemplo del prompt ahora trae un tubo con `ancho` y `alto`; el factor del ejemplo (9,14 kg/m para 150×50×3) es correcto (1.164 mm² × 0,00785).
@@ -303,6 +350,8 @@ Las unidades son `kg`, `m2`, `m3`, `ml` y `und` (enum `Unidad` en Prisma, `UNIDA
 - [ ] Agregar las que faltan a `/admin/uso`
 
 ### S-05 · Integración continua
+
+**Ronda 3:** el autor reporta el run `37510609595` en verde sobre `c934e13`. No puedo verlo (esta auditoría no tiene acceso a GitHub Actions), así que se toma como dato del autor. Falta mirar los runs de `aa8f3d8`, `6aea204` y `c7447fb`: con H-11 cambió código que el CI compila.
 **Verificado:** `.github/workflows/ci.yml` corre `npm ci`, `prisma generate`, `npm test`, `next typegen`, `tsc --noEmit` y `eslint`. Los comandos y rutas son correctos. Lo que no puedo ver desde aquí es que corra en verde.
 
 - [x] Workflow en cada push y pull request
@@ -324,7 +373,22 @@ Los planos y PDF viven en el volumen `/data` y los datos en Postgres de Railway.
 - [ ] Descargar la planta en DXF (elementos proyectados en planta). Se abre en AutoCAD.
 - [ ] Exportar el cuadro de cantidades a Excel
 
+### S-11 · Limitador de intentos: la purga usa la ventana equivocada
+`lib/limite.ts::contar` limpia el mapa cuando pasa de 10.000 entradas, y borra las que tengan más edad que la ventana **de la llamada actual**. Un fallo de login (ventana de 15 minutos) puede borrar contadores de registro (ventana de 60) con más de 15 minutos, antes de tiempo. Solo ocurre con el mapa lleno, es decir, justo bajo un ataque masivo; con el límite por IP funcionando (H-12) es poco probable. Corrección corta: guardar la ventana dentro de cada entrada.
+
+- [x] Guardar `ventana` en cada entrada y purgar con la suya
+- Aceptado, no es defecto: con "solo cuentan los fallos", quien escriba 10 contraseñas malas del correo de otra persona todavía la deja 15 minutos sin entrar. Es el costo de limitar por correo; el límite por IP no lo evita. Si molesta en el piloto, subir el tope por correo o avisar por correo a la persona.
+
+```ts
+// lib/limite.ts
+const intentos = new Map<string, { n: number; desde: number; ventana: number }>();
+// contar(): intentos.set(clave, { n: 1, desde: ahora, ventana: ventanaMs });
+// purga:    for (const [k, r] of intentos) if (ahora - r.desde > r.ventana) intentos.delete(k);
+```
+
 ### S-09 · Nombre de la marca en un solo lugar
+
+**Ronda 3: verificado.** `lib/marca.ts` existe y ya no queda "Cotizador 3D" escrito fijo en `apps/web` fuera de ese archivo (comprobado con búsqueda).
 "Cotizador 3D" aparece en correos, marca de agua y títulos.
 
 - [x] Una constante `MARCA` (y `MARCA_CORTA`) usada en todos esos lugares, para cambiar el nombre definitivo con una sola edición
@@ -409,6 +473,53 @@ Los planos y PDF viven en el volumen `/data` y los datos en Postgres de Railway.
 | S-09 | `lib/marca.ts` (`MARCA`, `MARCA_LEMA`), usado en correos, títulos, encabezados y marca de agua. El prompt de la IA dice "cotizador 3D" como descripción genérica y no se tocó. |
 
 **Siguen abiertos:** S-01 (esperando los datos legales del responsable), S-06 (los respaldos se activan en el panel de Railway), H-07 c, S-02, S-03, S-04, S-07, y los seguimientos de H-08 y H-09 (necesitan crédito de API). Lo menor de H-06 (los `<linkCompleto>.pdf` viejos en `/data`) no se borró: no hay acceso de consola al volumen desde aquí, y no se sirven.
+
+### Ronda 3 · 8 de octubre de 2026 · commit `c7447fb` (código en `6aea204`)
+**Alcance:** diff desde `c934e13` (17 archivos): `lib/limite.ts`, `lib/actions/auth.ts`, `lib/actions/pdf.ts`, `lib/pdf.ts`, `lib/proyectos.ts`, `lib/marca.ts`, `lib/email.ts`, `PanelPdf`, `SeccionesPorConfirmar`, `VisorImprimible`, `projects/[id]/page.tsx`, `p/[token]/page.tsx`, `secciones.js` con sus pruebas, y la respuesta del autor en este documento. **No revisé:** el comportamiento en producción (la comprobación de `X-Real-IP` es del autor), `next build` ni el CI de GitHub (esta auditoría no tiene acceso a ese repositorio).
+
+**Verificaciones:**
+
+| Verificación | Resultado |
+|---|---|
+| Pruebas del motor | 14 de 14 pasan |
+| Pruebas de Casa Castañeda | 4 de 4 pasan (18 de 18 en total, como dijo el autor) |
+| Lint (`eslint .`) | 0 errores, 0 advertencias |
+| Tipos (`tsc --noEmit`) | No verificable aquí otra vez (Prisma no se descarga). Falta mirar los runs del CI de los tres commits nuevos. |
+| Casa Castañeda con el catálogo del modo cliente | **139 de 233 elementos, 94 errores** → H-11 reabierto. Con factor neutro: 233 de 233. |
+| Corrección propuesta de H-11 | Ejecutada en una copia: la prueba pasa con la corrección y falla con el defecto |
+| Ruta temporal `/ip` | Borrada |
+| "Cotizador 3D" fijo en `apps/web` | Ninguno fuera de `lib/marca.ts` |
+| Claves o `.env` en el diff | Ninguno |
+
+**Cambios desde la ronda anterior:**
+- **Verificados como resueltos:** H-10, H-12, H-13, H-07 (d y e) y S-09. Cada uno coincide con lo que el autor dijo.
+- **Reabierto:** H-11. La parte de privacidad quedó bien hecha, pero al quitar `factor` del catálogo el motor deja de medir las vigas en `kg` y el link de cliente las deja sin dibujar. Pasó a P1 porque afecta lo que ve el cliente final.
+- **Nuevo:** S-11 (menor).
+- **Siguen abiertos:** S-01, S-06, H-07 c, S-02, S-03, S-04, S-07, y los seguimientos de H-08 y H-09, como el autor anotó.
+
+**Lectura general:** el patrón de esta ronda se repite de la anterior: cada corrección resuelve el hallazgo y deja un caso al lado. Esta vez el caso es que una función que protege datos se escribió sin una prueba que dibuje el resultado. La prueba de H-11 propuesta arriba cierra eso.
+
+**Orden sugerido:**
+1. **H-11**, antes de compartir otro link de cliente o PDF de presentación. Es un cambio de dos líneas más una prueba.
+2. **S-01**, que sigue esperando tus datos legales.
+3. **S-06**: activar los respaldos en Railway y probar una restauración, antes de tener planos de clientes reales.
+4. Confirmar en GitHub Actions que los tres commits nuevos salen en verde.
+5. **H-07 c** y **S-04**, cuando el piloto dé datos.
+6. S-02, S-03, S-07 y S-11, según lo que pida el piloto.
+
+### Respuesta a la ronda 3 · 8 de octubre de 2026 · commit `a1ac8bb` (del autor)
+**Verificaciones:** pruebas 20 de 20 (16 del motor, 2 nuevas en `publico.test.js`; 4 de Casa Castañeda) · `tsc --noEmit` sin errores · lint 0 y 0 · CI en verde en `a1ac8bb` y `55f5a5a`, y también en `aa8f3d8` y `c7447fb`. `6aea204` no tiene run propio: subió en el mismo push que `c7447fb`, y el CI corre sobre el último commit del push.
+
+| ID | Implementación |
+|---|---|
+| H-11 | Como se propuso: `catalogoPublico` en `packages/engine/src/publico.js`, con factor neutro (1) donde había factor, y la prueba contra Casa Castañeda tal cual (más una de tableros y vigas). Reproduje antes el defecto con los mismos números (139 de 233, `unidad_no_disponible`). **Comprobado en producción** con el proyecto de la cubierta curva: antes, el link de cliente mostraba la cubierta sobre las zapatas sin una sola pieza de acero; después, se ve igual que el link completo. El HTML del link de cliente trae `factor` solo con valor 1 (7 de 7) y nada de `consumos` ni de lámina. |
+| S-11 | Como se propuso: `ventana` en cada entrada y purga con la suya. |
+
+**Error del autor en `a1ac8bb`:** se coló un script temporal de capturas (`apps/pipeline/_tmp_cap.mjs`, sin datos sensibles); se quitó en `55f5a5a`.
+
+**Lección que queda escrita en el código:** `publico.js` explica que el visor no solo dibuja (descarta lo que no puede medir), que fue lo que hizo fallar la primera versión de H-11. Mi verificación de la ronda 2 solo buscó que `factor` no saliera en el HTML; no comparé el dibujo. Desde ahora, un cambio en lo que recibe el visor se prueba con el motor (como `publico.test.js`) y mirando el 3D.
+
+**Siguen abiertos:** S-01 (datos legales), S-06 (respaldos en Railway), H-07 c, S-02, S-03, S-04, S-07, y los seguimientos de H-08 y H-09 (necesitan crédito de API).
 
 <!--
 Plantilla para la próxima ronda:
