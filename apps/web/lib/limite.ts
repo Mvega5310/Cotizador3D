@@ -3,7 +3,9 @@ import { headers } from "next/headers";
 // Límite de intentos en memoria (ventana fija por clave). Sirve mientras la
 // app corra en una sola instancia; con varias réplicas habría que moverlo a
 // Postgres o Redis.
-const intentos = new Map<string, { n: number; desde: number }>();
+// Cada entrada guarda su ventana: la purga usa la de cada una, no la de quien
+// llama (AUDITORIA.md, S-11).
+const intentos = new Map<string, { n: number; desde: number; ventana: number }>();
 
 // IP del cliente: X-Real-IP, que el proxy de Railway sobrescribe siempre.
 // Comprobado en producción (AUDITORIA.md, H-12): un X-Real-IP falso se
@@ -23,10 +25,10 @@ function vigente(clave: string, ventanaMs: number) {
 
 function contar(clave: string, ventanaMs: number) {
   const ahora = Date.now();
-  if (intentos.size > 10_000) for (const [k, r] of intentos) if (ahora - r.desde > ventanaMs) intentos.delete(k);
+  if (intentos.size > 10_000) for (const [k, r] of intentos) if (ahora - r.desde > r.ventana) intentos.delete(k);
   const r = vigente(clave, ventanaMs);
   if (r) r.n += 1;
-  else intentos.set(clave, { n: 1, desde: ahora });
+  else intentos.set(clave, { n: 1, desde: ahora, ventana: ventanaMs });
 }
 
 // true si la acción se permite; cuenta el intento.

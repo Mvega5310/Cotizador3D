@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
-import { calcularProyecto, claveConsumo, consumoValido, medirElemento, seccionDesdeNombre } from "@cotizador3d/engine";
+import { calcularProyecto, catalogoPublico, claveConsumo, consumoValido, medirElemento, seccionDesdeNombre } from "@cotizador3d/engine";
 import type { RespuestaIA } from "@/lib/ia";
 import { guardarArchivos } from "@/lib/archivos";
 import { COTIZACION_INICIAL, leerCotizacion } from "@/lib/cotizacion";
@@ -329,24 +329,13 @@ export async function obtenerProyectoPorToken(token: string) {
   // del catálogo solo sale lo que hace falta para dibujar. El factor kg/m, los
   // consumos y el tamaño de lámina son datos del ejecutor con los que calcula
   // sus cantidades, y "ver código fuente" los mostraría (AUDITORIA.md, H-11).
+  // catalogoPublico deja un factor neutro: sin factor, las vigas en kg no se
+  // dibujarían (está en el motor, con una prueba contra Casa Castañeda).
   // `calculo` se calculó con la entrada completa; en modo cliente no se dibuja.
-  const publica: EntradaMotor = modo === "cliente" ? { ...entrada, catalogo: catalogoParaDibujar(entrada.catalogo) } : entrada;
+  const publica: EntradaMotor = modo === "cliente" ? { ...entrada, catalogo: catalogoPublico(entrada.catalogo) } : entrada;
   return { proyecto: resultado.version.proyecto, version, entrada: publica, calculo, modo, marcaAgua: version.resultado?.marcaAgua ?? true };
 }
 
-const DIMENSIONES_DE_DIBUJO = ["ancho", "alto", "espesor", "color", "opacidad"];
-
-function catalogoParaDibujar(catalogo: Record<string, Pieza>): Record<string, Pieza> {
-  return Object.fromEntries(
-    Object.entries(catalogo).map(([k, p]) => [
-      k,
-      {
-        id: p.id, nombre: p.nombre, unidad: p.unidad, tipo: p.tipo,
-        dimensiones: Object.fromEntries(Object.entries(p.dimensiones).filter(([d]) => DIMENSIONES_DE_DIBUJO.includes(d))),
-      },
-    ])
-  );
-}
 
 // Corregir la geometría de uno o más elementos: igual que confirmarPieza, no
 // se edita la versión existente — se crea la siguiente con esos elementos
